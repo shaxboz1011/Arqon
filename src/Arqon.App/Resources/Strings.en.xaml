@@ -1,0 +1,108 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+    <sys:String x:Key="S.Nav.Panel">Dashboard</sys:String>
+    <sys:String x:Key="S.Nav.Apps">Apps</sys:String>
+    <sys:String x:Key="S.Nav.Downloads">Downloads</sys:String>
+    <sys:String x:Key="S.Nav.Settings">Settings</sys:String>
+
+    <sys:String x:Key="S.Side.NoLinks">No connection</sys:String>
+    <sys:String x:Key="S.Side.OneLink">· 1 connection</sys:String>
+    <sys:String x:Key="S.Side.ManyLinks">· {0} connections combined</sys:String>
+
+    <sys:String x:Key="S.Unit.Mbit">Mbit/s</sys:String>
+
+    <sys:String x:Key="S.Status.Checking">Checking</sys:String>
+    <sys:String x:Key="S.Status.Offline">Offline</sys:String>
+    <sys:String x:Key="S.Status.Unstable">Unstable</sys:String>
+    <sys:String x:Key="S.Status.Excellent">Excellent</sys:String>
+    <sys:String x:Key="S.Status.Good">Good</sys:String>
+
+    <sys:String x:Key="S.Panel.SubNone">No internet connection found.</sys:String>
+    <sys:String x:Key="S.Panel.SubOne">Only one connection is active.</sys:String>
+    <sys:String x:Key="S.Panel.SubMany">{0} connections are working at the same time.</sys:String>
+    <sys:String x:Key="S.Panel.Combined">COMBINED DOWNLOAD SPEED</sys:String>
+    <sys:String x:Key="S.Panel.ShareHint">Bar colours show each connection's share.</sys:String>
+    <sys:String x:Key="S.Panel.SingleHint">Only one connection right now. To combine speeds, plug in your phone over USB and turn on USB tethering.</sys:String>
+
+    <sys:String x:Key="S.Link.Ping">PING</sys:String>
+    <sys:String x:Key="S.Link.Jitter">JITTER</sys:String>
+    <sys:String x:Key="S.Link.Loss">LOSS</sys:String>
+
+    <sys:String x:Key="S.Empty.NoLinksTitle">No connection found</sys:String>
+    <sys:String x:Key="S.Empty.NoLinksBody">Connect to Wi-Fi or Ethernet and Arqon will pick it up.</sys:String>
+
+    <sys:String x:Key="S.Game.Title">Game protection</sys:String>
+    <sys:String x:Key="S.Game.Off">Off. Turn it on in Settings.</sys:String>
+    <sys:String x:Key="S.Game.NoLink">Waiting for a connection.</sys:String>
+    <sys:String x:Key="S.Game.Using">Game traffic uses the steadiest connection: {0}.</sys:String>
+
+    <sys:String x:Key="S.Fix.Title">Windows may switch off your second network</sys:String>
+    <sys:String x:Key="S.Fix.Body">When one network connects, Windows can disconnect the other. The fix keeps every connection active.</sys:String>
+    <sys:String x:Key="S.Fix.Button">Fix</sys:String>
+    <sys:String x:Key="S.Fix.Confirm">This change will be made. Continue?</sys:String>
+    <sys:String x:Key="S.Fix.Done">Done. Reconnect the network for it to take effect.</sys:String>
+    <sys:String x:Key="S.Fix.NeedAdmin">Administrator rights are needed. Use "Restart as administrator" in Settings.</sys:String>
+
+    <sys:String x:Key="S.Apps.Sub">Choose which connection each app may use. Games are detected automatically.</sys:String>
+    <sys:String x:Key="S.Apps.Add">+ Add app</sys:String>
+    <sys:String x:Key="S.Apps.AddRunning">From running apps</sys:String>
+    <sys:String x:Key="S.Apps.SystemOff">System mode is off, so these rules are saved but for now only affect Arqon's own downloads. System mode is in Settings.</sys:String>
+    <sys:String x:Key="S.Apps.ColApp">APP</sys:String>
+    <sys:String x:Key="S.Apps.ColKind">TYPE</sys:String>
+    <sys:String x:Key="S.Apps.ColLink">CONNECTION</sys:String>
+    <sys:String x:Key="S.Apps.ColLimit">LIMIT</sys:String>
+    <sys:String x:Key="S.Apps.LimitTip">Speed limit in Mbit/s. Leave empty for no limit.</sys:String>
+    <sys:String x:Key="S.Apps.Remove">Remove</sys:String>
+    <sys:String x:Key="S.Apps.EmptyTitle">No rules yet</sys:String>
+    <sys:String x:Key="S.Apps.EmptyBody">Add an app, for example make Steam download over the phone only.</sys:String>
+    <sys:String x:Key="S.Apps.KnownGames">popular games are recognised automatically.</sys:String>
+    <sys:String x:Key="S.Apps.Auto">Auto (best one)</sys:String>
+    <sys:String x:Key="S.Apps.Both">Both (combine)</sys:String>
+    <sys:String x:Key="S.Apps.Only">Only {0}</sys:String>
+    <sys:String x:Key="S.Apps.OnlyOffline">Only {0} (not connected)</sys:String>
+    <sys:String x:Key="S.Kind.Normal">Normal</sys:String>
+    <sys:String x:Key="S.Kind.Game">Game</sys:String>
+    <sys:String x:Key="S.Kind.Downloader">Downloader</sys:String>
+    <sys:String x:Key="S.Kind.Background">Background</sys:String>
+
+    <sys:String x:Key="S.Dl.Sub">Paste a link: the file is split into pieces and downloaded over all connections at once.</sys:String>
+    <sys:String x:Key="S.Dl.Placeholder">https://example.com/file.zip</sys:String>
+    <sys:String x:Key="S.Dl.Paste">Paste</sys:String>
+    <sys:String x:Key="S.Dl.Download">Download</sys:String>
+    <sys:String x:Key="S.Dl.SaveTo">Save to:</sys:String>
+    <sys:String x:Key="S.Dl.Folder">Choose folder</sys:String>
+    <sys:String x:Key="S.Dl.EmptyTitle">No downloads</sys:String>
+    <sys:String x:Key="S.Dl.EmptyBody">Paste a link above and press Enter.</sys:String>
+    <sys:String x:Key="S.Dl.State.Downloading">Downloading</sys:String>
+    <sys:String x:Key="S.Dl.State.Paused">Paused</sys:String>
+    <sys:String x:Key="S.Dl.State.Done">Finished</sys:String>
+    <sys:String x:Key="S.Dl.State.Failed">Failed</sys:String>
+    <sys:String x:Key="S.Dl.Eta">{0} left</sys:String>
+    <sys:String x:Key="S.Dl.Pause">Pause</sys:String>
+    <sys:String x:Key="S.Dl.Resume">Resume</sys:String>
+    <sys:String x:Key="S.Dl.OpenFolder">Open folder</sys:String>
+    <sys:String x:Key="S.Dl.Remove">Cancel / remove</sys:String>
+    <sys:String x:Key="S.Dl.TorrentSoon">Torrent and magnet links are coming soon. For now, paste a normal http/https link.</sys:String>
+    <sys:String x:Key="S.Dl.BadUrl">That is not a valid http/https link.</sys:String>
+
+    <sys:String x:Key="S.Set.Sub">Tune how Arqon works.</sys:String>
+    <sys:String x:Key="S.Set.GameProtection">Game protection</sys:String>
+    <sys:String x:Key="S.Set.GameProtectionBody">Game traffic always uses the lowest-ping, steadiest connection, and downloads never get in its way.</sys:String>
+    <sys:String x:Key="S.Set.SystemMode">System mode (experimental)</sys:String>
+    <sys:String x:Key="S.Set.SystemModeBody">Spreads the connections of Telegram, Chrome and every other app across your networks. Needs the packet driver and administrator rights.</sys:String>
+    <sys:String x:Key="S.Set.SystemModeReady">Ready.</sys:String>
+    <sys:String x:Key="S.Set.SystemModeWip">Not available yet: the packet driver is not connected. For now the monitor and Arqon's download manager work.</sys:String>
+    <sys:String x:Key="S.Set.FixTitle">Windows network policy</sys:String>
+    <sys:String x:Key="S.Set.FixNeeded">A fix is recommended.</sys:String>
+    <sys:String x:Key="S.Set.FixOk">No problem found.</sys:String>
+    <sys:String x:Key="S.Set.Language">Language</sys:String>
+    <sys:String x:Key="S.Set.LanguageBody">The interface language changes immediately.</sys:String>
+    <sys:String x:Key="S.Set.Startup">Start with Windows</sys:String>
+    <sys:String x:Key="S.Set.StartupBody">Arqon starts by itself when the computer turns on.</sys:String>
+    <sys:String x:Key="S.Set.Admin">Administrator rights</sys:String>
+    <sys:String x:Key="S.Set.AdminYes">Arqon is running as administrator.</sys:String>
+    <sys:String x:Key="S.Set.AdminNo">Normal mode. System mode and the Windows fix need administrator rights.</sys:String>
+    <sys:String x:Key="S.Set.RestartAdmin">Restart as administrator</sys:String>
+    <sys:String x:Key="S.Set.Tagline">Combine your connections</sys:String>
+</ResourceDictionary>

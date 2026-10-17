@@ -1,0 +1,108 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+    <sys:String x:Key="S.Nav.Panel">Panel</sys:String>
+    <sys:String x:Key="S.Nav.Apps">Dasturlar</sys:String>
+    <sys:String x:Key="S.Nav.Downloads">Yuklashlar</sys:String>
+    <sys:String x:Key="S.Nav.Settings">Sozlamalar</sys:String>
+
+    <sys:String x:Key="S.Side.NoLinks">Ulanish yo'q</sys:String>
+    <sys:String x:Key="S.Side.OneLink">· 1 ulanish</sys:String>
+    <sys:String x:Key="S.Side.ManyLinks">· {0} ulanish birlashgan</sys:String>
+
+    <sys:String x:Key="S.Unit.Mbit">Mbit/s</sys:String>
+
+    <sys:String x:Key="S.Status.Checking">Tekshirilmoqda</sys:String>
+    <sys:String x:Key="S.Status.Offline">Uzilgan</sys:String>
+    <sys:String x:Key="S.Status.Unstable">Beqaror</sys:String>
+    <sys:String x:Key="S.Status.Excellent">A'lo</sys:String>
+    <sys:String x:Key="S.Status.Good">Yaxshi</sys:String>
+
+    <sys:String x:Key="S.Panel.SubNone">Internet ulanishi topilmadi.</sys:String>
+    <sys:String x:Key="S.Panel.SubOne">Faqat bitta ulanish faol.</sys:String>
+    <sys:String x:Key="S.Panel.SubMany">{0} ulanish bir vaqtda ishlayapti.</sys:String>
+    <sys:String x:Key="S.Panel.Combined">UMUMIY YUKLASH TEZLIGI</sys:String>
+    <sys:String x:Key="S.Panel.ShareHint">Chiziq rangi har bir ulanishning ulushini ko'rsatadi.</sys:String>
+    <sys:String x:Key="S.Panel.SingleHint">Hozir faqat bitta ulanish bor. Tezlikni birlashtirish uchun telefonni USB orqali ulang va "USB modem" ni yoqing.</sys:String>
+
+    <sys:String x:Key="S.Link.Ping">PING</sys:String>
+    <sys:String x:Key="S.Link.Jitter">JITTER</sys:String>
+    <sys:String x:Key="S.Link.Loss">YO'QOTISH</sys:String>
+
+    <sys:String x:Key="S.Empty.NoLinksTitle">Ulanish topilmadi</sys:String>
+    <sys:String x:Key="S.Empty.NoLinksBody">Wi-Fi yoki Ethernet'ga ulaning, Arqon avtomatik topadi.</sys:String>
+
+    <sys:String x:Key="S.Game.Title">O'yin himoyasi</sys:String>
+    <sys:String x:Key="S.Game.Off">O'chirilgan. Sozlamalardan yoqing.</sys:String>
+    <sys:String x:Key="S.Game.NoLink">Ulanish kutilmoqda.</sys:String>
+    <sys:String x:Key="S.Game.Using">O'yin trafigi eng barqaror ulanishdan ketadi: {0}.</sys:String>
+
+    <sys:String x:Key="S.Fix.Title">Windows ikkinchi tarmoqni o'chirib qo'yishi mumkin</sys:String>
+    <sys:String x:Key="S.Fix.Body">Windows bitta tarmoq ulanganda ikkinchisini uzib qo'yadi. Tuzatish ikkala ulanishni ham faol saqlaydi.</sys:String>
+    <sys:String x:Key="S.Fix.Button">Tuzatish</sys:String>
+    <sys:String x:Key="S.Fix.Confirm">Quyidagi o'zgarish qilinadi. Davom etasizmi?</sys:String>
+    <sys:String x:Key="S.Fix.Done">Tayyor. O'zgarish kuchga kirishi uchun tarmoqni qayta ulang.</sys:String>
+    <sys:String x:Key="S.Fix.NeedAdmin">Administrator huquqi kerak. Sozlamalardan "Administrator sifatida qayta ishga tushirish" ni bosing.</sys:String>
+
+    <sys:String x:Key="S.Apps.Sub">Har bir dastur qaysi ulanishdan foydalanishini belgilang. O'yinlar avtomatik aniqlanadi.</sys:String>
+    <sys:String x:Key="S.Apps.Add">+ Dastur qo'shish</sys:String>
+    <sys:String x:Key="S.Apps.AddRunning">Ishlayotganlardan</sys:String>
+    <sys:String x:Key="S.Apps.SystemOff">Tizim rejimi o'chiq, shuning uchun bu qoidalar saqlanadi, lekin hozircha faqat Arqon yuklashlariga ta'sir qiladi. Tizim rejimi Sozlamalarda.</sys:String>
+    <sys:String x:Key="S.Apps.ColApp">DASTUR</sys:String>
+    <sys:String x:Key="S.Apps.ColKind">TURI</sys:String>
+    <sys:String x:Key="S.Apps.ColLink">ULANISH</sys:String>
+    <sys:String x:Key="S.Apps.ColLimit">CHEGARA</sys:String>
+    <sys:String x:Key="S.Apps.LimitTip">Tezlik chegarasi (Mbit/s). Bo'sh qoldirsangiz cheklanmaydi.</sys:String>
+    <sys:String x:Key="S.Apps.Remove">Olib tashlash</sys:String>
+    <sys:String x:Key="S.Apps.EmptyTitle">Hali qoida yo'q</sys:String>
+    <sys:String x:Key="S.Apps.EmptyBody">Dastur qo'shing, masalan Steam'ni faqat telefon orqali yuklashga qo'ying.</sys:String>
+    <sys:String x:Key="S.Apps.KnownGames">ta mashhur o'yin avtomatik taniladi.</sys:String>
+    <sys:String x:Key="S.Apps.Auto">Avto (eng yaxshisi)</sys:String>
+    <sys:String x:Key="S.Apps.Both">Ikkalasi (birlashtir)</sys:String>
+    <sys:String x:Key="S.Apps.Only">Faqat {0}</sys:String>
+    <sys:String x:Key="S.Apps.OnlyOffline">Faqat {0} (ulanmagan)</sys:String>
+    <sys:String x:Key="S.Kind.Normal">Oddiy</sys:String>
+    <sys:String x:Key="S.Kind.Game">O'yin</sys:String>
+    <sys:String x:Key="S.Kind.Downloader">Yuklovchi</sys:String>
+    <sys:String x:Key="S.Kind.Background">Fon</sys:String>
+
+    <sys:String x:Key="S.Dl.Sub">Link bering: fayl bo'laklarga bo'linib, barcha ulanishlardan bir vaqtda yuklanadi.</sys:String>
+    <sys:String x:Key="S.Dl.Placeholder">https://misol.uz/fayl.zip</sys:String>
+    <sys:String x:Key="S.Dl.Paste">Qo'yish</sys:String>
+    <sys:String x:Key="S.Dl.Download">Yuklash</sys:String>
+    <sys:String x:Key="S.Dl.SaveTo">Saqlash joyi:</sys:String>
+    <sys:String x:Key="S.Dl.Folder">Papkani tanlang</sys:String>
+    <sys:String x:Key="S.Dl.EmptyTitle">Yuklashlar yo'q</sys:String>
+    <sys:String x:Key="S.Dl.EmptyBody">Yuqoridagi maydonga link qo'ying va Enter bosing.</sys:String>
+    <sys:String x:Key="S.Dl.State.Downloading">Yuklanmoqda</sys:String>
+    <sys:String x:Key="S.Dl.State.Paused">To'xtatilgan</sys:String>
+    <sys:String x:Key="S.Dl.State.Done">Tugadi</sys:String>
+    <sys:String x:Key="S.Dl.State.Failed">Xatolik</sys:String>
+    <sys:String x:Key="S.Dl.Eta">{0} qoldi</sys:String>
+    <sys:String x:Key="S.Dl.Pause">To'xtatish</sys:String>
+    <sys:String x:Key="S.Dl.Resume">Davom ettirish</sys:String>
+    <sys:String x:Key="S.Dl.OpenFolder">Papkani ochish</sys:String>
+    <sys:String x:Key="S.Dl.Remove">Bekor qilish / olib tashlash</sys:String>
+    <sys:String x:Key="S.Dl.TorrentSoon">Torrent va magnet havolalari tez orada qo'shiladi. Hozircha oddiy http/https link bering.</sys:String>
+    <sys:String x:Key="S.Dl.BadUrl">Bu to'g'ri http/https link emas.</sys:String>
+
+    <sys:String x:Key="S.Set.Sub">Arqon qanday ishlashini sozlang.</sys:String>
+    <sys:String x:Key="S.Set.GameProtection">O'yin himoyasi</sys:String>
+    <sys:String x:Key="S.Set.GameProtectionBody">O'yin trafigi doim eng past ping va barqaror ulanishdan ketadi, yuklashlar esa unga xalaqit bermaydi.</sys:String>
+    <sys:String x:Key="S.Set.SystemMode">Tizim rejimi (tajribaviy)</sys:String>
+    <sys:String x:Key="S.Set.SystemModeBody">Telegram, Chrome va boshqa barcha dasturlarning ulanishlarini tarmoqlar o'rtasida taqsimlaydi. Paket drayveri va administrator huquqi kerak.</sys:String>
+    <sys:String x:Key="S.Set.SystemModeReady">Tayyor.</sys:String>
+    <sys:String x:Key="S.Set.SystemModeWip">Hali mavjud emas: paket drayveri ulanmagan. Hozircha Arqon yuklash menejeri va monitor ishlaydi.</sys:String>
+    <sys:String x:Key="S.Set.FixTitle">Windows tarmoq siyosati</sys:String>
+    <sys:String x:Key="S.Set.FixNeeded">Tuzatish tavsiya etiladi.</sys:String>
+    <sys:String x:Key="S.Set.FixOk">Muammo topilmadi.</sys:String>
+    <sys:String x:Key="S.Set.Language">Til</sys:String>
+    <sys:String x:Key="S.Set.LanguageBody">Interfeys tili darhol almashadi.</sys:String>
+    <sys:String x:Key="S.Set.Startup">Windows bilan ishga tushish</sys:String>
+    <sys:String x:Key="S.Set.StartupBody">Kompyuter yoqilganda Arqon o'zi ishga tushadi.</sys:String>
+    <sys:String x:Key="S.Set.Admin">Administrator huquqi</sys:String>
+    <sys:String x:Key="S.Set.AdminYes">Arqon administrator sifatida ishlayapti.</sys:String>
+    <sys:String x:Key="S.Set.AdminNo">Oddiy rejim. Tizim rejimi va Windows tuzatishi uchun administrator huquqi kerak bo'ladi.</sys:String>
+    <sys:String x:Key="S.Set.RestartAdmin">Administrator sifatida qayta ishga tushirish</sys:String>
+    <sys:String x:Key="S.Set.Tagline">Ulanishlaringizni birlashtiring</sys:String>
+</ResourceDictionary>

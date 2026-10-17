@@ -26,6 +26,12 @@ public class RuleEngineTests
     }
 
     [Fact]
+    public void Catalogue_reports_how_many_games_it_knows()
+    {
+        Assert.True(GameCatalog.Count >= 20);
+    }
+
+    [Fact]
     public void Explicit_rule_overrides_the_catalogue()
     {
         var engine = Engine(new AppRule("valorant.exe", AppKind.Normal, LinkChoice.Only, "phone", null));

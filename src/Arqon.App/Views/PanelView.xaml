@@ -1,0 +1,154 @@
+<UserControl x:Class="Arqon.App.Views.PanelView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:Arqon.App.Controls"
+             xmlns:vm="clr-namespace:Arqon.App.ViewModels">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="B2V" />
+        <DataTemplate x:Key="LinkCard" DataType="{x:Type vm:LinkCardViewModel}">
+            <Border Style="{StaticResource Card}" Margin="0,0,14,0">
+                <StackPanel>
+                    <Grid>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Text="{Binding Glyph}" Foreground="{Binding Brush}" FontSize="16" Margin="0,0,8,0" />
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <Border Style="{StaticResource Pill}" HorizontalAlignment="Right" x:Name="pill">
+                            <TextBlock Text="{Binding Status}" FontSize="11" Foreground="#4ADE80" x:Name="pillText" />
+                        </Border>
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <TextBlock Style="{StaticResource BigNumber}" Text="{Binding Down}" />
+                        <TextBlock Style="{StaticResource MutedText}" Text="{DynamicResource S.Unit.Mbit}" Margin="6,0,0,5" VerticalAlignment="Bottom" />
+                        <TextBlock Style="{StaticResource MutedText}" Margin="14,0,0,5" VerticalAlignment="Bottom">
+                            <Run Text="↑ " /><Run Text="{Binding Up, Mode=OneWay}" />
+                        </TextBlock>
+                    </StackPanel>
+                    <c:LineChart Height="56" Margin="0,6,0,8" ShowAxis="False" MaxPoints="60" Series="{Binding Series}" />
+                    <UniformGrid Columns="3">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource CardLabel}" Text="{DynamicResource S.Link.Ping}" />
+                            <TextBlock><Run Text="{Binding Ping, Mode=OneWay}" FontWeight="SemiBold" /><Run Text=" ms" Foreground="#8B93A7" /></TextBlock>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource CardLabel}" Text="{DynamicResource S.Link.Jitter}" />
+                            <TextBlock><Run Text="{Binding Jitter, Mode=OneWay}" FontWeight="SemiBold" /><Run Text=" ms" Foreground="#8B93A7" /></TextBlock>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource CardLabel}" Text="{DynamicResource S.Link.Loss}" />
+                            <TextBlock Text="{Binding Loss}" FontWeight="SemiBold" />
+                        </StackPanel>
+                    </UniformGrid>
+                </StackPanel>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsHealthy}" Value="False">
+                    <Setter TargetName="pill" Property="Background" Value="#3B2F14" />
+                    <Setter TargetName="pillText" Property="Foreground" Value="#F59E0B" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,10,20">
+            <TextBlock Style="{StaticResource PageTitle}" Text="{DynamicResource S.Nav.Panel}" />
+            <TextBlock Style="{StaticResource MutedText}" Text="{Binding Subtitle}" Margin="0,2,0,16" />
+
+            <!-- Windows Connection Manager fix -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,14" BorderBrush="#F59E0B"
+                    Visibility="{Binding NeedsFix, Converter={StaticResource B2V}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Style="{StaticResource Icon}" Text="&#xE7BA;" Foreground="#F59E0B" FontSize="18" Margin="0,0,12,0" />
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold" Text="{DynamicResource S.Fix.Title}" />
+                            <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Text="{DynamicResource S.Fix.Body}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <Button Grid.Column="1" Style="{StaticResource PrimaryButton}" Content="{DynamicResource S.Fix.Button}"
+                            Command="{Binding ApplyFixCommand}" Margin="16,0,0,0" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+            <TextBlock Text="{Binding FixMessage}" Foreground="#4ADE80" Margin="0,-6,0,10"
+                       Visibility="{Binding HasFixMessage, Converter={StaticResource B2V}}" />
+
+            <!-- No links -->
+            <Border Style="{StaticResource Card}" Visibility="{Binding NoLinks, Converter={StaticResource B2V}}">
+                <StackPanel HorizontalAlignment="Center" Margin="0,24">
+                    <TextBlock Style="{StaticResource Icon}" Text="&#xEB5E;" FontSize="34" Foreground="#8B93A7" HorizontalAlignment="Center" />
+                    <TextBlock FontWeight="SemiBold" FontSize="16" Margin="0,10,0,2" HorizontalAlignment="Center" Text="{DynamicResource S.Empty.NoLinksTitle}" />
+                    <TextBlock Style="{StaticResource MutedText}" HorizontalAlignment="Center" Text="{DynamicResource S.Empty.NoLinksBody}" />
+                </StackPanel>
+            </Border>
+
+            <StackPanel Visibility="{Binding HasLinks, Converter={StaticResource B2V}}">
+                <!-- Combined speed -->
+                <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="260" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,20,0">
+                            <TextBlock Style="{StaticResource CardLabel}" Text="{DynamicResource S.Panel.Combined}" />
+                            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                <TextBlock Style="{StaticResource BigNumber}" FontSize="38" Text="{Binding TotalDown}" />
+                                <TextBlock Style="{StaticResource MutedText}" Text="{DynamicResource S.Unit.Mbit}" Margin="8,0,0,7" VerticalAlignment="Bottom" />
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource MutedText}" Margin="0,0,0,12">
+                                <Run Text="↑ " /><Run Text="{Binding TotalUp, Mode=OneWay}" /><Run Text=" " /><Run Text="{DynamicResource S.Unit.Mbit}" />
+                            </TextBlock>
+                            <c:SplitBar Height="8" Parts="{Binding SpeedSplit}" />
+                            <TextBlock Style="{StaticResource MutedText}" FontSize="11" Margin="0,6,0,0" Text="{DynamicResource S.Panel.ShareHint}" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <c:LineChart Grid.Column="1" Height="150" Stacked="True" Unit="{DynamicResource S.Unit.Mbit}" MaxPoints="60" Series="{Binding TotalSeries}" />
+                    </Grid>
+                </Border>
+
+                <!-- Per-link cards -->
+                <ItemsControl ItemsSource="{Binding Links}" ItemTemplate="{StaticResource LinkCard}" Margin="0,0,-14,14">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Rows="1" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+
+                <!-- Single link hint -->
+                <Border Style="{StaticResource Card}" Margin="0,0,0,14" Visibility="{Binding SingleLink, Converter={StaticResource B2V}}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Style="{StaticResource Icon}" Text="&#xE946;" Foreground="#6C8CFF" FontSize="18" Margin="0,0,12,0" />
+                        <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Text="{DynamicResource S.Panel.SingleHint}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Game protection -->
+                <Border Style="{StaticResource Card}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border Width="42" Height="42" CornerRadius="10" Background="#26304A" Margin="0,0,14,0">
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE7FC;" FontSize="20" Foreground="#9FB4FF" HorizontalAlignment="Center" />
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock FontWeight="SemiBold" Text="{DynamicResource S.Game.Title}" />
+                            <TextBlock Style="{StaticResource MutedText}" Text="{Binding GameHeadline}" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                            <TextBlock Style="{StaticResource CardLabel}" HorizontalAlignment="Right" Text="{DynamicResource S.Link.Ping}" />
+                            <TextBlock HorizontalAlignment="Right"><Run Text="{Binding GamePing, Mode=OneWay}" FontSize="22" FontWeight="SemiBold" /><Run Text=" ms" Foreground="#8B93A7" /></TextBlock>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

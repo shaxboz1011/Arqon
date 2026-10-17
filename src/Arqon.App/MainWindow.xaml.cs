@@ -1,23 +1,38 @@
-﻿using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+﻿using System.Windows;
+using System.Windows.Threading;
+using Arqon.App.ViewModels;
 
 namespace Arqon.App;
 
-/// <summary>
-/// Interaction logic for MainWindow.xaml
-/// </summary>
 public partial class MainWindow : Window
 {
-    public MainWindow()
+    private readonly ShellViewModel _shell;
+    private readonly DispatcherTimer _summaryTimer;
+
+    public MainWindow(ShellViewModel shell)
     {
+        _shell = shell;
+        DataContext = shell;
         InitializeComponent();
+
+        StateChanged += (_, _) => AdjustForMaximize();
+        _summaryTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
+        _summaryTimer.Tick += (_, _) => _shell.Refresh();
+        _summaryTimer.Start();
     }
+
+    // A borderless maximized window extends past the screen edge by the resize border width.
+    private void AdjustForMaximize()
+    {
+        Root.Padding = WindowState == WindowState.Maximized
+            ? new Thickness(SystemParameters.WindowResizeBorderThickness.Left + 2)
+            : new Thickness(0);
+    }
+
+    private void OnMinimize(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+
+    private void OnMaximize(object sender, RoutedEventArgs e) =>
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+
+    private void OnClose(object sender, RoutedEventArgs e) => Close();
 }

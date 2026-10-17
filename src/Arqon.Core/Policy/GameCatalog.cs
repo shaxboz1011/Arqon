@@ -23,6 +23,8 @@ public static class GameCatalog
         "brawlhalla.exe", "apexlegends.exe",
     };
 
+    public static int Count => Games.Count;
+
     public static bool IsGame(string exeName) => Games.Contains(Normalize(exeName));
 
     /// <summary>File name only, with an .exe extension.</summary>
