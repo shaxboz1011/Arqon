@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arqon – maket</title>
+<style>
+  :root{
+    --bg:#0f1218; --panel:#171b24; --panel2:#1e2330; --line:#2a3040;
+    --text:#e7eaf2; --muted:#8b93a7; --accent:#6c8cff;
+    --wifi:#4ade80; --phone:#f59e0b; --bad:#f87171; --good:#4ade80;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#07090d;color:var(--text);font:14px/1.45 "Segoe UI",system-ui,sans-serif;padding:24px}
+  .note{max-width:1100px;margin:0 auto 14px;color:var(--muted);font-size:13px}
+  .note b{color:var(--text)}
+  .win{max-width:1100px;margin:0 auto;background:var(--bg);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-height:640px}
+  .titlebar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:#0b0e14;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted)}
+  .titlebar .dot{width:10px;height:10px;border-radius:50%;background:#2a3040}
+  .titlebar strong{color:var(--text);letter-spacing:.5px}
+  .body{display:flex;flex:1}
+  nav{width:190px;background:#0b0e14;border-right:1px solid var(--line);padding:14px 10px;display:flex;flex-direction:column;gap:4px}
+  nav button{all:unset;cursor:pointer;padding:9px 12px;border-radius:8px;color:var(--muted);display:flex;gap:10px;align-items:center}
+  nav button:hover{background:var(--panel)}
+  nav button.on{background:var(--panel2);color:var(--text)}
+  nav .sp{flex:1}
+  main{flex:1;padding:20px 24px;overflow:auto}
+  .screen{display:none}.screen.on{display:block}
+  h2{font-size:18px;margin-bottom:4px}
+  .sub{color:var(--muted);margin-bottom:18px}
+  .grid{display:grid;gap:14px}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .card h3{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:600;margin-bottom:8px}
+  .big{font-size:28px;font-weight:600}
+  .unit{font-size:13px;color:var(--muted);font-weight:400}
+  .row{display:flex;justify-content:space-between;align-items:center}
+  .pill{font-size:11px;padding:2px 8px;border-radius:99px;background:#1d3a2a;color:var(--good)}
+  .pill.warn{background:#3b2f14;color:var(--phone)}
+  .dotc{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+  .bar{height:8px;border-radius:99px;background:#232a3a;overflow:hidden;display:flex}
+  .bar i{display:block;height:100%}
+  .w{background:var(--wifi)} .p{background:var(--phone)}
+  .spark{height:44px;margin-top:10px;display:flex;align-items:flex-end;gap:3px}
+  .spark span{flex:1;background:var(--accent);opacity:.7;border-radius:2px 2px 0 0}
+  table{width:100%;border-collapse:collapse}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);font-weight:600}
+  td{padding:10px;border-bottom:1px solid #1f2533;vertical-align:middle}
+  tr:last-child td{border-bottom:0}
+  .app{display:flex;align-items:center;gap:10px}
+  .ico{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;font-size:12px;font-weight:700;color:#0b0e14}
+  select{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:7px;padding:5px 8px;font:inherit}
+  .tag{font-size:11px;padding:2px 7px;border-radius:6px;background:#26304a;color:#9fb4ff}
+  .tag.game{background:#3a1f2f;color:#ff9fc4}
+  .btn{all:unset;cursor:pointer;background:var(--accent);color:#0b0e14;padding:8px 14px;border-radius:8px;font-weight:600}
+  .btn.ghost{background:var(--panel2);color:var(--text)}
+  .toggle{width:36px;height:20px;border-radius:99px;background:var(--accent);position:relative;display:inline-block}
+  .toggle:after{content:"";position:absolute;right:3px;top:3px;width:14px;height:14px;border-radius:50%;background:#0b0e14}
+  .toggle.off{background:#2a3040}.toggle.off:after{right:auto;left:3px;background:var(--muted)}
+  .dl{padding:12px 0;border-bottom:1px solid #1f2533}
+  .dl:last-child{border-bottom:0}
+  .dl .meta{color:var(--muted);font-size:12px;margin-top:6px}
+  .legend{display:flex;gap:14px;color:var(--muted);font-size:12px}
+  .addbar{display:flex;gap:8px;margin-bottom:16px}
+  .addbar input{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--text);font:inherit}
+</style>
+</head>
+<body>
+<p class="note"><b>Arqon v1 – dastlabki maket.</b> Chap tomondagi menyudan 3 ekranni almashtirib ko'r. Bu faqat ko'rinish, hali ishlaydigan dastur emas, raqamlar o'ylab topilgan.</p>
+
+<div class="win">
+  <div class="titlebar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><strong>ARQON</strong><span>· Ikki ulanish birlashgan</span></div>
+  <div class="body">
+    <nav>
+      <button class="on" data-s="s1">▦&nbsp; Panel</button>
+      <button data-s="s2">☰&nbsp; Dasturlar</button>
+      <button data-s="s3">⬇&nbsp; Yuklashlar</button>
+      <button>⚙&nbsp; Sozlamalar</button>
+      <div class="sp"></div>
+      <div class="card" style="padding:10px 12px;font-size:12px">
+        <div class="row"><span>Tizim rejimi</span><span class="toggle"></span></div>
+        <div style="color:var(--muted);margin-top:4px">Barcha dasturlar uchun faol</div>
+      </div>
+    </nav>
+    <main>
+
+      <!-- 1. PANEL -->
+      <section class="screen on" id="s1">
+        <h2>Panel</h2>
+        <p class="sub">Ikkala ulanish bir vaqtda ishlayapti.</p>
+
+        <div class="grid g3" style="margin-bottom:14px">
+          <div class="card">
+            <h3>Umumiy tezlik</h3>
+            <div class="big">73 <span class="unit">Mbit/s</span></div>
+            <div class="bar" style="margin-top:10px"><i class="w" style="width:58%"></i><i class="p" style="width:42%"></i></div>
+            <div class="spark" id="spark"></div>
+          </div>
+          <div class="card">
+            <div class="row"><h3><span class="dotc" style="background:var(--wifi)"></span>Wi-Fi</h3><span class="pill">Faol</span></div>
+            <div class="big">42 <span class="unit">Mbit/s</span></div>
+            <div class="sub" style="margin:6px 0 0">Ping <b style="color:var(--text)">18 ms</b> · Jitter 2 ms · Yo'qotish 0%</div>
+          </div>
+          <div class="card">
+            <div class="row"><h3><span class="dotc" style="background:var(--phone)"></span>Telefon (USB)</h3><span class="pill">Faol</span></div>
+            <div class="big">31 <span class="unit">Mbit/s</span></div>
+            <div class="sub" style="margin:6px 0 0">Ping <b style="color:var(--text)">35 ms</b> · Jitter 6 ms · Yo'qotish 0.2%</div>
+          </div>
+        </div>
+
+        <div class="grid g2">
+          <div class="card">
+            <div class="row"><h3>O'yin himoyasi</h3><span class="pill">Yoqilgan</span></div>
+            <div class="big" style="font-size:22px">Ping 19 ms <span class="unit">· barqaror</span></div>
+            <p class="sub" style="margin:8px 0 0">Valorant o'yin trafigi <b style="color:var(--wifi)">Wi-Fi</b>'dan ketyapti. Yuklashlar o'yinga halaqit bermaslik uchun tezligi nazorat qilinyapti.</p>
+          </div>
+          <div class="card">
+            <h3>Hozir eng faol dasturlar</h3>
+            <table>
+              <tr><td><span class="app"><span class="ico" style="background:#4ade80">V</span>Valorant</span></td><td><span class="tag game">O'yin</span></td><td style="text-align:right">0.4 Mbit/s</td></tr>
+              <tr><td><span class="app"><span class="ico" style="background:#60a5fa">T</span>Telegram</span></td><td><div class="bar" style="width:80px"><i class="w" style="width:55%"></i><i class="p" style="width:45%"></i></div></td><td style="text-align:right">24 Mbit/s</td></tr>
+              <tr><td><span class="app"><span class="ico" style="background:#fbbf24">C</span>Chrome</span></td><td><div class="bar" style="width:80px"><i class="w" style="width:60%"></i><i class="p" style="width:40%"></i></div></td><td style="text-align:right">31 Mbit/s</td></tr>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. DASTURLAR -->
+      <section class="screen" id="s2">
+        <div class="row" style="margin-bottom:4px"><h2>Dasturlar</h2><button class="btn ghost">+ Dastur qo'shish</button></div>
+        <p class="sub">Har bir dastur qaysi ulanishdan foydalanishini o'zing belgilaysan. "Avto" bo'lsa Arqon o'zi tanlaydi.</p>
+        <div class="card" style="padding:6px 8px">
+          <table>
+            <tr><th>Dastur</th><th>Tur</th><th>Ulanish</th><th>Tezlik chegarasi</th><th>Hozir</th></tr>
+            <tr><td><span class="app"><span class="ico" style="background:#4ade80">V</span>Valorant</span></td><td><span class="tag game">O'yin (avto aniqlandi)</span></td><td><select><option>Eng yaxshisi (ping bo'yicha)</option><option>Faqat Wi-Fi</option><option>Faqat Telefon</option></select></td><td><select><option>Cheksiz</option></select></td><td>Wi-Fi</td></tr>
+            <tr><td><span class="app"><span class="ico" style="background:#60a5fa">T</span>Telegram</span></td><td><span class="tag">Oddiy</span></td><td><select><option>Ikkalasi (birlashtir)</option><option>Avto</option></select></td><td><select><option>Cheksiz</option></select></td><td>Wi-Fi + Telefon</td></tr>
+            <tr><td><span class="app"><span class="ico" style="background:#fbbf24">C</span>Chrome</span></td><td><span class="tag">Oddiy</span></td><td><select><option>Ikkalasi (birlashtir)</option><option>Avto</option></select></td><td><select><option>Cheksiz</option></select></td><td>Wi-Fi + Telefon</td></tr>
+            <tr><td><span class="app"><span class="ico" style="background:#94a3b8">S</span>Steam</span></td><td><span class="tag">Yuklovchi</span></td><td><select><option>Faqat Telefon</option><option>Ikkalasi</option></select></td><td><select><option>O'yin vaqtida 10 Mbit/s</option></select></td><td>Telefon</td></tr>
+            <tr><td><span class="app"><span class="ico" style="background:#c084fc">W</span>Windows Update</span></td><td><span class="tag">Fon</span></td><td><select><option>Faqat Telefon</option></select></td><td><select><option>O'yin vaqtida to'xtat</option></select></td><td>Kutmoqda</td></tr>
+          </table>
+        </div>
+      </section>
+
+      <!-- 3. YUKLASHLAR -->
+      <section class="screen" id="s3">
+        <h2>Yuklashlar</h2>
+        <p class="sub">Link yoki torrent bering: fayl bo'laklarga bo'linib, ikkala ulanishdan bir vaqtda yuklanadi.</p>
+        <div class="addbar"><input placeholder="Link yoki magnet manzilini shu yerga qo'ying…"><button class="btn">Yuklash</button></div>
+        <div class="card">
+          <div class="legend" style="margin-bottom:6px"><span><span class="dotc" style="background:var(--wifi)"></span>Wi-Fi</span><span><span class="dotc" style="background:var(--phone)"></span>Telefon</span></div>
+
+          <div class="dl">
+            <div class="row"><b>Windows11_24H2.iso</b><span>68 Mbit/s · 4 daqiqa qoldi</span></div>
+            <div class="bar" style="margin-top:8px"><i class="w" style="width:34%"></i><i class="p" style="width:26%"></i><i style="width:40%;background:#232a3a"></i></div>
+            <div class="meta">3.1 GB / 5.2 GB (60%) · 16 oqim: Wi-Fi 9, Telefon 7</div>
+          </div>
+          <div class="dl">
+            <div class="row"><b>ubuntu-24.04.iso</b><span>torrent · 41 Mbit/s</span></div>
+            <div class="bar" style="margin-top:8px"><i class="w" style="width:20%"></i><i class="p" style="width:17%"></i><i style="width:63%;background:#232a3a"></i></div>
+            <div class="meta">1.0 GB / 2.7 GB (37%) · 38 hamkor (peer)</div>
+          </div>
+          <div class="dl">
+            <div class="row"><b>setup_game.exe</b><span>Tugadi ✓</span></div>
+            <div class="bar" style="margin-top:8px"><i class="w" style="width:55%"></i><i class="p" style="width:45%"></i></div>
+            <div class="meta">890 MB · o'rtacha 64 Mbit/s</div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('nav button[data-s]').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('nav button').forEach(function(x){x.classList.remove('on')});
+      document.querySelectorAll('.screen').forEach(function(x){x.classList.remove('on')});
+      b.classList.add('on');
+      document.getElementById(b.dataset.s).classList.add('on');
+    });
+  });
+  var sp = document.getElementById('spark');
+  [30,42,38,55,60,48,66,72,70,64,73,69,75,73].forEach(function(v){
+    var s = document.createElement('span'); s.style.height = v + '%'; sp.appendChild(s);
+  });
+</script>
+</body>
+</html>
