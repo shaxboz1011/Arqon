@@ -158,4 +158,88 @@ public sealed class DownloadJobTests : IDisposable
             [Loopback("a", "127.0.0.2")], null, default));
         Assert.False(File.Exists(Dest()));
     }
+
+    [Fact]
+    public async Task A_single_link_survives_a_short_network_blip()
+    {
+        using var server = new TestRangeServer(4 * MiB);
+        // The probe (HEAD, seen == 0) works; the first 12 ranged GETs fail, then the network is back.
+        server.FailFor = (_, seen) => seen is >= 1 and <= 12;
+
+        await new DownloadJob().RunAsync(new DownloadRequest(server.Url, Dest(), 512 * 1024),
+            [Loopback("a", "127.0.0.2")], null, default);
+
+        Assert.Equal(Hash(server.Payload), HashFile(Dest()));
+    }
+
+    [Fact]
+    public async Task Falls_back_to_one_stream_when_ranged_requests_are_ignored()
+    {
+        using var server = new TestRangeServer(3 * MiB) { IgnoreRangeOnGet = true };
+
+        await new DownloadJob().RunAsync(new DownloadRequest(server.Url, Dest(), 512 * 1024),
+            [Loopback("a", "127.0.0.2"), Loopback("b", "127.0.0.3")], null, default);
+
+        Assert.Equal(Hash(server.Payload), HashFile(Dest()));
+        Assert.False(File.Exists(Dest() + ".arqpart"));
+    }
+
+    [Fact]
+    public async Task Refuses_a_file_whose_size_differs_between_probe_and_download()
+    {
+        using var server = new TestRangeServer(2 * MiB) { HeadLengthOverride = 1 * MiB };
+
+        await Assert.ThrowsAnyAsync<IOException>(() => new DownloadJob().RunAsync(
+            new DownloadRequest(server.Url, Dest(), 512 * 1024), [Loopback("a", "127.0.0.2")], null, default));
+        Assert.False(File.Exists(Dest()));
+    }
+
+    [Fact]
+    public async Task Refuses_a_partial_response_for_a_different_range_than_requested()
+    {
+        using var server = new TestRangeServer(2 * MiB) { WrongRangeStart = true };
+
+        await Assert.ThrowsAnyAsync<IOException>(() => new DownloadJob().RunAsync(
+            new DownloadRequest(server.Url, Dest(), 512 * 1024), [Loopback("a", "127.0.0.2")], null, default));
+        Assert.False(File.Exists(Dest()));
+    }
+
+    [Fact]
+    public async Task Does_not_resume_when_the_remote_file_changed()
+    {
+        using var server = new TestRangeServer(16 * MiB) { DelayMs = 200, ETag = "\"v1\"" };
+        var links = new[] { Loopback("a", "127.0.0.2"), Loopback("b", "127.0.0.3") };
+        var request = new DownloadRequest(server.Url, Dest(), 512 * 1024);
+
+        using var cts = new CancellationTokenSource();
+        var progress = new SyncProgress<DownloadProgress>(p =>
+        {
+            if (p.Done >= p.Total * 0.3) cts.Cancel();
+        });
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => new DownloadJob().RunAsync(request, links, progress, cts.Token));
+
+        server.ETag = "\"v2\"";
+        server.ResetCounters();
+        await new DownloadJob().RunAsync(request, links, null, default);
+
+        Assert.Equal(Hash(server.Payload), HashFile(Dest()));
+        Assert.True(server.BytesServed >= server.Payload.Length,
+            $"resumed old chunks of a changed file: only {server.BytesServed} bytes requested");
+    }
+
+    [Fact]
+    public async Task A_failed_final_rename_keeps_the_downloaded_data()
+    {
+        using var server = new TestRangeServer(2 * MiB) { SupportsRanges = false };
+        using var held = new FileStream(Dest(), FileMode.Create, FileAccess.ReadWrite, FileShare.None);
+
+        // Windows reports a locked destination as UnauthorizedAccessException or IOException depending on the lock.
+        var error = await Assert.ThrowsAnyAsync<Exception>(() => new DownloadJob().RunAsync(
+            new DownloadRequest(server.Url, Dest(), 512 * 1024), [Loopback("a", "127.0.0.2")], null, default));
+        Assert.DoesNotContain("every link", error.Message);
+
+        Assert.True(File.Exists(Dest() + ".arqpart"), "the fully downloaded data was thrown away");
+        Assert.Equal(server.Payload.Length, server.BytesServed);
+    }
 }

@@ -2,7 +2,8 @@ using System.Net.Http.Headers;
 
 namespace Arqon.Core.Download;
 
-public sealed record RemoteFileInfo(long? Length, bool AcceptsRanges, string? FileName);
+/// <summary>Validator is the ETag, or Last-Modified when there is none; used to detect that the file changed between runs.</summary>
+public sealed record RemoteFileInfo(long? Length, bool AcceptsRanges, string? FileName, string? Validator = null);
 
 public static class RemoteFileProbe
 {
@@ -17,7 +18,8 @@ public static class RemoteFileProbe
                 return new RemoteFileInfo(
                     resp.Content.Headers.ContentLength,
                     resp.Headers.AcceptRanges.Contains("bytes"),
-                    FileNameFrom(resp.Content.Headers.ContentDisposition, url));
+                    FileNameFrom(resp.Content.Headers.ContentDisposition, url),
+                    ValidatorFrom(resp));
             }
         }
         catch (HttpRequestException)
@@ -32,9 +34,12 @@ public static class RemoteFileProbe
 
         var name = FileNameFrom(r.Content.Headers.ContentDisposition, url);
         if (r.StatusCode == System.Net.HttpStatusCode.PartialContent)
-            return new RemoteFileInfo(r.Content.Headers.ContentRange?.Length, true, name);
-        return new RemoteFileInfo(r.Content.Headers.ContentLength, false, name);
+            return new RemoteFileInfo(r.Content.Headers.ContentRange?.Length, true, name, ValidatorFrom(r));
+        return new RemoteFileInfo(r.Content.Headers.ContentLength, false, name, ValidatorFrom(r));
     }
+
+    private static string? ValidatorFrom(HttpResponseMessage resp) =>
+        resp.Headers.ETag?.Tag ?? resp.Content.Headers.LastModified?.ToString("R");
 
     private static string? FileNameFrom(ContentDispositionHeaderValue? disposition, Uri url)
     {

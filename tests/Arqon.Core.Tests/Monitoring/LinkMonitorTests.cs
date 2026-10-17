@@ -105,6 +105,70 @@ public class LinkMonitorTests
         Assert.Empty(monitor.Latest);
     }
 
+    private sealed class ThrowingCounters : ICounterReader
+    {
+        public bool Throw;
+        public long Rx;
+        public (long Rx, long Tx) Read(LinkInfo link) =>
+            Throw ? throw new System.Net.NetworkInformation.NetworkInformationException() : (Rx, 0);
+    }
+
+    [Fact]
+    public async Task A_failing_counter_read_does_not_break_the_sample_or_cause_a_speed_spike()
+    {
+        var clock = new FakeClock();
+        var counters = new ThrowingCounters { Rx = 1_000_000 };
+        var monitor = new LinkMonitor(new FakeProvider(Wifi), new ScriptedProbe(20), counters, TimeSpan.FromSeconds(1), clock.Get);
+
+        await monitor.TickAsync(CancellationToken.None);
+        counters.Throw = true;
+        clock.Now = clock.Now.AddSeconds(1);
+        await monitor.TickAsync(CancellationToken.None);
+        Assert.Equal(20, monitor.Latest["wifi"].LatencyMs, 3);
+
+        counters.Throw = false;
+        counters.Rx = 3_000_000;
+        clock.Now = clock.Now.AddSeconds(1);
+        await monitor.TickAsync(CancellationToken.None);
+
+        // 2 MB over the 2 s since the last good reading
+        Assert.Equal(1_000_000, monitor.Latest["wifi"].DownBps, 1);
+    }
+
+    [Fact]
+    public async Task A_throwing_subscriber_does_not_stop_publishing()
+    {
+        var clock = new FakeClock();
+        var monitor = new LinkMonitor(new FakeProvider(Wifi), new ScriptedProbe(20), new FakeCounters(), TimeSpan.FromSeconds(1), clock.Get);
+        var good = 0;
+        monitor.SampleReady += _ => throw new InvalidOperationException("bad subscriber");
+        monitor.SampleReady += _ => good++;
+
+        await monitor.TickAsync(CancellationToken.None);
+
+        Assert.Equal(1, good);
+    }
+
+    private sealed class FlakyProvider(LinkInfo link) : ILinkProvider
+    {
+        private int _calls;
+        public IReadOnlyList<LinkInfo> GetLinks() =>
+            Interlocked.Increment(ref _calls) == 1 ? throw new InvalidOperationException("adapter list failed") : [link];
+    }
+
+    [Fact]
+    public async Task Background_loop_survives_an_exception_and_keeps_sampling()
+    {
+        var monitor = new LinkMonitor(new FlakyProvider(Wifi), new ScriptedProbe(20), new FakeCounters(), TimeSpan.FromMilliseconds(20));
+        monitor.Start();
+        try
+        {
+            for (var i = 0; i < 100 && !monitor.Latest.ContainsKey("wifi"); i++) await Task.Delay(20);
+            Assert.True(monitor.Latest.ContainsKey("wifi"), "monitor stopped after the first exception");
+        }
+        finally { monitor.Stop(); }
+    }
+
     private sealed class MutableProvider(List<LinkInfo> links) : ILinkProvider
     {
         public IReadOnlyList<LinkInfo> GetLinks() => links.ToList();

@@ -99,8 +99,13 @@ public sealed class DownloadItemViewModel : ViewModelBase
         }
     }
 
+    private bool _running;
+
     public void Start()
     {
+        // Guards double-clicks: two jobs on one file would fight over it.
+        if (_running) return;
+        _running = true;
         _discard = false;
         _ = RunAsync();
     }
@@ -129,6 +134,10 @@ public sealed class DownloadItemViewModel : ViewModelBase
         {
             _error = ex.InnerException?.Message ?? ex.Message;
             SetState(DownloadState.Failed);
+        }
+        finally
+        {
+            _running = false;
         }
         _owner.Persist();
     }
@@ -291,7 +300,7 @@ public sealed class DownloadsViewModel : ViewModelBase
         Directory.CreateDirectory(Folder);
         var name = Path.GetFileName(Uri.UnescapeDataString(uri.LocalPath));
         if (string.IsNullOrWhiteSpace(name)) name = "download";
-        var path = UniquePath(Folder, name);
+        var path = UniquePath(Folder, name, Items.Select(i => i.Record.Path));
 
         var item = new DownloadItemViewModel(this, new DownloadRecord(uri.ToString(), path, Path.GetFileName(path), false));
         Items.Insert(0, item);
@@ -301,12 +310,14 @@ public sealed class DownloadsViewModel : ViewModelBase
         item.Start();
     }
 
-    private static string UniquePath(string folder, string name)
+    /// <summary>A path no file on disk and no download already in the list uses (the part file only appears after the probe).</summary>
+    private static string UniquePath(string folder, string name, IEnumerable<string> reserved)
     {
+        var taken = new HashSet<string>(reserved, StringComparer.OrdinalIgnoreCase);
         var path = Path.Combine(folder, name);
         var stem = Path.GetFileNameWithoutExtension(name);
         var ext = Path.GetExtension(name);
-        for (var i = 1; File.Exists(path) || File.Exists(path + ".arqpart"); i++)
+        for (var i = 1; File.Exists(path) || File.Exists(path + ".arqpart") || taken.Contains(path); i++)
             path = Path.Combine(folder, $"{stem} ({i}){ext}");
         return path;
     }

@@ -114,6 +114,34 @@ public class SteeringCoordinatorTests
     }
 
     [Fact]
+    public void A_flow_pinned_to_a_link_that_disappeared_is_given_a_new_link()
+    {
+        var phonePresent = true;
+        var (c, _, _) = Make(() => phonePresent ? [S("phone", 10), S("wifi", 50)] : [S("wifi", 50)],
+            new AppRule("game.exe", AppKind.Game, LinkChoice.Auto, null, null));
+
+        Assert.Equal("phone", c.PickLink(Flow(1, 17), "game.exe"));
+        phonePresent = false;
+
+        Assert.Equal("wifi", c.PickLink(Flow(1, 17), "game.exe"));
+    }
+
+    [Fact]
+    public async Task Concurrent_decisions_for_the_same_new_flow_agree_on_one_link()
+    {
+        var (c, _, _) = Make(() => [S("wifi", 20, 5_000_000), S("phone", 20, 5_000_000)]);
+        var results = new System.Collections.Concurrent.ConcurrentDictionary<int, System.Collections.Concurrent.ConcurrentBag<string>>();
+
+        await Task.WhenAll(Enumerable.Range(0, 8).Select(_ => Task.Run(() =>
+        {
+            for (var i = 0; i < 300; i++)
+                results.GetOrAdd(i, _ => new()).Add(c.PickLink(Flow(i), "chrome.exe")!);
+        })));
+
+        Assert.All(results.Values, bag => Assert.Single(bag.Distinct()));
+    }
+
+    [Fact]
     public void A_fault_stops_the_steerer_and_is_reported()
     {
         var (c, _, steerer) = Make(() => []);

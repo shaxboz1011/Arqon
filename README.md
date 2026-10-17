@@ -29,7 +29,7 @@ Requires Windows 10/11 and the .NET 10 SDK.
 ```powershell
 dotnet run --project src/Arqon.App            # real adapters
 dotnet run --project src/Arqon.App -- --demo  # two pretend links, no phone needed
-dotnet test                                    # 59 tests
+dotnet test                                    # 76 tests
 ```
 
 ## Layout
@@ -47,3 +47,4 @@ dotnet test                                    # 59 tests
 ## Licence
 
 MIT
+

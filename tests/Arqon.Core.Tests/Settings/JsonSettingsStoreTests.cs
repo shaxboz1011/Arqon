@@ -43,6 +43,21 @@ public sealed class JsonSettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public void Incomplete_json_is_filled_with_defaults_instead_of_nulls()
+    {
+        Directory.CreateDirectory(_dir);
+        var path = Path.Combine(_dir, "settings.json");
+        File.WriteAllText(path, """{ "GameProtection": false, "Rules": null }""");
+
+        var s = new JsonSettingsStore(path).Load();
+
+        Assert.False(s.GameProtection);
+        Assert.NotNull(s.Rules);
+        Assert.Empty(s.Rules);
+        Assert.Equal("uz", s.Language);
+    }
+
+    [Fact]
     public void Corrupt_file_gives_defaults_and_does_not_throw()
     {
         Directory.CreateDirectory(_dir);

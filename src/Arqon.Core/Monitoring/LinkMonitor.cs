@@ -65,7 +65,18 @@ public sealed class LinkMonitor
         {
             var sample = BuildSample(links[i], rtts[i]);
             _latest[sample.LinkId] = sample;
-            SampleReady?.Invoke(sample);
+            Publish(sample);
+        }
+    }
+
+    /// <summary>One misbehaving subscriber must not stop the monitor or starve the other subscribers.</summary>
+    private void Publish(LinkSample sample)
+    {
+        if (SampleReady is null) return;
+        foreach (var handler in SampleReady.GetInvocationList().Cast<Action<LinkSample>>())
+        {
+            try { handler(sample); }
+            catch (Exception) { /* subscriber's problem */ }
         }
     }
 
@@ -73,7 +84,11 @@ public sealed class LinkMonitor
     {
         var st = _states.GetOrAdd(link.Id, _ => new State());
         var now = _clock();
-        var (rx, tx) = _counters.Read(link);
+
+        // A link can vanish between listing and reading; then we simply have no throughput for this tick.
+        (long Rx, long Tx)? reading = null;
+        try { reading = _counters.Read(link); }
+        catch (Exception ex) when (ex is not OperationCanceledException) { }
 
         lock (st)
         {
@@ -92,16 +107,19 @@ public sealed class LinkMonitor
             }
 
             double down = 0, up = 0;
-            if (st.LastCounters is { } last)
+            if (reading is { } r)
             {
-                var seconds = (now - last.At).TotalSeconds;
-                if (seconds > 0)
+                if (st.LastCounters is { } last)
                 {
-                    down = Math.Max(0, rx - last.Rx) / seconds;
-                    up = Math.Max(0, tx - last.Tx) / seconds;
+                    var seconds = (now - last.At).TotalSeconds;
+                    if (seconds > 0)
+                    {
+                        down = Math.Max(0, r.Rx - last.Rx) / seconds;
+                        up = Math.Max(0, r.Tx - last.Tx) / seconds;
+                    }
                 }
+                st.LastCounters = (r.Rx, r.Tx, now);
             }
-            st.LastCounters = (rx, tx, now);
 
             var sample = new LinkSample(link.Id, now, latency, jitter, loss, down, up);
             st.History.Add(sample);
@@ -120,7 +138,14 @@ public sealed class LinkMonitor
             using var timer = new PeriodicTimer(_interval);
             try
             {
-                do { await TickAsync(token).ConfigureAwait(false); }
+                do
+                {
+                    try { await TickAsync(token).ConfigureAwait(false); }
+                    catch (Exception ex) when (ex is not OperationCanceledException)
+                    {
+                        // e.g. the adapter list failed once; keep monitoring, the next tick usually works
+                    }
+                }
                 while (await timer.WaitForNextTickAsync(token).ConfigureAwait(false));
             }
             catch (OperationCanceledException) { }

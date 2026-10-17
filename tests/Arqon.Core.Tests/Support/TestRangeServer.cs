@@ -15,6 +15,17 @@ public sealed class TestRangeServer : IDisposable
     public bool SupportsRanges { get; set; } = true;
     public int DelayMs { get; set; }
 
+    /// <summary>Advertise Accept-Ranges on HEAD but answer every ranged GET with the whole file (status 200).</summary>
+    public bool IgnoreRangeOnGet { get; set; }
+
+    /// <summary>Make HEAD report this Content-Length while GET keeps serving the real size.</summary>
+    public long? HeadLengthOverride { get; set; }
+
+    /// <summary>Send a Content-Range whose start is off by one.</summary>
+    public bool WrongRangeStart { get; set; }
+
+    public string? ETag { get; set; }
+
     /// <summary>Return true to answer 503 for this client address; gets the number of GET requests seen so far.</summary>
     public Func<IPAddress, int, bool>? FailFor { get; set; }
 
@@ -67,23 +78,26 @@ public sealed class TestRangeServer : IDisposable
 
             if (DelayMs > 0 && !isHead) await Task.Delay(DelayMs);
 
+            if (ETag is not null) resp.AddHeader("ETag", ETag);
+
             long start = 0, end = Payload.Length - 1;
             var range = c.Request.Headers["Range"];
-            if (SupportsRanges)
+            if (SupportsRanges || IgnoreRangeOnGet)
             {
                 resp.AddHeader("Accept-Ranges", "bytes");
-                if (range is not null && range.StartsWith("bytes="))
+                if (SupportsRanges && !IgnoreRangeOnGet && range is not null && range.StartsWith("bytes="))
                 {
                     var parts = range["bytes=".Length..].Split('-');
                     start = long.Parse(parts[0]);
                     end = Math.Min(long.Parse(parts[1]), Payload.Length - 1);
                     resp.StatusCode = 206;
-                    resp.AddHeader("Content-Range", $"bytes {start}-{end}/{Payload.Length}");
+                    var shown = WrongRangeStart ? start + 1 : start;
+                    resp.AddHeader("Content-Range", $"bytes {shown}-{end}/{Payload.Length}");
                 }
             }
 
             var count = (int)(end - start + 1);
-            resp.ContentLength64 = count;
+            resp.ContentLength64 = isHead && HeadLengthOverride is { } overrideLength ? overrideLength : count;
             if (isHead)
             {
                 resp.Close();

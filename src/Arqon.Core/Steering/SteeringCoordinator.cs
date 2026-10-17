@@ -47,26 +47,28 @@ public sealed class SteeringCoordinator
     /// <summary>Link id for this flow, or null to leave it to normal Windows routing (no measurements yet).</summary>
     public string? PickLink(FlowKey key, string exeName)
     {
-        if (_table.TryGet(key, out var existing)) return existing;
-
         var samples = _samples();
-        if (samples.Count == 0) return null;
-
         var rule = _rules.Resolve(exeName);
-        string? link;
+
+        // One lock around lookup + decision + store: two packets of the same new flow must get the same link.
         lock (_gate)
         {
-            link = rule switch
+            if (_table.TryGet(key, out var existing) && (samples.Count == 0 || samples.Any(s => s.LinkId == existing)))
+                return existing;
+            if (samples.Count == 0) return null;
+
+            // A new flow, or one whose link has disappeared: decide again.
+            var link = rule switch
             {
                 { Choice: LinkChoice.Only } when rule.LinkId is { } id && samples.Any(s => s.LinkId == id) => id,
                 { Choice: LinkChoice.Only } => BestForGame(samples),
                 { Kind: AppKind.Game } => BestForGame(samples),
                 _ => WeightedRoundRobin(samples),
             };
-        }
 
-        if (link is not null) _table.Set(key, link);
-        return link;
+            if (link is not null) _table.Set(key, link);
+            return link;
+        }
     }
 
     private string? BestForGame(IReadOnlyList<LinkSample> samples) =>

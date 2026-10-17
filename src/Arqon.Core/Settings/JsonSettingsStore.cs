@@ -25,7 +25,15 @@ public sealed class JsonSettingsStore(string path) : ISettingsStore
         try
         {
             if (!File.Exists(path)) return ArqonSettings.Default();
-            return JsonSerializer.Deserialize<ArqonSettings>(File.ReadAllText(path), Options) ?? ArqonSettings.Default();
+            var loaded = JsonSerializer.Deserialize<ArqonSettings>(File.ReadAllText(path), Options);
+            if (loaded is null) return ArqonSettings.Default();
+
+            // Older or hand-edited files can omit members; fill them so the rest of the app never sees null.
+            return loaded with
+            {
+                Rules = (loaded.Rules ?? []).Where(r => r is not null && !string.IsNullOrWhiteSpace(r.ExeName)).ToList(),
+                Language = string.IsNullOrWhiteSpace(loaded.Language) ? "uz" : loaded.Language,
+            };
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
         {
