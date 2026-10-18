@@ -73,8 +73,18 @@
     <sys:String x:Key="S.Kind.Downloader">Downloader</sys:String>
     <sys:String x:Key="S.Kind.Background">Background</sys:String>
 
-    <sys:String x:Key="S.Dl.Sub">Paste a link: the file is split into pieces and downloaded over all connections at once.</sys:String>
-    <sys:String x:Key="S.Dl.Placeholder">https://example.com/file.zip</sys:String>
+    <sys:String x:Key="S.Dl.Sub">Paste a link or magnet link: the file is split into pieces and downloaded over all connections at once. A .torrent file works too.</sys:String>
+    <sys:String x:Key="S.Dl.Placeholder">https://example.com/file.zip or magnet:?xt=…</sys:String>
+    <sys:String x:Key="S.Dl.AddTorrent">Torrent file</sys:String>
+    <sys:String x:Key="S.Dl.FolderAuto">(auto: Downloads folder)</sys:String>
+    <sys:String x:Key="S.Dl.FolderReset">Back to the automatic folder (Windows Downloads)</sys:String>
+    <sys:String x:Key="S.Dl.BadMagnet">That magnet link is not valid.</sys:String>
+    <sys:String x:Key="S.Dl.BadTorrent">That is not a valid .torrent file.</sys:String>
+    <sys:String x:Key="S.Dl.AlreadyAdded">That torrent is already in the list.</sys:String>
+    <sys:String x:Key="S.Dl.TorrentDownloadFailed">Could not download the .torrent file: {0}</sys:String>
+    <sys:String x:Key="S.Dl.State.Metadata">Fetching torrent info</sys:String>
+    <sys:String x:Key="S.Dl.State.Checking">Checking files</sys:String>
+    <sys:String x:Key="S.Dl.Peers">{0} peers · {1} seeds</sys:String>
     <sys:String x:Key="S.Dl.Paste">Paste</sys:String>
     <sys:String x:Key="S.Dl.Download">Download</sys:String>
     <sys:String x:Key="S.Dl.SaveTo">Save to:</sys:String>

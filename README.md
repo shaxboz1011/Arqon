@@ -24,7 +24,7 @@ Arqon ("rope" in Uzbek) uses Wi-Fi, Ethernet and a USB-tethered phone at the sam
 | Speed unit switch: Mbit/s or MB/s, everywhere (meter, Dashboard, charts, Downloads, app speed caps) | Done |
 | Dashboard, Apps, Downloads, Usage, Settings UI (dark theme, live charts, Uzbek/English) | Done |
 | **System mode** (speed up Telegram, Chrome, every app) | **Implemented and unit-tested; first test with Wi-Fi plus a USB phone: 40 parallel downloads finished in 5.3 s instead of 11.3 s.** Not yet tested with a game or over a long session. Needs the WinDivert driver and administrator rights. See [docs/steering.md](docs/steering.md) |
-| Torrents / magnet links | Planned |
+| **Torrents and magnet links**: paste a magnet link, a `.torrent` link or file path, or pick a `.torrent` file. Peer connections are spread over every link (Wi-Fi, phone) one by one, no system mode needed; they join the download queue; downloads go to the folder you choose, by default the Downloads folder of Windows | Done (real Debian torrent over Wi-Fi + phone: both adapters carried data; see [docs/torrents.md](docs/torrents.md)) |
 | Optional relay server (single-connection bonding, duplicated game packets) | Planned |
 | Installer and code signing | Planned |
 
@@ -37,7 +37,7 @@ Requires Windows 10/11 and the .NET 10 SDK.
 ```powershell
 dotnet run --project src/Arqon.App            # real adapters
 dotnet run --project src/Arqon.App -- --demo  # two pretend links, no phone needed
-dotnet test                                    # 302 tests
+dotnet test                                    # 349 tests
 ```
 
 System mode additionally needs the packet driver, see [docs/steering.md](docs/steering.md):
@@ -61,4 +61,4 @@ powershell -ExecutionPolicy Bypass -File tools\get-windivert.ps1 -Destination sr
 
 ## Licence
 
-MIT. System mode uses WinDivert (LGPLv3), which is downloaded separately and not part of this repository.
+MIT. System mode uses WinDivert (LGPLv3), which is downloaded separately and not part of this repository. Torrents use [MonoTorrent](https://github.com/alanmcgovern/monotorrent) (MIT), pulled in through NuGet.

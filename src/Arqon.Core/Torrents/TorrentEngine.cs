@@ -15,7 +15,8 @@ public sealed record TorrentEngineOptions(
     bool EnableDht = true,
     LinkRoundRobin? Links = null,
     bool AllowPortForwarding = false,
-    bool AllowLocalPeerDiscovery = true);
+    bool AllowLocalPeerDiscovery = true,
+    IPAddress? ListenAddress = null);
 
 public enum TorrentPhase { Metadata, Checking, Downloading, Complete, Stopped, Error }
 
@@ -45,8 +46,8 @@ public sealed class TorrentEngine : IDisposable
             AllowLocalPeerDiscovery = options.AllowLocalPeerDiscovery,
             AutoSaveLoadFastResume = true,
             AutoSaveLoadMagnetLinkMetadata = true,
-            ListenEndPoints = new Dictionary<string, IPEndPoint> { ["ipv4"] = new(IPAddress.Any, options.ListenPort) },
-            DhtEndPoint = options.EnableDht ? new IPEndPoint(IPAddress.Any, options.ListenPort) : null!,
+            ListenEndPoints = new Dictionary<string, IPEndPoint> { ["ipv4"] = new(options.ListenAddress ?? IPAddress.Any, options.ListenPort) },
+            DhtEndPoint = options.EnableDht ? new IPEndPoint(options.ListenAddress ?? IPAddress.Any, options.ListenPort) : null!,
         }.ToSettings();
 
         var factories = Factories.Default;

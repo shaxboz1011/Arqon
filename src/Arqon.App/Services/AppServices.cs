@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.IO;
 using System.Windows.Media;
 using Arqon.App.Infrastructure;
 using Arqon.Core;
@@ -10,6 +11,7 @@ using Arqon.Core.Monitoring;
 using Arqon.Core.Policy;
 using Arqon.Core.Settings;
 using Arqon.Core.Steering;
+using Arqon.Core.Torrents;
 using Arqon.Core.Usage;
 using Arqon.Core.Windows;
 
@@ -31,6 +33,9 @@ public sealed class AppServices : IDisposable
     private readonly Stopwatch _uptime = Stopwatch.StartNew();
     private Timer? _maintenance;
     private Timer? _gameTimer;
+    private readonly object _torrentGate = new();
+    private TorrentEngine? _torrents;
+    private LinkRoundRobin? _torrentLinks;
     private int _ticks;
 
     public bool Demo { get; }
@@ -46,6 +51,30 @@ public sealed class AppServices : IDisposable
     public GameWatcher Games { get; }
     public UsageTracker Usage { get; }
     public SteeringService Steering { get; }
+
+    /// <summary>
+    /// The torrent engine, created on first use: it opens a listening port, so a user who never adds a torrent never gets
+    /// a firewall question. Its peer connections are spread over the links (Wi-Fi, phone) one by one.
+    /// </summary>
+    public TorrentEngine Torrents
+    {
+        get
+        {
+            lock (_torrentGate)
+            {
+                _torrentLinks ??= new LinkRoundRobin(() => _linkCache.Get() ?? [], IsLinkAlive);
+                return _torrents ??= new TorrentEngine(new TorrentEngineOptions(
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Arqon", "torrent-cache"),
+                    Links: _torrentLinks));
+            }
+        }
+    }
+
+    /// <summary>How many peer connections each link got so far (empty until a torrent was used).</summary>
+    public IReadOnlyDictionary<string, int> TorrentConnectionsPerLink() => _torrentLinks?.Counts ?? new Dictionary<string, int>();
+
+    private bool IsLinkAlive(LinkInfo link) =>
+        !Monitor.Latest.TryGetValue(link.Id, out var sample) || sample.Loss < 1;
 
     /// <summary>Holds system mode (and unloads its driver) while a game runs, so anti-cheat never sees a network driver.</summary>
     public SafeGameMode SafeGame { get; }
@@ -178,6 +207,7 @@ public sealed class AppServices : IDisposable
     {
         _maintenance?.Dispose();
         _gameTimer?.Dispose();
+        lock (_torrentGate) _torrents?.Dispose();
         Monitor.SampleReady -= OnSample;
         Monitor.Stop();
         Steering.Stop();
@@ -225,12 +255,27 @@ public sealed class AppServices : IDisposable
             }
 
             if (Steering.State == SteeringState.Running && !Demo) Steering.Engine.CheckHealth();
+            LimitTorrentsForGames();
             if (++_ticks % SaveUsageEveryTicks == 0) Usage.Save();
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             // Upkeep must never take the app down; the next tick tries again.
         }
+    }
+
+    /// <summary>
+    /// A torrent opens many connections at once and can fill a link on its own. While the game protection holds a link back
+    /// for a game, the torrents are held to that same speed in total, so they cannot undo the protection.
+    /// </summary>
+    private void LimitTorrentsForGames()
+    {
+        TorrentEngine? engine;
+        lock (_torrentGate) engine = _torrents;
+        if (engine is null) return;
+
+        var caps = (_linkCache.Get() ?? []).Select(l => Throttle.Get(l.Id)).Where(c => c is not null).Select(c => c!.Value).ToList();
+        _ = engine.SetDownloadLimitAsync(caps.Count == 0 ? null : caps.Min());
     }
 
     private void OnGamesChanged()

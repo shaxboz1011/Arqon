@@ -73,8 +73,18 @@
     <sys:String x:Key="S.Kind.Downloader">Yuklovchi</sys:String>
     <sys:String x:Key="S.Kind.Background">Fon</sys:String>
 
-    <sys:String x:Key="S.Dl.Sub">Link bering: fayl bo'laklarga bo'linib, barcha ulanishlardan bir vaqtda yuklanadi.</sys:String>
-    <sys:String x:Key="S.Dl.Placeholder">https://misol.uz/fayl.zip</sys:String>
+    <sys:String x:Key="S.Dl.Sub">Link yoki magnet bering: fayl bo'laklarga bo'linib, barcha ulanishlardan bir vaqtda yuklanadi. .torrent fayl ham bo'ladi.</sys:String>
+    <sys:String x:Key="S.Dl.Placeholder">https://misol.uz/fayl.zip yoki magnet:?xt=…</sys:String>
+    <sys:String x:Key="S.Dl.AddTorrent">Torrent fayl</sys:String>
+    <sys:String x:Key="S.Dl.FolderAuto">(avto: Yuklashlar papkasi)</sys:String>
+    <sys:String x:Key="S.Dl.FolderReset">Avtomatik papkaga qaytarish (Windows Yuklashlar)</sys:String>
+    <sys:String x:Key="S.Dl.BadMagnet">Bu magnet link noto'g'ri.</sys:String>
+    <sys:String x:Key="S.Dl.BadTorrent">Bu .torrent fayl emas yoki buzilgan.</sys:String>
+    <sys:String x:Key="S.Dl.AlreadyAdded">Bu torrent ro'yxatda allaqachon bor.</sys:String>
+    <sys:String x:Key="S.Dl.TorrentDownloadFailed">.torrent faylni yuklab bo'lmadi: {0}</sys:String>
+    <sys:String x:Key="S.Dl.State.Metadata">Torrent ma'lumoti olinmoqda</sys:String>
+    <sys:String x:Key="S.Dl.State.Checking">Fayllar tekshirilmoqda</sys:String>
+    <sys:String x:Key="S.Dl.Peers">{0} ulanish · {1} seed</sys:String>
     <sys:String x:Key="S.Dl.Paste">Qo'yish</sys:String>
     <sys:String x:Key="S.Dl.Download">Yuklash</sys:String>
     <sys:String x:Key="S.Dl.SaveTo">Saqlash joyi:</sys:String>

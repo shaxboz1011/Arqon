@@ -1,12 +1,14 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Net.Http;
 using System.Windows;
 using System.Windows.Media;
 using Arqon.App.Controls;
 using Arqon.App.Infrastructure;
 using Arqon.App.Services;
 using Arqon.Core.Download;
+using Arqon.Core.Torrents;
 using Microsoft.Win32;
 
 namespace Arqon.App.ViewModels;
@@ -22,16 +24,22 @@ public sealed class DownloadItemViewModel : ViewModelBase
 
     private DownloadState _state = DownloadState.Paused;
     private long _done, _total;
-    private double _speed;
+    private double _speed, _upSpeed;
     private string _error = "";
     private IReadOnlyList<BarPart> _parts = [];
     private string _split = "";
+    private TorrentHandle? _torrent;
+    private TorrentPhase _phase = TorrentPhase.Stopped;
 
     public DownloadItemViewModel(DownloadsViewModel owner, DownloadRecord record)
     {
         _owner = owner;
         Record = record;
-        if (record.Completed && File.Exists(record.Path))
+        if (record.Kind == DownloadKind.Torrent)
+        {
+            if (record.Completed) _state = DownloadState.Done;
+        }
+        else if (record.Completed && File.Exists(record.Path))
         {
             _state = DownloadState.Done;
             _done = _total = new FileInfo(record.Path).Length;
@@ -44,17 +52,27 @@ public sealed class DownloadItemViewModel : ViewModelBase
     }
 
     /// <summary>Fixed-value item for the demo data set.</summary>
-    public DownloadItemViewModel(DownloadsViewModel owner, string name, DownloadState state, long done, long total, long wifi, long phone, double speed)
-        : this(owner, new DownloadRecord("https://example.com/" + name, name, name, state == DownloadState.Done))
+    public DownloadItemViewModel(DownloadsViewModel owner, string name, DownloadState state, long done, long total, long wifi, long phone, double speed,
+        bool torrent = false)
+        : this(owner, torrent
+            ? new DownloadRecord("magnet:?xt=urn:btih:" + new string('a', 40), @"C:\Users\me\Downloads", name, state == DownloadState.Done, DownloadKind.Torrent)
+            : new DownloadRecord("https://example.com/" + name, name, name, state == DownloadState.Done))
     {
         _state = state;
         _done = done;
         _total = total;
         _speed = speed;
         ApplyParts(new Dictionary<string, long> { ["wifi"] = wifi, ["phone"] = phone });
+        if (torrent)
+        {
+            _upSpeed = speed / 12;
+            _phase = TorrentPhase.Downloading;
+            _split = Loc.Format("S.Dl.Peers", 31, 9) + "  ·  " + _owner.NameFor("wifi") + " 17  ·  " + _owner.NameFor("phone") + " 14";
+        }
     }
 
-    public DownloadRecord Record { get; }
+    public DownloadRecord Record { get; private set; }
+    public bool IsTorrent => Record.Kind == DownloadKind.Torrent;
     public RelayCommand PauseCommand { get; }
     public RelayCommand ResumeCommand { get; }
     public RelayCommand StartNowCommand { get; }
@@ -82,6 +100,8 @@ public sealed class DownloadItemViewModel : ViewModelBase
 
     public string StateText => _state switch
     {
+        DownloadState.Downloading when IsTorrent && _phase == TorrentPhase.Metadata => Loc.Get("S.Dl.State.Metadata"),
+        DownloadState.Downloading when IsTorrent && _phase == TorrentPhase.Checking => Loc.Get("S.Dl.State.Checking"),
         DownloadState.Downloading => Loc.Get("S.Dl.State.Downloading"),
         DownloadState.Queued => Loc.Format("S.Dl.State.Queued", Math.Max(1, _owner.QueuePosition(this))),
         DownloadState.Paused => Loc.Get("S.Dl.State.Paused"),
@@ -91,9 +111,11 @@ public sealed class DownloadItemViewModel : ViewModelBase
 
     public string SizeText => _total > 0
         ? $"{Units.Size(_done)} / {Units.Size(_total)}  ({Percent:0}%)"
-        : Units.Size(_done);
+        : IsTorrent && _done == 0 ? "" : Units.Size(_done);
 
-    public string SpeedText => IsDownloading ? $"{Units.Speed(_speed)} {Units.SpeedLabel}" : "";
+    public string SpeedText => !IsDownloading ? ""
+        : IsTorrent ? $"{Units.Speed(_speed)} {Units.SpeedLabel}   ↑ {Units.Speed(_upSpeed)}"
+        : $"{Units.Speed(_speed)} {Units.SpeedLabel}";
 
     public string EtaText
     {
@@ -126,7 +148,97 @@ public sealed class DownloadItemViewModel : ViewModelBase
         if (IsQueued) Raise(nameof(StateText));
     }
 
-    private async Task RunAsync()
+    private Task RunAsync() => IsTorrent ? RunTorrentAsync() : RunHttpAsync();
+
+    private async Task RunTorrentAsync()
+    {
+        SetState(DownloadState.Downloading);
+        _error = "";
+        _phase = TorrentPhase.Metadata;
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+        try
+        {
+            var engine = _owner.TorrentEngine();
+            _torrent = Record.Url.StartsWith("magnet:", StringComparison.OrdinalIgnoreCase)
+                ? await engine.AddMagnetAsync(Record.Url, Record.Path)
+                : await engine.AddFileAsync(Record.Url, Record.Path);
+            await _torrent.StartAsync();
+
+            while (true)
+            {
+                var snapshot = _torrent.Snapshot();
+                ApplyTorrent(snapshot);
+                if (snapshot.Phase == TorrentPhase.Complete) break;
+                if (snapshot.Phase == TorrentPhase.Error) throw new IOException(snapshot.Error ?? "torrent error");
+                await Task.Delay(500, token);
+            }
+
+            await _torrent.StopAsync();   // finished: Arqon does not stay on to seed
+            _speed = _upSpeed = 0;
+            SetState(DownloadState.Done);
+        }
+        catch (OperationCanceledException)
+        {
+            await StopTorrentQuietly();
+            if (_discard)
+            {
+                await DropTorrentAsync(deleteData: true);
+                _owner.Remove(this);
+            }
+            else SetState(DownloadState.Paused);
+        }
+        catch (Exception ex)
+        {
+            await StopTorrentQuietly();
+            _error = ex.InnerException?.Message ?? ex.Message;
+            SetState(DownloadState.Failed);
+        }
+        finally
+        {
+            _running = false;
+        }
+        _owner.Persist();
+        _owner.OnEnded(this);
+    }
+
+    private async Task StopTorrentQuietly()
+    {
+        try { if (_torrent is not null) await _torrent.StopAsync(); }
+        catch (Exception ex) when (ex is not OutOfMemoryException) { /* it is being stopped anyway */ }
+    }
+
+    /// <summary>Takes the torrent out of the engine. Only a torrent that was started in this session is known to the engine.</summary>
+    public async Task DropTorrentAsync(bool deleteData)
+    {
+        if (_torrent is null) return;
+        try { await _torrent.RemoveAsync(deleteData); }
+        catch (Exception ex) when (ex is not OutOfMemoryException) { /* nothing more to clean up */ }
+        _torrent = null;
+    }
+
+    private void ApplyTorrent(TorrentSnapshot s)
+    {
+        _phase = s.Phase;
+        _done = s.Done;
+        _total = s.Size;
+        _speed = s.DownBps;
+        _upSpeed = s.UpBps;
+        if (s.Name.Length > 0 && s.Name != Record.Name)
+        {
+            Record = Record with { Name = s.Name };   // a magnet link only learns its name once the metadata arrives
+            _owner.Persist();
+        }
+
+        var perLink = _owner.TorrentConnectionsPerLink();
+        _parts = perLink.Select(kv => new BarPart(_owner.ColorFor(kv.Key), kv.Value)).ToList();
+        var connections = Loc.Format("S.Dl.Peers", s.Peers, s.Seeds);
+        _split = perLink.Count == 0 ? connections
+            : connections + "  ·  " + string.Join("  ·  ", perLink.Select(kv => $"{_owner.NameFor(kv.Key)} {kv.Value}"));
+        Raise(string.Empty);
+    }
+
+    private async Task RunHttpAsync()
     {
         SetState(DownloadState.Downloading);
         _error = "";
@@ -206,6 +318,7 @@ public sealed class DownloadItemViewModel : ViewModelBase
 
     public void DeletePartialFiles()
     {
+        if (IsTorrent) return;   // a torrent's files are removed through the engine, which knows exactly which ones are its own
         foreach (var f in new[] { Record.Path + ".arqpart", Record.Path + ".arqstate" })
         {
             try { File.Delete(f); } catch (IOException) { } catch (UnauthorizedAccessException) { }
@@ -214,7 +327,11 @@ public sealed class DownloadItemViewModel : ViewModelBase
 
     private void OpenFolder()
     {
-        var target = File.Exists(Record.Path) ? $"/select,\"{Record.Path}\"" : $"\"{Path.GetDirectoryName(Record.Path)}\"";
+        // A torrent is saved into the chosen folder under its own name; show that, or the folder itself while nothing is there yet.
+        var item = IsTorrent ? Path.Combine(Record.Path, Record.Name) : Record.Path;
+        var target = File.Exists(item) || Directory.Exists(item)
+            ? $"/select,\"{item}\""
+            : $"\"{(IsTorrent ? Record.Path : Path.GetDirectoryName(Record.Path))}\"";
         Process.Start(new ProcessStartInfo("explorer.exe", target) { UseShellExecute = true });
     }
 }
@@ -226,7 +343,6 @@ public sealed class DownloadsViewModel : ViewModelBase
     private readonly DownloadQueue _queue;
     private string _urlText = "";
     private string _message = "";
-    private string _folder;
 
     public ObservableCollection<DownloadItemViewModel> Items { get; } = [];
 
@@ -236,11 +352,12 @@ public sealed class DownloadsViewModel : ViewModelBase
         _store = new DownloadStore(DownloadStore.DefaultPath);
         _queue = new DownloadQueue(services.Settings.MaxConcurrentDownloads);
         services.SettingsChanged += OnSettingsChanged;
-        _folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "Arqon");
 
         AddCommand = new RelayCommand(Add);
         PasteCommand = new RelayCommand(Paste);
         ChooseFolderCommand = new RelayCommand(ChooseFolder);
+        ResetFolderCommand = new RelayCommand(ResetFolder);
+        AddTorrentFileCommand = new RelayCommand(ChooseTorrentFile);
         AcceptClipboardCommand = new RelayCommand(AcceptClipboard);
         DismissClipboardCommand = new RelayCommand(DismissClipboard);
 
@@ -248,6 +365,7 @@ public sealed class DownloadsViewModel : ViewModelBase
         {
             const long gb = 1024L * 1024 * 1024;
             Items.Add(new DownloadItemViewModel(this, "Windows11_24H2.iso", DownloadState.Downloading, (long)(3.1 * gb), (long)(5.2 * gb), (long)(1.8 * gb), (long)(1.3 * gb), 8_500_000));
+            Items.Add(new DownloadItemViewModel(this, "Big.Buck.Bunny.1080p", DownloadState.Downloading, (long)(0.62 * gb), (long)(1.4 * gb), (long)(0.36 * gb), (long)(0.26 * gb), 6_200_000, torrent: true));
             Items.Add(new DownloadItemViewModel(this, "movie-2160p.mkv", DownloadState.Queued, 0, (long)(8.4 * gb), 0, 0, 0));
             Items.Add(new DownloadItemViewModel(this, "ubuntu-24.04-desktop.iso", DownloadState.Paused, (long)(1.0 * gb), (long)(2.7 * gb), (long)(0.55 * gb), (long)(0.45 * gb), 0));
             Items.Add(new DownloadItemViewModel(this, "setup_game.exe", DownloadState.Done, 890L * 1024 * 1024, 890L * 1024 * 1024, 490L * 1024 * 1024, 400L * 1024 * 1024, 0));
@@ -280,7 +398,7 @@ public sealed class DownloadsViewModel : ViewModelBase
     // ---- queue ----------------------------------------------------------------------------------------------
 
     private DownloadItemViewModel? ItemFor(string id) =>
-        Items.FirstOrDefault(i => string.Equals(i.Record.Path, id, StringComparison.OrdinalIgnoreCase));
+        Items.FirstOrDefault(i => string.Equals(i.Record.Key, id, StringComparison.OrdinalIgnoreCase));
 
     private void Launch(IEnumerable<string> ids)
     {
@@ -292,24 +410,30 @@ public sealed class DownloadsViewModel : ViewModelBase
     /// <summary>The item joins the line and starts when the limit allows.</summary>
     public void Enqueue(DownloadItemViewModel item)
     {
-        var start = _queue.Add(item.Record.Path);
-        if (!start.Contains(item.Record.Path, StringComparer.OrdinalIgnoreCase)) item.MarkQueued();
+        var start = _queue.Add(item.Record.Key);
+        if (!start.Contains(item.Record.Key, StringComparer.OrdinalIgnoreCase)) item.MarkQueued();
         Launch(start);
     }
 
     /// <summary>A waiting item starts now, ahead of the line and even beyond the limit.</summary>
-    public void StartNow(DownloadItemViewModel item) => Launch(_queue.StartNow(item.Record.Path));
+    public void StartNow(DownloadItemViewModel item) => Launch(_queue.StartNow(item.Record.Key));
 
     /// <summary>The item leaves the line without starting.</summary>
-    public void Dequeue(DownloadItemViewModel item) => Launch(_queue.Remove(item.Record.Path));
+    public void Dequeue(DownloadItemViewModel item) => Launch(_queue.Remove(item.Record.Key));
 
     /// <summary>The item stopped running (done, failed or paused): the next one in line may start.</summary>
-    public void OnEnded(DownloadItemViewModel item) => Launch(_queue.Finished(item.Record.Path));
+    public void OnEnded(DownloadItemViewModel item) => Launch(_queue.Finished(item.Record.Key));
 
     /// <summary>1 for the next download to start, 0 when the item is not waiting.</summary>
-    public int QueuePosition(DownloadItemViewModel item) => _queue.PositionOf(item.Record.Path);
+    public int QueuePosition(DownloadItemViewModel item) => _queue.PositionOf(item.Record.Key);
 
-    private void OnSettingsChanged() => Launch(_queue.SetLimit(_services.Settings.MaxConcurrentDownloads));
+    private void OnSettingsChanged()
+    {
+        Launch(_queue.SetLimit(_services.Settings.MaxConcurrentDownloads));
+        Raise(nameof(Folder));
+        Raise(nameof(FolderIsCustom));
+        Raise(nameof(FolderIsAuto));
+    }
 
     public int QueuedCount => Items.Count(i => i.IsQueued);
 
@@ -338,8 +462,10 @@ public sealed class DownloadsViewModel : ViewModelBase
         try { if (Clipboard.ContainsText()) text = Clipboard.GetText(); }
         catch (System.Runtime.InteropServices.ExternalException) { /* clipboard busy: try again next time */ }
 
-        var link = DownloadLinkDetector.Detect(text)?.ToString();
-        var known = link is not null && Items.Any(i => string.Equals(i.Record.Url, link, StringComparison.OrdinalIgnoreCase));
+        var link = TorrentInput.Classify(text) == InputKind.Magnet ? text!.Trim() : DownloadLinkDetector.Detect(text)?.ToString();
+        var magnetHash = link is not null && link.StartsWith("magnet:", StringComparison.OrdinalIgnoreCase) ? TorrentIdentity.OfMagnet(link) : null;
+        var known = link is not null && Items.Any(i => string.Equals(i.Record.Url, link, StringComparison.OrdinalIgnoreCase)
+                                                       || (magnetHash is not null && i.IsTorrent && TorrentSource.HashOf(i.Record.Url) == magnetHash));
         ClipboardLink = link is null || known || link == _dismissedClipboard ? null : link;
     }
 
@@ -360,11 +486,18 @@ public sealed class DownloadsViewModel : ViewModelBase
     public RelayCommand AddCommand { get; }
     public RelayCommand PasteCommand { get; }
     public RelayCommand ChooseFolderCommand { get; }
+    public RelayCommand ResetFolderCommand { get; }
+    public RelayCommand AddTorrentFileCommand { get; }
 
     public string UrlText { get => _urlText; set => Set(ref _urlText, value); }
     public string Message { get => _message; private set { Set(ref _message, value); Raise(nameof(HasMessage)); } }
     public bool HasMessage => _message.Length > 0;
-    public string Folder { get => _folder; private set => Set(ref _folder, value); }
+
+    /// <summary>Where new downloads go: the folder chosen in the app, or by default the Downloads folder of Windows.</summary>
+    public string Folder => DownloadFolder.Resolve(_services.Settings.DownloadDirectory, DownloadFolder.Windows());
+
+    public bool FolderIsCustom => DownloadFolder.IsCustom(_services.Settings.DownloadDirectory);
+    public bool FolderIsAuto => !FolderIsCustom;
     public bool IsEmpty => Items.Count == 0;
     public int ActiveCount => Items.Count(i => i.IsDownloading);
     public string TotalSpeed => $"{Units.Speed(Items.Sum(i => i.SpeedBps))} {Units.SpeedLabel}";
@@ -393,9 +526,74 @@ public sealed class DownloadsViewModel : ViewModelBase
     public void Remove(DownloadItemViewModel item)
     {
         if (!item.IsDone) item.DeletePartialFiles();
+        if (item.IsTorrent) _ = item.DropTorrentAsync(deleteData: !item.IsDone);
         Items.Remove(item);
         Persist();
-        Launch(_queue.Remove(item.Record.Path));
+        Launch(_queue.Remove(item.Record.Key));
+    }
+
+    // ---- torrents ---------------------------------------------------------------------------------------------
+
+    public TorrentEngine TorrentEngine() => _services.Torrents;
+
+    /// <summary>How many peer connections each link received, for the Wi-Fi / phone split shown on a torrent.</summary>
+    public IReadOnlyDictionary<string, int> TorrentConnectionsPerLink() => _services.TorrentConnectionsPerLink();
+
+    private void ChooseTorrentFile()
+    {
+        var dialog = new OpenFileDialog { Title = Loc.Get("S.Dl.AddTorrent"), Filter = "Torrent (*.torrent)|*.torrent", Multiselect = true };
+        if (dialog.ShowDialog() != true) return;
+        foreach (var file in dialog.FileNames) AddTorrentFile(file);
+    }
+
+    private void AddMagnet(string magnet)
+    {
+        var hash = TorrentIdentity.OfMagnet(magnet);
+        if (hash is null) { Message = Loc.Get("S.Dl.BadMagnet"); return; }
+        if (Items.Any(i => i.IsTorrent && TorrentSource.HashOf(i.Record.Url) == hash)) { Message = Loc.Get("S.Dl.AlreadyAdded"); return; }
+
+        var name = MonoTorrent.MagnetLink.TryParse(magnet.Trim(), out var parsed) && !string.IsNullOrWhiteSpace(parsed?.Name) ? parsed!.Name! : hash;
+        AddTorrentItem(new DownloadRecord(magnet.Trim(), Folder, name, false, DownloadKind.Torrent));
+    }
+
+    private void AddTorrentFile(string path)
+    {
+        var info = TorrentIdentity.OfFile(path);
+        if (info is null) { Message = Loc.Get("S.Dl.BadTorrent"); return; }
+        if (Items.Any(i => i.IsTorrent && TorrentSource.HashOf(i.Record.Url) == info.Hash)) { Message = Loc.Get("S.Dl.AlreadyAdded"); return; }
+
+        // A copy is kept, so the torrent still resumes after the original file is moved or deleted.
+        var copy = TorrentSource.SaveCopy(File.ReadAllBytes(path), info.Hash);
+        AddTorrentItem(new DownloadRecord(copy, Folder, info.Name, false, DownloadKind.Torrent));
+    }
+
+    private async Task AddTorrentUrlAsync(string url)
+    {
+        try
+        {
+            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+            var bytes = await http.GetByteArrayAsync(url);
+            if (bytes.Length > 10 * 1024 * 1024) throw new InvalidDataException("too large for a .torrent file");
+            var info = TorrentIdentity.OfBytes(bytes);
+            if (info is null) { Message = Loc.Get("S.Dl.BadTorrent"); return; }
+            if (Items.Any(i => i.IsTorrent && TorrentSource.HashOf(i.Record.Url) == info.Hash)) { Message = Loc.Get("S.Dl.AlreadyAdded"); return; }
+
+            AddTorrentItem(new DownloadRecord(TorrentSource.SaveCopy(bytes, info.Hash), Folder, info.Name, false, DownloadKind.Torrent));
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidDataException or IOException)
+        {
+            Message = Loc.Format("S.Dl.TorrentDownloadFailed", ex.Message);
+        }
+    }
+
+    private void AddTorrentItem(DownloadRecord record)
+    {
+        var item = new DownloadItemViewModel(this, record);
+        Items.Insert(0, item);
+        UrlText = "";
+        Message = "";
+        Persist();
+        item.Enqueue();
     }
 
     private void Add()
@@ -403,16 +601,14 @@ public sealed class DownloadsViewModel : ViewModelBase
         var text = UrlText.Trim();
         if (text.Length == 0) return;
 
-        if (text.StartsWith("magnet:", StringComparison.OrdinalIgnoreCase) || text.EndsWith(".torrent", StringComparison.OrdinalIgnoreCase))
+        switch (TorrentInput.Classify(text))
         {
-            Message = Loc.Get("S.Dl.TorrentSoon");
-            return;
+            case InputKind.Magnet: AddMagnet(text); return;
+            case InputKind.TorrentFile: AddTorrentFile(TorrentInput.LocalPath(text)); return;
+            case InputKind.TorrentUrl: _ = AddTorrentUrlAsync(text); return;
+            case InputKind.Invalid: Message = Loc.Get("S.Dl.BadUrl"); return;
         }
-        if (!Uri.TryCreate(text, UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https"))
-        {
-            Message = Loc.Get("S.Dl.BadUrl");
-            return;
-        }
+        var uri = new Uri(text);
 
         Directory.CreateDirectory(Folder);
         var name = Path.GetFileName(Uri.UnescapeDataString(uri.LocalPath));
@@ -451,6 +647,10 @@ public sealed class DownloadsViewModel : ViewModelBase
     private void ChooseFolder()
     {
         var dialog = new OpenFolderDialog { InitialDirectory = Folder, Title = Loc.Get("S.Dl.Folder") };
-        if (dialog.ShowDialog() == true) Folder = dialog.FolderName;
+        if (dialog.ShowDialog() == true)
+            _services.SaveSettings(_services.Settings with { DownloadDirectory = dialog.FolderName });
     }
+
+    /// <summary>Back to automatic: the Downloads folder of Windows.</summary>
+    private void ResetFolder() => _services.SaveSettings(_services.Settings with { DownloadDirectory = null });
 }

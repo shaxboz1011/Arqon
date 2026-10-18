@@ -83,6 +83,7 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Grid>
                     <TextBox Text="{Binding UrlText, UpdateSourceTrigger=PropertyChanged}" Padding="12,10">
@@ -105,14 +106,20 @@
                     </TextBlock>
                 </Grid>
                 <Button Grid.Column="1" Style="{StaticResource GhostButton}" Margin="8,0,0,0" Content="{DynamicResource S.Dl.Paste}" Command="{Binding PasteCommand}" />
-                <Button Grid.Column="2" Style="{StaticResource PrimaryButton}" Margin="8,0,0,0" Content="{DynamicResource S.Dl.Download}" Command="{Binding AddCommand}" />
+                <Button Grid.Column="2" Style="{StaticResource GhostButton}" Margin="8,0,0,0" Content="{DynamicResource S.Dl.AddTorrent}" Command="{Binding AddTorrentFileCommand}" />
+                <Button Grid.Column="3" Style="{StaticResource PrimaryButton}" Margin="8,0,0,0" Content="{DynamicResource S.Dl.Download}" Command="{Binding AddCommand}" />
             </Grid>
             <TextBlock Foreground="#F59E0B" FontSize="12" Margin="2,0,0,6" Text="{Binding Message}" Visibility="{Binding HasMessage, Converter={StaticResource B2V}}" />
             <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                 <TextBlock Style="{StaticResource MutedText}" FontSize="12" Text="{DynamicResource S.Dl.SaveTo}" />
                 <TextBlock Style="{StaticResource MutedText}" FontSize="12" Text="{Binding Folder}" Margin="6,0,0,0" Foreground="#E7EAF2" />
+                <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="6,0,0,0" Text="{DynamicResource S.Dl.FolderAuto}"
+                           Visibility="{Binding FolderIsAuto, Converter={StaticResource B2V}}" />
                 <Button Style="{StaticResource IconButton}" Width="22" Height="22" FontSize="11" Content="&#xE70F;" Margin="4,-2,0,0"
                         Command="{Binding ChooseFolderCommand}" ToolTip="{DynamicResource S.Dl.Folder}" />
+                <Button Style="{StaticResource IconButton}" Width="22" Height="22" FontSize="11" Content="&#xE777;" Margin="2,-2,0,0"
+                        Command="{Binding ResetFolderCommand}" ToolTip="{DynamicResource S.Dl.FolderReset}"
+                        Visibility="{Binding FolderIsCustom, Converter={StaticResource B2V}}" />
             </StackPanel>
 
             <Border Style="{StaticResource Card}" Visibility="{Binding IsEmpty, Converter={StaticResource B2V}}">
