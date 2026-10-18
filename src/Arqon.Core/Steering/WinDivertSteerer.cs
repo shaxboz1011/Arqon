@@ -35,6 +35,7 @@ public sealed class WinDivertSteerer : ISteerer, IDisposable
     private readonly Func<IPAddress?> _defaultAddress;
     private readonly string _directory;
     private readonly object _gate = new();
+    private readonly WeakHostScope _weakHost = new();
     private Session? _session;
     private CancellationTokenSource? _cts;
     private int _engineErrors;
@@ -102,6 +103,7 @@ public sealed class WinDivertSteerer : ISteerer, IDisposable
             _cts?.Cancel();
             _cts = null;
             CloseSession();
+            _weakHost.Dispose();
         }
     }
 
@@ -123,6 +125,9 @@ public sealed class WinDivertSteerer : ISteerer, IDisposable
             throw new InvalidOperationException(DescribeOpenError(Marshal.GetLastWin32Error()));
 
         var session = new Session(handle, filter, InterfaceIndexes());
+        // Without it Windows drops the replies of steered connections (strong host model), see docs/steering.md.
+        _weakHost.Enable(others.Append(native!)
+            .Select(a => session.InterfaceIndex.GetValueOrDefault(a)).Where(i => i != 0));
         var workers = Math.Clamp(Environment.ProcessorCount / 2, 2, 4);
         for (var i = 0; i < workers; i++)
         {
@@ -241,6 +246,7 @@ public sealed class WinDivertSteerer : ISteerer, IDisposable
             _cts?.Cancel();
             _cts = null;
             CloseSession();
+            _weakHost.Dispose();
         }
         Faulted?.Invoke(why);
     }

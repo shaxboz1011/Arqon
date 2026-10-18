@@ -1,6 +1,6 @@
 # System mode (steering)
 
-**Status: implemented and unit-tested; not yet verified on real hardware with two live links.** It is off by default, needs the WinDivert driver and administrator rights, and fails open: if anything goes wrong, Windows routes normally again.
+**Status: implemented, unit-tested, and checked on one machine with Wi-Fi plus a USB-tethered phone (see "First hardware test"); a wider test is still open.** It is off by default, needs the WinDivert driver and administrator rights, and fails open: if anything goes wrong, Windows routes normally again.
 
 ## What it does
 
@@ -73,14 +73,16 @@ If something looks wrong, switch the mode off or close Arqon. If the network sti
 3. Play a game or run a ping to a game server: it should stay on the better link, and downloads on that link should be capped when ping rises (Dashboard, game card).
 4. Pull the phone's cable: after a few seconds everything should continue on Wi-Fi.
 
-If the phone never receives traffic, or the Dashboard shows it as "paused: no answers", Windows probably does not route the rewritten packets out of the phone's interface. Things to try, all unverified: `netsh interface ipv4 set interface "<phone adapter>" weakhostsend=enabled weakhostreceive=enabled`, then the same with `weakhostsend=disabled` on every adapter. Please open an issue with the Dashboard numbers and the output of `route print`.
+If a link never receives traffic, or the Dashboard shows it as paused, read `%APPDATA%\Arqon\steering.log` and open an issue with it, the Dashboard numbers and the output of `route print`. Do not enable `weakhostsend`: it makes Windows route sockets bound to an adapter through the default route, which breaks Arqon's own per-link probes (the link then looks dead).
 
 ## First hardware test (2026-10-18, Wi-Fi + USB phone)
 
 - Found and fixed: new flows were weighted by each link's *current* speed, so an idle link was never chosen and therefore never measured. Weights now use a fading peak speed plus a 25 % exploration floor; links whose probes all fail get no new flows.
-- Verified on the wire (pktmon): the driver installs, system mode starts, and steered connections complete normally.
-- **Not verified:** sending a connection out of the *non-default* link. During the test the phone had no internet (Windows reported `LocalNetwork`), so no rewritten connection could complete; Windows had also made Wi-Fi the default address because of that. The quarantine caught it: stalled connections were retried on the other link after about 4 s.
-- Needs a repeat with a phone that really has internet, ideally once with each link as the default.
+- Found and fixed: with Windows' default strong host model the stack silently drops a reply that arrives on one adapter addressed to another adapter's address, so steered connections hung. Arqon now switches `weakhostreceive` on for the link adapters while system mode runs (running configuration only, original values restored when it stops; a reboot also undoes it). Control run without it: 38/40 downloads, Wi-Fi received 0 MB. With it: 40/40 in 5.3 s instead of 11.3 s, 30 MB over Wi-Fi and 10 MB over the phone.
+- Found and fixed: a reply that Windows dropped still counted as "answered", so the quarantine never fired. A TCP connection now counts as answered only when the application continues after the reply.
+- Verified on the wire with `pktmon`: connections rewritten to the non-default link leave through that adapter and their replies come back through it.
+- Not yet verified: the other direction (Wi-Fi as default, phone steered), a game running (game link choice and ping guard) and a long browsing session. If Arqon is killed instead of closed, weak host receive stays on until the next reboot.
+- `%APPDATA%\Arqon\steering.log` records the start state, the first steered connection and first reply per link, and every link pause. Please attach it to bug reports.
 
 ## Known limits
 
