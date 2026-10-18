@@ -24,6 +24,12 @@ public sealed class SteeringCoordinator
 {
     private const double MinWeight = 1;
 
+    /// <summary>Every usable link weighs at least this fraction of the fastest one, so an idle link keeps being measured.</summary>
+    private const double ExploreShare = 0.25;
+
+    private static readonly TimeSpan PeakHalfLife = TimeSpan.FromSeconds(120);
+    private readonly Dictionary<string, (double Bps, DateTimeOffset At)> _peak = new();
+
     private readonly ISteerer? _steerer;
     private readonly FlowTable _table;
     private readonly Func<RuleEngine> _rules;
@@ -112,14 +118,31 @@ public sealed class SteeringCoordinator
     private string? BestForGame(IReadOnlyList<LinkSample> samples) =>
         _gameLink = LinkSelector.PickBestForGame(samples, _gameLink);
 
-    /// <summary>Smooth weighted round-robin: each link gets new flows in proportion to its measured speed.</summary>
+    /// <summary>
+    /// Smooth weighted round-robin: each link gets new flows in proportion to the best speed it showed recently.
+    /// Weighting by the current speed would starve an idle link for good (it carries nothing, so it never measures
+    /// any speed), hence the fading peak and the exploration share.
+    /// </summary>
     private string WeightedRoundRobin(IReadOnlyList<LinkSample> samples)
     {
-        var total = 0.0;
-        foreach (var s in samples)
+        var now = _clock();
+        var weights = new double[samples.Count];
+        for (var i = 0; i < samples.Count; i++)
         {
-            var w = Math.Max(MinWeight, s.DownBps);
-            _credit[s.LinkId] = _credit.GetValueOrDefault(s.LinkId) + w;
+            var s = samples[i];
+            var peak = s.DownBps;
+            if (_peak.TryGetValue(s.LinkId, out var seen))
+                peak = Math.Max(peak, seen.Bps * Math.Pow(0.5, (now - seen.At).TotalSeconds / PeakHalfLife.TotalSeconds));
+            _peak[s.LinkId] = (peak, now);
+            weights[i] = peak;
+        }
+
+        var floor = Math.Max(MinWeight, weights.Max() * ExploreShare);
+        var total = 0.0;
+        for (var i = 0; i < samples.Count; i++)
+        {
+            var w = Math.Max(floor, weights[i]);
+            _credit[samples[i].LinkId] = _credit.GetValueOrDefault(samples[i].LinkId) + w;
             total += w;
         }
 

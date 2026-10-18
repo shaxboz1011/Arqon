@@ -55,6 +55,50 @@ public class SteeringCoordinatorTests
         Assert.InRange(counts["phone"], 350, 450);
     }
 
+    private static Dictionary<string, int> Spread(SteeringCoordinator c, int flows)
+    {
+        var counts = new Dictionary<string, int>();
+        for (var i = 0; i < flows; i++)
+        {
+            var link = c.PickLink(Flow(i), "chrome.exe")!;
+            counts[link] = counts.GetValueOrDefault(link) + 1;
+        }
+        return counts;
+    }
+
+    [Fact]
+    public void An_idle_link_still_gets_a_share_so_its_speed_can_be_measured()
+    {
+        // The link that carries the traffic reports high speed, the idle one reports 0. Weighting by the current
+        // speed alone would starve the idle link forever: it never carries anything, so it never measures any speed.
+        var (c, _, _) = Make(() => [S("wifi", 20, 0), S("phone", 40, 40_000_000)]);
+
+        var counts = Spread(c, 1000);
+
+        Assert.InRange(counts.GetValueOrDefault("wifi"), 150, 260);
+    }
+
+    [Fact]
+    public void A_links_recent_peak_speed_keeps_counting_after_it_goes_quiet_and_then_fades()
+    {
+        var clock = new Clock();
+        var wifiBps = 30_000_000.0;
+        var table = new FlowTable(() => clock.Now);
+        var c = new SteeringCoordinator(null, table, new RuleEngine(ArqonSettings.Default()),
+            () => [S("wifi", 20, wifiBps), S("phone", 40, 30_000_000)], () => clock.Now);
+
+        Spread(c, 10);   // both links are seen at 30 MB/s
+        wifiBps = 0;
+        clock.Now = clock.Now.AddSeconds(10);
+        var soon = Spread(c, 1000);
+        Assert.InRange(soon["wifi"], 400, 520);   // still about half: the peak was seen seconds ago
+
+        clock.Now = clock.Now.AddMinutes(10);
+        table.RemoveExpired();
+        var later = Spread(c, 1000);
+        Assert.InRange(later["wifi"], 150, 260);   // faded down to the exploration share
+    }
+
     [Fact]
     public void An_existing_flow_never_moves_even_when_weights_change()
     {
