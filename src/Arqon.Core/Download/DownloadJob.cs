@@ -81,6 +81,7 @@ public sealed class DownloadJob
     {
         var part = request.DestinationPath + ".arqpart";
         var limiter = request.SpeedLimitBps is { } bps ? new RateLimiter(bps) : null;
+        var throttle = request.Throttle;
         Exception? last = null;
         string? finishedOn = null;
         long finishedBytes = 0;
@@ -110,6 +111,7 @@ public sealed class DownloadJob
                         while ((n = await src.ReadAsync(buf.AsMemory(0, BufferSize), ct).ConfigureAwait(false)) > 0)
                         {
                             if (limiter is not null) await limiter.AcquireAsync(n, ct).ConfigureAwait(false);
+                            if (throttle is not null) await throttle.For(runner.Id).AcquireAsync(n, ct).ConfigureAwait(false);
                             await dst.WriteAsync(buf.AsMemory(0, n), ct).ConfigureAwait(false);
                             done += n;
 
@@ -501,6 +503,7 @@ public sealed class DownloadJob
                     var n = await stream.ReadAsync(buf.AsMemory(0, want), stall.Token).ConfigureAwait(false);
                     if (n == 0) throw new IOException("Connection closed before the range was complete");
                     if (_limiter is not null) await _limiter.AcquireAsync(n, token).ConfigureAwait(false);
+                    if (_request.Throttle is { } throttle) await throttle.For(link.Id).AcquireAsync(n, token).ConfigureAwait(false);
                     await RandomAccess.WriteAsync(_handle, buf.AsMemory(0, n), offset, token).ConfigureAwait(false);
                     offset += n;
                     Interlocked.Add(ref _wire, n);

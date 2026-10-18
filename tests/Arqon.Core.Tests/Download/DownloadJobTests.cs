@@ -229,6 +229,43 @@ public sealed class DownloadJobTests : IDisposable
     }
 
     [Fact]
+    public async Task A_cap_on_a_link_is_obeyed_and_lifting_it_mid_download_speeds_the_rest_up()
+    {
+        using var server = new TestRangeServer(6 * MiB);
+        var throttle = new LinkThrottle();
+        throttle.Set("a", 1 * MiB);
+        var request = new DownloadRequest(server.Url, Dest(), 512 * 1024, Throttle: throttle);
+
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        await new DownloadJob().RunAsync(request, [Loopback("a", "127.0.0.2")],
+            new SyncProgress<DownloadProgress>(p =>
+            {
+                if (p.Done >= p.Total / 4) throttle.Set("a", null);
+            }), default);
+
+        Assert.Equal(Hash(server.Payload), HashFile(Dest()));
+        Assert.True(sw.Elapsed < TimeSpan.FromSeconds(4.5), $"cap was not lifted: {sw.Elapsed}");
+        Assert.True(sw.Elapsed > TimeSpan.FromSeconds(0.8), $"cap was never applied: {sw.Elapsed}");
+    }
+
+    [Fact]
+    public async Task A_cap_on_one_link_does_not_slow_the_other()
+    {
+        using var server = new TestRangeServer(8 * MiB) { DelayMs = 10 };
+        var throttle = new LinkThrottle();
+        throttle.Set("b", 128 * 1024);
+        DownloadProgress? last = null;
+
+        await new DownloadJob().RunAsync(new DownloadRequest(server.Url, Dest(), 512 * 1024, Throttle: throttle),
+            [Loopback("a", "127.0.0.2"), Loopback("b", "127.0.0.3")],
+            new SyncProgress<DownloadProgress>(p => last = p), default);
+
+        Assert.Equal(Hash(server.Payload), HashFile(Dest()));
+        Assert.True(last!.PerLinkBytes["a"] > last.PerLinkBytes.GetValueOrDefault("b") * 3,
+            $"a={last.PerLinkBytes["a"]} b={last.PerLinkBytes.GetValueOrDefault("b")}");
+    }
+
+    [Fact]
     public async Task A_failed_final_rename_keeps_the_downloaded_data()
     {
         using var server = new TestRangeServer(2 * MiB) { SupportsRanges = false };
