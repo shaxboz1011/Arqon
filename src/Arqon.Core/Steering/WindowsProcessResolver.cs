@@ -21,6 +21,8 @@ public sealed class WindowsProcessResolver : IProcessResolver
     private readonly object _gate = new();
     private readonly Dictionary<ushort, int> _tcp = new();
     private readonly Dictionary<ushort, int> _udp = new();
+    private readonly HashSet<(uint Address, ushort Port)> _tcpBound = new();
+    private readonly HashSet<(uint Address, ushort Port)> _udpBound = new();
     private readonly Dictionary<int, (string Name, long At)> _names = new();
     private long _lastRefresh;
 
@@ -43,16 +45,33 @@ public sealed class WindowsProcessResolver : IProcessResolver
         }
     }
 
+    public bool IsLocalPortInUse(byte protocol, System.Net.IPAddress address, ushort port)
+    {
+        if (protocol is not (6 or 17)) return false;
+        var bytes = address.GetAddressBytes();
+        if (bytes.Length != 4) return false;
+        var key = (BitConverter.ToUInt32(bytes), port);
+
+        lock (_gate)
+        {
+            // Asked once per connection that is about to be moved, so a fresh read is affordable and a stale one could miss a clash.
+            Refresh();
+            var bound = protocol == 6 ? _tcpBound : _udpBound;
+            return bound.Contains(key) || bound.Contains((0u, port));   // 0.0.0.0 holds the port on every address
+        }
+    }
+
     private void Refresh()
     {
         _lastRefresh = Stopwatch.GetTimestamp();
-        Read(_tcp, tcp: true);
-        Read(_udp, tcp: false);
+        Read(_tcp, _tcpBound, tcp: true);
+        Read(_udp, _udpBound, tcp: false);
     }
 
-    private static void Read(Dictionary<ushort, int> into, bool tcp)
+    private static void Read(Dictionary<ushort, int> into, HashSet<(uint Address, ushort Port)> bound, bool tcp)
     {
         into.Clear();
+        bound.Clear();
         var size = 0;
         IntPtr buffer = IntPtr.Zero;
         try
@@ -72,6 +91,7 @@ public sealed class WindowsProcessResolver : IProcessResolver
 
             var count = Marshal.ReadInt32(buffer);
             var rowSize = tcp ? 24 : 12;
+            var addressOffset = tcp ? 4 : 0;
             var portOffset = tcp ? 8 : 4;   // TCP rows start with the connection state
             var pidOffset = tcp ? 20 : 8;
             for (var i = 0; i < count; i++)
@@ -80,6 +100,7 @@ public sealed class WindowsProcessResolver : IProcessResolver
                 var raw = (uint)Marshal.ReadInt32(row, portOffset);
                 var port = (ushort)((raw & 0xFF) << 8 | (raw >> 8) & 0xFF);
                 into[port] = Marshal.ReadInt32(row, pidOffset);
+                bound.Add(((uint)Marshal.ReadInt32(row, addressOffset), port));
             }
         }
         finally

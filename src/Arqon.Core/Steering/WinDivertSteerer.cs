@@ -175,6 +175,7 @@ public sealed class WinDivertSteerer : ISteerer, IDisposable
     private void Work(Session s)
     {
         var buffer = new byte[MaxPacket];
+        var backup = new byte[MaxPacket];
         var address = new WinDivertNative.Address();
         var sendFailures = 0;
 
@@ -191,7 +192,7 @@ public sealed class WinDivertSteerer : ISteerer, IDisposable
                     return;
                 }
 
-                Divert(s, buffer, (int)length, ref address);
+                Divert(s, buffer, backup, (int)length, ref address);
 
                 if (WinDivertNative.Send(s.Handle, buffer, length, out _, ref address)) { sendFailures = 0; continue; }
                 if (++sendFailures >= MaxConsecutiveSendFailures && !s.Closing)
@@ -208,9 +209,8 @@ public sealed class WinDivertSteerer : ISteerer, IDisposable
     }
 
     /// <summary>Per-packet fail-open: if the engine misbehaves the packet goes out exactly as it came in.</summary>
-    private void Divert(Session s, byte[] buffer, int length, ref WinDivertNative.Address address)
+    private void Divert(Session s, byte[] buffer, byte[] backup, int length, ref WinDivertNative.Address address)
     {
-        var backup = new byte[length];
         Buffer.BlockCopy(buffer, 0, backup, 0, length);
         try
         {

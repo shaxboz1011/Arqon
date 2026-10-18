@@ -10,6 +10,12 @@ public sealed record ProcessInfo(int Pid, string ExeName);
 public interface IProcessResolver
 {
     ProcessInfo? Resolve(byte protocol, ushort localPort);
+
+    /// <summary>
+    /// True when a real socket already holds this local address and port. Steering a connection to such an address
+    /// would make its replies indistinguishable from that socket's own traffic.
+    /// </summary>
+    bool IsLocalPortInUse(byte protocol, IPAddress address, ushort port) => false;
 }
 
 public enum SteerVerdict { Pass, Rewritten }
@@ -153,6 +159,7 @@ public sealed class NatSteeringEngine
     /// <summary>Drops flows that are finished or idle for longer than their protocol allows; returns how many were removed.</summary>
     public int Cleanup()
     {
+        _coordinator.Cleanup();
         var now = _clock().UtcTicks;
         var removed = 0;
         foreach (var flow in _outbound.Values)
@@ -193,6 +200,10 @@ public sealed class NatSteeringEngine
             var own = owner?.Pid == _ownPid;
             var linkId = own ? null : _coordinator.PickLink(key, owner?.ExeName ?? "");
             var target = linkId is null ? null : links.FirstOrDefault(l => l.Id == linkId);
+
+            if (target is not null && !own && !target.LocalAddress.Equals(key.LocalAddr)
+                && _resolver.IsLocalPortInUse(key.Protocol, target.LocalAddress, key.LocalPort))
+                target = null;   // port clash on the target link: keep this connection where it is
 
             if (own || target is null || target.LocalAddress.Equals(key.LocalAddr))
             {

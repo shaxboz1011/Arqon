@@ -64,10 +64,10 @@ public sealed class SettingsViewModel : ViewModelBase
 
     public bool SystemMode
     {
-        get => _services.Settings.SystemMode;
+        get => _services.Steering.State == SteeringState.Running;
         set
         {
-            if (value == _services.Settings.SystemMode) return;
+            if (value == (_services.Steering.State == SteeringState.Running)) return;
             var on = value && _services.Steering.Start();
             if (!value) _services.Steering.Stop();
             _services.SaveSettings(_services.Settings with { SystemMode = on });

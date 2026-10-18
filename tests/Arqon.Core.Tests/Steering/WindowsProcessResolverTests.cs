@@ -48,4 +48,40 @@ public class WindowsProcessResolverTests
     {
         Assert.Null(new WindowsProcessResolver().Resolve(1, 80));
     }
+
+    [Fact]
+    public void Knows_which_local_address_and_port_a_socket_holds()
+    {
+        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        var port = (ushort)((IPEndPoint)listener.LocalEndpoint).Port;
+        var resolver = new WindowsProcessResolver();
+
+        Assert.True(resolver.IsLocalPortInUse(6, IPAddress.Loopback, port));
+        Assert.False(resolver.IsLocalPortInUse(6, IPAddress.Parse("127.0.0.2"), port));
+        Assert.False(resolver.IsLocalPortInUse(6, IPAddress.Loopback, (ushort)(port == 65535 ? 1 : port + 1)));
+    }
+
+    [Fact]
+    public void A_socket_bound_to_every_address_holds_the_port_on_each_of_them()
+    {
+        using var listener = new TcpListener(IPAddress.Any, 0);
+        listener.Start();
+        var port = (ushort)((IPEndPoint)listener.LocalEndpoint).Port;
+
+        Assert.True(new WindowsProcessResolver().IsLocalPortInUse(6, IPAddress.Parse("127.0.0.2"), port));
+    }
+
+    [Fact]
+    public void Sees_a_socket_opened_a_moment_ago()
+    {
+        var resolver = new WindowsProcessResolver();
+        resolver.Resolve(6, 1);   // primes the cached snapshot
+
+        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        var port = (ushort)((IPEndPoint)listener.LocalEndpoint).Port;
+
+        Assert.True(resolver.IsLocalPortInUse(6, IPAddress.Loopback, port));
+    }
 }

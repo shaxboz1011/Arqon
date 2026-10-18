@@ -60,6 +60,12 @@ public sealed class SteeringCoordinator
 
     public string? LastFault { get; private set; }
 
+    /// <summary>Flows remembered right now (for tests and diagnostics).</summary>
+    public int TrackedFlows => _table.Count;
+
+    /// <summary>Forgets idle flows; call periodically or the table grows without bound. Returns how many were removed.</summary>
+    public int Cleanup() => _table.RemoveExpired();
+
     /// <summary>Link id for this flow, or null to leave it to normal Windows routing (no measurements yet).</summary>
     public string? PickLink(FlowKey key, string exeName)
     {

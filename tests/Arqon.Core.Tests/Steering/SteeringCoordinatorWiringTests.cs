@@ -34,4 +34,19 @@ public class SteeringCoordinatorWiringTests
 
         Assert.Equal("phone", c.PickLink(Flow(1), "chrome.exe"));
     }
+
+    [Fact]
+    public void Cleanup_forgets_flows_that_have_been_idle_too_long()
+    {
+        var now = new DateTimeOffset(2026, 10, 18, 12, 0, 0, TimeSpan.Zero);
+        var c = new SteeringCoordinator(null, new FlowTable(() => now), new RuleEngine(ArqonSettings.Default()), () => [S("wifi", 20)]);
+        c.PickLink(Flow(1), "chrome.exe");
+        c.PickLink(Flow(2), "chrome.exe");
+        Assert.Equal(2, c.TrackedFlows);
+
+        now += TimeSpan.FromMinutes(5);
+
+        Assert.Equal(2, c.Cleanup());
+        Assert.Equal(0, c.TrackedFlows);
+    }
 }

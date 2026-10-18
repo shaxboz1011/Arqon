@@ -24,7 +24,9 @@ public class NatSteeringEngineTests
     private sealed class FakeResolver : IProcessResolver
     {
         public readonly Dictionary<ushort, ProcessInfo> Ports = new();
+        public readonly HashSet<(string Address, ushort Port)> InUse = new();
         public ProcessInfo? Resolve(byte protocol, ushort localPort) => Ports.GetValueOrDefault(localPort);
+        public bool IsLocalPortInUse(byte protocol, IPAddress address, ushort port) => InUse.Contains((address.ToString(), port));
     }
 
     private sealed class Rig
@@ -339,6 +341,31 @@ public class NatSteeringEngineTests
         rig.Engine.CheckHealth();
 
         Assert.False(rig.Engine.Stats().Single(s => s.LinkId == "phone").Quarantined);
+    }
+
+    [Fact]
+    public void A_connection_is_not_steered_to_a_link_whose_address_already_uses_that_port()
+    {
+        var rig = new Rig();
+        rig.Resolver.InUse.Add((PhoneIp, 50000));   // e.g. Arqon's own download socket bound to the phone
+        var (raw, view) = rig.Packet(PacketBuilder.Tcp, 50000);   // chrome: ruled "Only phone"
+        var before = (byte[])raw.Clone();
+
+        Assert.Equal(SteerVerdict.Pass, rig.Engine.ProcessOutbound(view));
+        Assert.Equal(before, raw);
+    }
+
+    [Fact]
+    public void Cleanup_also_clears_the_coordinators_memory_of_flows()
+    {
+        var rig = new Rig();
+        rig.Engine.ProcessOutbound(rig.Packet(PacketBuilder.Udp, 50000).View);
+        Assert.Equal(1, rig.Coordinator.TrackedFlows);
+
+        rig.Now += TimeSpan.FromMinutes(5);
+        rig.Engine.Cleanup();
+
+        Assert.Equal(0, rig.Coordinator.TrackedFlows);
     }
 
     [Fact]

@@ -10,12 +10,16 @@ Arqon ("rope" in Uzbek) uses Wi-Fi, Ethernet and a USB-tethered phone at the sam
 | Feature | Status |
 |---|---|
 | Link discovery (Wi-Fi / Ethernet / phone) and live monitor: speed, ping, jitter, loss | Done |
-| Game protection logic: pick the best link for games, avoid flip-flopping | Done (decision logic; applied to traffic only in system mode) |
 | Multi-link download manager: chunked HTTP ranges over every link, resume, endgame racing, speed limit | Done |
+| **Game ping guard**: detects running games, and when ping or loss rises on the game's link it caps downloads on that link only, then gives bandwidth back gradually | Done |
+| Game link choice (lowest latency, jitter, loss, with hysteresis) | Done |
 | Per-app rules, built-in game catalogue, JSON settings | Done |
 | One-click fix for the Windows policy that turns the second network off | Done |
-| Dashboard, Apps, Downloads, Settings UI (dark theme, live charts, Uzbek/English) | Done |
-| **System mode** (speed up Telegram, Chrome, every app) | **Decision logic done; packet driver not connected.** See [docs/steering.md](docs/steering.md) |
+| Usage statistics: bytes per link per day, 14-day chart, monthly totals, persisted | Done |
+| Tray icon, close-to-tray, balloon notifications (link connected/lost, game found, cap engaged), single instance, start hidden with Windows | Done |
+| Clipboard offer: copy a file link anywhere and Downloads offers to fetch it | Done |
+| Dashboard, Apps, Downloads, Usage, Settings UI (dark theme, live charts, Uzbek/English) | Done |
+| **System mode** (speed up Telegram, Chrome, every app) | **Implemented and unit-tested; not yet verified on real hardware with two live links.** Needs the WinDivert driver and administrator rights. See [docs/steering.md](docs/steering.md) |
 | Torrents / magnet links | Planned |
 | Optional relay server (single-connection bonding, duplicated game packets) | Planned |
 | Installer and code signing | Planned |
@@ -29,22 +33,28 @@ Requires Windows 10/11 and the .NET 10 SDK.
 ```powershell
 dotnet run --project src/Arqon.App            # real adapters
 dotnet run --project src/Arqon.App -- --demo  # two pretend links, no phone needed
-dotnet test                                    # 76 tests
+dotnet test                                    # 220 tests
+```
+
+System mode additionally needs the packet driver, see [docs/steering.md](docs/steering.md):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\get-windivert.ps1 -Destination src\Arqon.App\bin\Debug\net10.0-windows
 ```
 
 ## Layout
 
-- `src/Arqon.Core`: links, monitoring, scoring, download engine, rules, settings, steering decisions (no UI)
+- `src/Arqon.Core`: links, monitoring, scoring, download engine, game guard, rules, settings, usage, steering (no UI)
 - `src/Arqon.App`: WPF app
-- `tests/Arqon.Core.Tests`: xUnit tests, including a local range-capable HTTP server
-- `docs/superpowers`: design and implementation plan
+- `tests/Arqon.Core.Tests`: xUnit tests, including a local range-capable HTTP server and hand-built packets
+- `tools`: icon generator, WinDivert installer script
+- `docs`: steering design, design and implementation plans
 - `mockups`: the approved UI mockup
 
 ## Compared with Plexo
 
-[Plexo](https://github.com/anmolkapil/plexo) speeds up its own downloads (and torrents) with chunked range requests over several networks. Arqon uses the same idea for its download manager and aims further: protecting game latency, per-app rules, and handling the Windows pitfalls Plexo documents (the Connection Manager policy) for you.
+[Plexo](https://github.com/anmolkapil/plexo) speeds up its own downloads (and torrents) with chunked range requests over several networks. Arqon uses the same idea for its download manager and aims further: protecting game latency, per-app rules, steering other apps' connections, and handling the Windows pitfalls Plexo documents (the Connection Manager policy) for you.
 
 ## Licence
 
-MIT
-
+MIT. System mode uses WinDivert (LGPLv3), which is downloaded separately and not part of this repository.

@@ -103,7 +103,9 @@ public sealed class AppServices : IDisposable
         Games.Refresh();
         _maintenance = new Timer(_ => Maintain(), null, MaintenanceEvery, MaintenanceEvery);
 
-        if (Settings.SystemMode && !Steering.Start()) SaveSettings(Settings with { SystemMode = false });
+        // The preference is kept when the driver is missing or Arqon is not elevated (it will start next time it can);
+        // it is only cleared when system mode actually fails, see OnSteeringChanged.
+        if (Settings.SystemMode) Steering.Start();
     }
 
     public void SaveSettings(ArqonSettings settings)
@@ -184,7 +186,10 @@ public sealed class AppServices : IDisposable
     {
         if (Steering.State != SteeringState.Faulted) return;
         Raise(Loc.Get("S.Notice.SteerFaultTitle"), Loc.Format("S.Notice.SteerFaultBody", Steering.Reason ?? ""));
-        if (Settings.SystemMode) SaveSettings(Settings with { SystemMode = false });
+
+        // This runs on the thread that detected the fault; settings listeners belong to the UI thread.
+        if (Settings.SystemMode)
+            System.Windows.Application.Current?.Dispatcher.BeginInvoke(() => SaveSettings(Settings with { SystemMode = false }));
     }
 
     private void Raise(string title, string message)
