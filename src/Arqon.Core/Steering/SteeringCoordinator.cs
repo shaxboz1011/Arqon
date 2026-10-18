@@ -24,9 +24,9 @@ public sealed class SteeringCoordinator
 {
     private const double MinWeight = 1;
 
-    private readonly ISteerer _steerer;
+    private readonly ISteerer? _steerer;
     private readonly FlowTable _table;
-    private readonly RuleEngine _rules;
+    private readonly Func<RuleEngine> _rules;
     private readonly Func<IReadOnlyList<LinkSample>> _samples;
     private readonly Dictionary<string, double> _credit = new();
     private readonly Dictionary<string, DateTimeOffset> _excluded = new();
@@ -34,7 +34,15 @@ public sealed class SteeringCoordinator
     private readonly object _gate = new();
     private string? _gameLink;
 
-    public SteeringCoordinator(ISteerer steerer, FlowTable table, RuleEngine rules, Func<IReadOnlyList<LinkSample>> samples,
+    public SteeringCoordinator(ISteerer? steerer, FlowTable table, RuleEngine rules, Func<IReadOnlyList<LinkSample>> samples,
+        Func<DateTimeOffset>? clock = null)
+        : this(steerer, table, () => rules, samples, clock)
+    {
+    }
+
+    /// <param name="steerer">Optional: when given, a fault stops it. Null when something else (e.g. SteeringService) owns that.</param>
+    /// <param name="rules">Asked for every new flow, so rule changes in the settings apply immediately.</param>
+    public SteeringCoordinator(ISteerer? steerer, FlowTable table, Func<RuleEngine> rules, Func<IReadOnlyList<LinkSample>> samples,
         Func<DateTimeOffset>? clock = null)
     {
         _clock = clock ?? (() => DateTimeOffset.UtcNow);
@@ -42,11 +50,12 @@ public sealed class SteeringCoordinator
         _table = table;
         _rules = rules;
         _samples = samples;
-        _steerer.Faulted += why =>
-        {
-            LastFault = why;
-            _steerer.Stop();
-        };
+        if (_steerer is not null)
+            _steerer.Faulted += why =>
+            {
+                LastFault = why;
+                _steerer.Stop();
+            };
     }
 
     public string? LastFault { get; private set; }
@@ -54,7 +63,7 @@ public sealed class SteeringCoordinator
     /// <summary>Link id for this flow, or null to leave it to normal Windows routing (no measurements yet).</summary>
     public string? PickLink(FlowKey key, string exeName)
     {
-        var rule = _rules.Resolve(exeName);
+        var rule = _rules().Resolve(exeName);
 
         // One lock around lookup + decision + store: two packets of the same new flow must get the same link.
         lock (_gate)
