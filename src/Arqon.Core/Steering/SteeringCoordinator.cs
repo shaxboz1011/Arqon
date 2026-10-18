@@ -9,6 +9,9 @@ public interface ISteerer
     /// <summary>False when the driver is missing or the process lacks administrator rights. Never throws.</summary>
     bool IsAvailable { get; }
 
+    /// <summary>Short machine-readable cause when <see cref="IsAvailable"/> is false (e.g. "driver-missing", "not-admin").</summary>
+    string? UnavailableReason => null;
+
     void Start();
     void Stop();
 
