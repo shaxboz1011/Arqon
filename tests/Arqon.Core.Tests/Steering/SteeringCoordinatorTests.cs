@@ -79,6 +79,27 @@ public class SteeringCoordinatorTests
     }
 
     [Fact]
+    public void A_link_whose_probes_all_fail_gets_no_new_flows_while_another_link_is_alive()
+    {
+        // Seen on the first real test: the phone was reachable but had no internet. Every flow sent there stalled.
+        var dead = new LinkSample("phone", DateTimeOffset.UnixEpoch, 0, 0, 1.0, 0, 0);
+        var (c, _, _) = Make(() => [S("wifi", 20, 5_000_000), dead]);
+
+        var counts = Spread(c, 200);
+
+        Assert.Equal(200, counts["wifi"]);
+        Assert.False(counts.ContainsKey("phone"));
+    }
+
+    [Fact]
+    public void When_every_link_looks_dead_flows_are_still_decided_instead_of_stalling_the_whole_machine()
+    {
+        var (c, _, _) = Make(() => [new("wifi", DateTimeOffset.UnixEpoch, 0, 0, 1.0, 0, 0), new("phone", DateTimeOffset.UnixEpoch, 0, 0, 1.0, 0, 0)]);
+
+        Assert.NotNull(c.PickLink(Flow(1), "chrome.exe"));
+    }
+
+    [Fact]
     public void A_links_recent_peak_speed_keeps_counting_after_it_goes_quiet_and_then_fades()
     {
         var clock = new Clock();

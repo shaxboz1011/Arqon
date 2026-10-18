@@ -107,6 +107,11 @@ public sealed class SteeringCoordinator
 
     private IReadOnlyList<LinkSample> Usable(IReadOnlyList<LinkSample> samples)
     {
+        // A link whose probes all fail (e.g. a phone without mobile data) would stall every flow sent to it.
+        // If every link looks dead, keep them all rather than leave the machine without any decision.
+        var alive = samples.Where(s => s.Loss < 1).ToList();
+        if (alive.Count > 0 && alive.Count < samples.Count) samples = alive;
+
         if (_excluded.Count == 0) return samples;
 
         var now = _clock();

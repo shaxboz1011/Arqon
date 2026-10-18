@@ -33,7 +33,7 @@ Requires Windows 10/11 and the .NET 10 SDK.
 ```powershell
 dotnet run --project src/Arqon.App            # real adapters
 dotnet run --project src/Arqon.App -- --demo  # two pretend links, no phone needed
-dotnet test                                    # 220 tests
+dotnet test                                    # 224 tests
 ```
 
 System mode additionally needs the packet driver, see [docs/steering.md](docs/steering.md):

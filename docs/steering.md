@@ -75,6 +75,13 @@ If something looks wrong, switch the mode off or close Arqon. If the network sti
 
 If the phone never receives traffic, or the Dashboard shows it as "paused: no answers", Windows probably does not route the rewritten packets out of the phone's interface. Things to try, all unverified: `netsh interface ipv4 set interface "<phone adapter>" weakhostsend=enabled weakhostreceive=enabled`, then the same with `weakhostsend=disabled` on every adapter. Please open an issue with the Dashboard numbers and the output of `route print`.
 
+## First hardware test (2026-10-18, Wi-Fi + USB phone)
+
+- Found and fixed: new flows were weighted by each link's *current* speed, so an idle link was never chosen and therefore never measured. Weights now use a fading peak speed plus a 25 % exploration floor; links whose probes all fail get no new flows.
+- Verified on the wire (pktmon): the driver installs, system mode starts, and steered connections complete normally.
+- **Not verified:** sending a connection out of the *non-default* link. During the test the phone had no internet (Windows reported `LocalNetwork`), so no rewritten connection could complete; Windows had also made Wi-Fi the default address because of that. The quarantine caught it: stalled connections were retried on the other link after about 4 s.
+- Needs a repeat with a phone that really has internet, ideally once with each link as the default.
+
 ## Known limits
 
 - Per connection, not per packet (see above).
