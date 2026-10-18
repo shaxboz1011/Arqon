@@ -10,6 +10,8 @@ namespace Arqon.App.ViewModels;
 
 public sealed record LanguageOption(string Label, string Code);
 
+public sealed record SpeedUnitOption(string Label, bool InBytes);
+
 public sealed class SettingsViewModel : ViewModelBase
 {
     private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
@@ -109,6 +111,19 @@ public sealed class SettingsViewModel : ViewModelBase
     {
         get => _services.Settings.ClipboardWatch;
         set { _services.SaveSettings(_services.Settings with { ClipboardWatch = value }); Raise(); }
+    }
+
+    public IReadOnlyList<SpeedUnitOption> SpeedUnits { get; } = [new("Mbit/s", false), new("MB/s", true)];
+
+    public SpeedUnitOption SelectedSpeedUnit
+    {
+        get => SpeedUnits.First(o => o.InBytes == _services.Settings.SpeedInBytes);
+        set
+        {
+            if (value is null || value.InBytes == _services.Settings.SpeedInBytes) return;
+            _services.SaveSettings(_services.Settings with { SpeedInBytes = value.InBytes });
+            Raise();
+        }
     }
 
     public bool TaskbarMeter

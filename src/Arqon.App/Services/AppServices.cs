@@ -5,6 +5,7 @@ using Arqon.Core;
 using Arqon.Core.Download;
 using Arqon.Core.Guard;
 using Arqon.Core.Links;
+using Arqon.Core.Meter;
 using Arqon.Core.Monitoring;
 using Arqon.Core.Policy;
 using Arqon.Core.Settings;
@@ -60,6 +61,7 @@ public sealed class AppServices : IDisposable
         Fix = fix;
         Usage = usage;
         Settings = store.Load();
+        Units.Unit = UnitOf(Settings);
 
         _linkCache = new TtlCache<IReadOnlyList<LinkInfo>>(links.GetLinks, TimeSpan.FromSeconds(1));
         var defaultAddress = new TtlCache<System.Net.IPAddress?>(demo ? () => DemoLinkProvider.Wifi.LocalAddress : DefaultRoute.LocalAddress,
@@ -120,10 +122,13 @@ public sealed class AppServices : IDisposable
     public void SaveSettings(ArqonSettings settings)
     {
         Settings = settings;
+        Units.Unit = UnitOf(settings);
         Guard.Enabled = settings.GameProtection;
         SettingsStore.Save(settings);
         SettingsChanged?.Invoke();
     }
+
+    private static SpeedUnit UnitOf(ArqonSettings s) => s.SpeedInBytes ? SpeedUnit.Bytes : SpeedUnit.Bits;
 
     public IReadOnlyList<LinkSteerStats> SteerStats() => Demo ? DemoSteerStats() : Steering.Engine.Stats();
 

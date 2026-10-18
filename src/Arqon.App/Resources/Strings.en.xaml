@@ -11,6 +11,9 @@
     <sys:String x:Key="S.Side.ManyLinks">· {0} connections combined</sys:String>
 
     <sys:String x:Key="S.Unit.Mbit">Mbit/s</sys:String>
+    <sys:String x:Key="S.Unit.MByte">MB/s</sys:String>
+    <sys:String x:Key="S.Set.Unit">Speed unit</sys:String>
+    <sys:String x:Key="S.Set.UnitBody">Mbit/s matches the speed on your tariff; MB/s is what download programs show (1 MB/s = 8 Mbit/s).</sys:String>
 
     <sys:String x:Key="S.Status.Checking">Checking</sys:String>
     <sys:String x:Key="S.Status.Offline">Offline</sys:String>
@@ -52,7 +55,7 @@
     <sys:String x:Key="S.Apps.ColKind">TYPE</sys:String>
     <sys:String x:Key="S.Apps.ColLink">CONNECTION</sys:String>
     <sys:String x:Key="S.Apps.ColLimit">LIMIT</sys:String>
-    <sys:String x:Key="S.Apps.LimitTip">Speed limit in Mbit/s. Leave empty for no limit.</sys:String>
+    <sys:String x:Key="S.Apps.LimitTip">Speed limit in {0}. Leave empty for no limit.</sys:String>
     <sys:String x:Key="S.Apps.Remove">Remove</sys:String>
     <sys:String x:Key="S.Apps.EmptyTitle">No rules yet</sys:String>
     <sys:String x:Key="S.Apps.EmptyBody">Add an app, for example make Steam download over the phone only.</sys:String>
@@ -118,7 +121,7 @@
     <sys:String x:Key="S.Notice.SteerFaultTitle">System mode stopped</sys:String>
     <sys:String x:Key="S.Notice.SteerFaultBody">{0}. Your internet keeps working normally.</sys:String>
     <sys:String x:Key="S.Game.Detected">Game running: {0}.</sys:String>
-    <sys:String x:Key="S.Game.Capped">Downloads over {0} are capped at {1} Mbit/s to keep your ping steady.</sys:String>
+    <sys:String x:Key="S.Game.Capped">Downloads over {0} are capped at {1} {2} to keep your ping steady.</sys:String>
     <sys:String x:Key="S.Steer.Title">System mode</sys:String>
     <sys:String x:Key="S.Steer.On">New connections of every app are being spread across your networks.</sys:String>
     <sys:String x:Key="S.Steer.Fault">System mode stopped: {0}. Your internet works normally.</sys:String>

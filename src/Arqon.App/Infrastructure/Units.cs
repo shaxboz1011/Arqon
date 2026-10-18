@@ -1,14 +1,24 @@
 using System.Globalization;
+using Arqon.Core.Meter;
 
 namespace Arqon.App.Infrastructure;
 
 public static class Units
 {
-    /// <summary>Bytes per second to megabits per second, the unit people compare against their tariff.</summary>
-    public static double ToMbit(double bytesPerSecond) => bytesPerSecond * 8 / 1_000_000.0;
+    /// <summary>The speed unit chosen in Settings; <see cref="Services.AppServices"/> keeps it in step with the setting.</summary>
+    public static SpeedUnit Unit { get; set; } = SpeedUnit.Bits;
 
-    public static string Mbit(double bytesPerSecond) =>
-        ToMbit(bytesPerSecond).ToString(ToMbit(bytesPerSecond) >= 100 ? "0" : "0.0", CultureInfo.InvariantCulture);
+    /// <summary>Bytes per second in the chosen unit: Mbit/s (what a tariff is sold in) or MB/s.</summary>
+    public static double ToSpeed(double bytesPerSecond) => SpeedFormat.ToMega(bytesPerSecond, Unit);
+
+    /// <summary>The inverse of <see cref="ToSpeed"/>, for values the user types.</summary>
+    public static double FromSpeed(double value) => SpeedFormat.FromMega(value, Unit);
+
+    public static string Speed(double bytesPerSecond) =>
+        ToSpeed(bytesPerSecond).ToString(ToSpeed(bytesPerSecond) >= 100 ? "0" : "0.0", CultureInfo.InvariantCulture);
+
+    /// <summary>"Mbit/s" or "MB/s" in the current language.</summary>
+    public static string SpeedLabel => Loc.Get(Unit == SpeedUnit.Bits ? "S.Unit.Mbit" : "S.Unit.MByte");
 
     public static string Size(long bytes)
     {

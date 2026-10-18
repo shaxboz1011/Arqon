@@ -25,14 +25,15 @@ public sealed class LinkCardViewModel(LinkInfo link) : ViewModelBase
     public void Update(LinkSample sample, IReadOnlyList<LinkSample> history)
     {
         _sample = sample;
-        Series = [new ChartSeries(Name, Color, history.Select(h => Units.ToMbit(h.DownBps)).ToList())];
+        Series = [new ChartSeries(Name, Color, history.Select(h => Units.ToSpeed(h.DownBps)).ToList())];
         Raise(string.Empty);
     }
 
     public IReadOnlyList<ChartSeries> Series { get => _series; private set => Set(ref _series, value); }
     public double DownBps => _sample?.DownBps ?? 0;
-    public string Down => _sample is null ? "–" : Units.Mbit(_sample.DownBps);
-    public string Up => _sample is null ? "–" : Units.Mbit(_sample.UpBps);
+    public string Down => _sample is null ? "–" : Units.Speed(_sample.DownBps);
+    public string Up => _sample is null ? "–" : Units.Speed(_sample.UpBps);
+    public string SpeedUnitLabel => Units.SpeedLabel;
     public string Ping => _sample is null || _sample.Loss >= 1 ? "–" : FormattableString.Invariant($"{_sample.LatencyMs:0}");
     public string Jitter => _sample is null ? "–" : FormattableString.Invariant($"{_sample.JitterMs:0.#}");
     public string Loss => _sample is null ? "–" : FormattableString.Invariant($"{_sample.Loss * 100:0.#}%");
@@ -85,8 +86,9 @@ public sealed class PanelViewModel : ViewModelBase
     public RelayCommand ApplyFixCommand { get; }
 
     public IReadOnlyList<ChartSeries> TotalSeries { get => _totalSeries; private set => Set(ref _totalSeries, value); }
-    public string TotalDown => Units.Mbit(_totalDown);
-    public string TotalUp => Units.Mbit(_totalUp);
+    public string TotalDown => Units.Speed(_totalDown);
+    public string TotalUp => Units.Speed(_totalUp);
+    public string SpeedUnitLabel => Units.SpeedLabel;
     public int LinkCount => Links.Count;
     public bool NoLinks => Links.Count == 0;
     public bool SingleLink => Links.Count == 1;
@@ -125,7 +127,7 @@ public sealed class PanelViewModel : ViewModelBase
                 .FirstOrDefault(x => x.Limit is not null);
             var found = Loc.Format("S.Game.Detected", string.Join(", ", _services.Games.RunningGames));
             return capped.Limit is { } limit
-                ? found + " " + Loc.Format("S.Game.Capped", capped.Link.Name, Units.Mbit(limit))
+                ? found + " " + Loc.Format("S.Game.Capped", capped.Link.Name, Units.Speed(limit), Units.SpeedLabel)
                 : found;
         }
     }
@@ -170,7 +172,7 @@ public sealed class PanelViewModel : ViewModelBase
 
         TotalSeries = links
             .Select(l => new ChartSeries(l.Name, LinkPalette.ColorFor(l.Kind),
-                _services.Monitor.History(l.Id).Select(h => Units.ToMbit(h.DownBps)).ToList()))
+                _services.Monitor.History(l.Id).Select(h => Units.ToSpeed(h.DownBps)).ToList()))
             .ToList();
 
         NeedsFix = _services.Fix.NeedsFix;

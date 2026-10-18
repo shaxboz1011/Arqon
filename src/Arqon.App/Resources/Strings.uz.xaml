@@ -11,6 +11,9 @@
     <sys:String x:Key="S.Side.ManyLinks">· {0} ulanish birlashgan</sys:String>
 
     <sys:String x:Key="S.Unit.Mbit">Mbit/s</sys:String>
+    <sys:String x:Key="S.Unit.MByte">MB/s</sys:String>
+    <sys:String x:Key="S.Set.Unit">Tezlik birligi</sys:String>
+    <sys:String x:Key="S.Set.UnitBody">Mbit/s tarif tezligi bilan bir xil, MB/s esa yuklash dasturlarida ko'rinadigan birlik (1 MB/s = 8 Mbit/s).</sys:String>
 
     <sys:String x:Key="S.Status.Checking">Tekshirilmoqda</sys:String>
     <sys:String x:Key="S.Status.Offline">Uzilgan</sys:String>
@@ -52,7 +55,7 @@
     <sys:String x:Key="S.Apps.ColKind">TURI</sys:String>
     <sys:String x:Key="S.Apps.ColLink">ULANISH</sys:String>
     <sys:String x:Key="S.Apps.ColLimit">CHEGARA</sys:String>
-    <sys:String x:Key="S.Apps.LimitTip">Tezlik chegarasi (Mbit/s). Bo'sh qoldirsangiz cheklanmaydi.</sys:String>
+    <sys:String x:Key="S.Apps.LimitTip">Tezlik chegarasi ({0}). Bo'sh qoldirsangiz cheklanmaydi.</sys:String>
     <sys:String x:Key="S.Apps.Remove">Olib tashlash</sys:String>
     <sys:String x:Key="S.Apps.EmptyTitle">Hali qoida yo'q</sys:String>
     <sys:String x:Key="S.Apps.EmptyBody">Dastur qo'shing, masalan Steam'ni faqat telefon orqali yuklashga qo'ying.</sys:String>
@@ -118,7 +121,7 @@
     <sys:String x:Key="S.Notice.SteerFaultTitle">Tizim rejimi to'xtadi</sys:String>
     <sys:String x:Key="S.Notice.SteerFaultBody">{0}. Internet odatdagidek ishlayveradi.</sys:String>
     <sys:String x:Key="S.Game.Detected">O'yin ishlayapti: {0}.</sys:String>
-    <sys:String x:Key="S.Game.Capped">{0} orqali yuklash {1} Mbit/s ga cheklandi, ping barqaror qolishi uchun.</sys:String>
+    <sys:String x:Key="S.Game.Capped">{0} orqali yuklash {1} {2} ga cheklandi, ping barqaror qolishi uchun.</sys:String>
     <sys:String x:Key="S.Steer.Title">Tizim rejimi</sys:String>
     <sys:String x:Key="S.Steer.On">Barcha dasturlarning yangi ulanishlari tarmoqlar o'rtasida taqsimlanmoqda.</sys:String>
     <sys:String x:Key="S.Steer.Fault">Tizim rejimi to'xtadi: {0}. Internet odatdagidek ishlayapti.</sys:String>

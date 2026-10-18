@@ -59,19 +59,30 @@ public sealed class AppRuleViewModel : ViewModelBase
         }
     }
 
-    /// <summary>Speed cap in Mbit/s; empty means unlimited.</summary>
+    /// <summary>Speed cap in the unit chosen in Settings (Mbit/s or MB/s); empty means unlimited.</summary>
     public string LimitText
     {
-        get => _rule.LimitBps is { } b ? Units.ToMbit(b).ToString("0.##", CultureInfo.InvariantCulture) : "";
+        get => _rule.LimitBps is { } b ? Units.ToSpeed(b).ToString("0.##", CultureInfo.InvariantCulture) : "";
         set
         {
             long? bps = null;
-            if (double.TryParse(value.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var mbit) && mbit > 0)
-                bps = (long)(mbit * 1_000_000 / 8);
+            if (double.TryParse(value.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var typed) && typed > 0)
+                bps = (long)Units.FromSpeed(typed);
             _rule = _rule with { LimitBps = bps };
             _owner.Persist();
             Raise(nameof(LimitText));
         }
+    }
+
+    public string LimitUnit => Units.SpeedLabel;
+    public string LimitTip => Loc.Format("S.Apps.LimitTip", Units.SpeedLabel);
+
+    /// <summary>The unit setting changed: the same cap is shown in the new unit.</summary>
+    public void RefreshUnit()
+    {
+        Raise(nameof(LimitText));
+        Raise(nameof(LimitUnit));
+        Raise(nameof(LimitTip));
     }
 
     public void RefreshOptions() => Raise(nameof(ChoiceOptions));
@@ -111,6 +122,7 @@ public sealed class AppsViewModel : ViewModelBase
     private void OnSettingsChanged()
     {
         Raise(nameof(SystemModeOff));
+        foreach (var rule in Rules) rule.RefreshUnit();
     }
 
     private void Rebuild()

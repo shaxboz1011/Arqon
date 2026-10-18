@@ -27,8 +27,8 @@
                               SelectedItem="{Binding SelectedChoice, Mode=TwoWay}" />
                     <StackPanel Grid.Column="3" Orientation="Horizontal">
                         <TextBox Width="70" Text="{Binding LimitText, UpdateSourceTrigger=LostFocus}" Padding="8,6"
-                                 ToolTip="{DynamicResource S.Apps.LimitTip}" />
-                        <TextBlock Style="{StaticResource MutedText}" Text="Mbit/s" Margin="6,0,0,0" VerticalAlignment="Center" FontSize="11" />
+                                 ToolTip="{Binding LimitTip}" />
+                        <TextBlock Style="{StaticResource MutedText}" Text="{Binding LimitUnit}" Margin="6,0,0,0" VerticalAlignment="Center" FontSize="11" />
                     </StackPanel>
                     <Button Grid.Column="4" Style="{StaticResource IconButton}" Content="&#xE74D;" Command="{Binding RemoveCommand}"
                             ToolTip="{DynamicResource S.Apps.Remove}" />

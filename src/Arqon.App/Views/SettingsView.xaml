@@ -83,6 +83,18 @@
             </Border>
 
             <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource RowTitle}" Text="{DynamicResource S.Set.Unit}" />
+                        <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Text="{DynamicResource S.Set.UnitBody}" />
+                    </StackPanel>
+                    <ComboBox Grid.Column="1" Margin="16,0,0,0" ItemsSource="{Binding SpeedUnits}" DisplayMemberPath="Label"
+                              SelectedItem="{Binding SelectedSpeedUnit, Mode=TwoWay}" />
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,10">
                 <StackPanel>
                     <Grid>
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>

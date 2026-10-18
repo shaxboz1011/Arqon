@@ -34,8 +34,8 @@ public sealed class TaskbarMeterViewModel : ObservableObject
     public void RefreshSpeed()
     {
         var (down, up) = _services.CurrentSpeed();
-        _down = SpeedFormat.Of(down);
-        _up = SpeedFormat.Of(up);
+        _down = SpeedFormat.Of(down, Units.Unit);
+        _up = SpeedFormat.Of(up, Units.Unit);
         Raise(nameof(DownValue));
         Raise(nameof(DownUnit));
         Raise(nameof(UpValue));

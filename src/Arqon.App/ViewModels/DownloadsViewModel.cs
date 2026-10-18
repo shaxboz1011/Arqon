@@ -88,7 +88,7 @@ public sealed class DownloadItemViewModel : ViewModelBase
         ? $"{Units.Size(_done)} / {Units.Size(_total)}  ({Percent:0}%)"
         : Units.Size(_done);
 
-    public string SpeedText => IsDownloading ? $"{Units.Mbit(_speed)} {Loc.Get("S.Unit.Mbit")}" : "";
+    public string SpeedText => IsDownloading ? $"{Units.Speed(_speed)} {Units.SpeedLabel}" : "";
 
     public string EtaText
     {
@@ -299,7 +299,7 @@ public sealed class DownloadsViewModel : ViewModelBase
     public string Folder { get => _folder; private set => Set(ref _folder, value); }
     public bool IsEmpty => Items.Count == 0;
     public int ActiveCount => Items.Count(i => i.IsDownloading);
-    public string TotalSpeed => $"{Units.Mbit(Items.Sum(i => i.SpeedBps))} {Loc.Get("S.Unit.Mbit")}";
+    public string TotalSpeed => $"{Units.Speed(Items.Sum(i => i.SpeedBps))} {Units.SpeedLabel}";
 
     public LinkThrottle Throttle => _services.Throttle;
 
