@@ -45,6 +45,22 @@ public sealed class SettingsEvolutionTests : IDisposable
     }
 
     [Fact]
+    public void The_download_folder_is_automatic_until_the_user_picks_one()
+    {
+        var path = Path.Combine(_dir, "settings.json");
+        File.WriteAllText(path, """{ "Rules": [], "GameProtection": true, "SystemMode": false, "Language": "uz" }""");
+        var store = new JsonSettingsStore(path);
+
+        Assert.Null(store.Load().DownloadDirectory);
+
+        store.Save(ArqonSettings.Default() with { DownloadDirectory = @"D:\Torrents" });
+        Assert.Equal(@"D:\Torrents", store.Load().DownloadDirectory);
+
+        store.Save(ArqonSettings.Default() with { DownloadDirectory = null });
+        Assert.Null(store.Load().DownloadDirectory);   // back to automatic
+    }
+
+    [Fact]
     public void The_safe_game_mode_choice_survives_a_save_and_load()
     {
         var path = Path.Combine(_dir, "settings.json");

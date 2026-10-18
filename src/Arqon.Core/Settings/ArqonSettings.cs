@@ -13,7 +13,8 @@ public sealed record ArqonSettings(
     bool TaskbarMeter = true,
     bool SpeedInBytes = false,
     bool SafeGameMode = true,
-    int MaxConcurrentDownloads = 3)
+    int MaxConcurrentDownloads = 3,
+    string? DownloadDirectory = null)
 {
     public static ArqonSettings Default() => new([], GameProtection: true, SystemMode: false, Language: "uz");
 }

@@ -33,6 +33,34 @@ public sealed class DownloadStoreTests : IDisposable
     }
 
     [Fact]
+    public void A_list_written_before_torrents_existed_loads_as_plain_downloads()
+    {
+        Directory.CreateDirectory(_dir);
+        var path = Path.Combine(_dir, "d.json");
+        File.WriteAllText(path, """[{"Url":"https://example.com/a.iso","Path":"C:\\Downloads\\a.iso","Name":"a.iso","Completed":false}]""");
+
+        var record = Assert.Single(new DownloadStore(path).Load());
+
+        Assert.Equal(DownloadKind.Http, record.Kind);
+        Assert.Equal(@"C:\Downloads\a.iso", record.Key);
+    }
+
+    [Fact]
+    public void Torrent_records_round_trip_and_are_keyed_by_their_source_not_their_folder()
+    {
+        var store = new DownloadStore(Path.Combine(_dir, "d.json"));
+        var one = new DownloadRecord("magnet:?xt=urn:btih:AAAA", @"C:\Users\me\Downloads", "Ubuntu", false, DownloadKind.Torrent);
+        var two = new DownloadRecord(@"C:\data\torrents\x.torrent", @"C:\Users\me\Downloads", "Movie", false, DownloadKind.Torrent);
+
+        store.Save([one, two]);
+
+        var loaded = store.Load();
+        Assert.Equal([one, two], loaded);
+        Assert.NotEqual(loaded[0].Key, loaded[1].Key);   // both save into the same folder, so the folder cannot identify them
+        Assert.Equal(one.Url, loaded[0].Key);
+    }
+
+    [Fact]
     public void Corrupt_file_gives_empty_list()
     {
         Directory.CreateDirectory(_dir);

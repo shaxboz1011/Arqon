@@ -2,7 +2,15 @@ using System.Text.Json;
 
 namespace Arqon.Core.Download;
 
-public sealed record DownloadRecord(string Url, string Path, string Name, bool Completed);
+public enum DownloadKind { Http, Torrent }
+
+/// <param name="Url">The link, a magnet link, or (for a torrent added from a file) the saved copy of the .torrent file.</param>
+/// <param name="Path">A plain download: the file. A torrent: the folder it is saved into.</param>
+public sealed record DownloadRecord(string Url, string Path, string Name, bool Completed, DownloadKind Kind = DownloadKind.Http)
+{
+    /// <summary>Identifies the download in the queue. Torrents share a folder, so for them the source is the identity.</summary>
+    public string Key => Kind == DownloadKind.Torrent ? Url : Path;
+}
 
 /// <summary>Remembers the download list so unfinished downloads can be resumed after a restart.</summary>
 public sealed class DownloadStore(string path)
