@@ -10,6 +10,8 @@ public sealed record LinkUsage(string LinkId, string Name, IReadOnlyList<DayUsag
 
 public sealed record UsageTotals(long Down, long Up);
 
+public sealed record LinkTotals(string LinkId, string Name, long Down, long Up);
+
 /// <summary>Counts how many bytes each link carried per day, and remembers it across restarts.</summary>
 public sealed class UsageTracker
 {
@@ -95,6 +97,15 @@ public sealed class UsageTracker
         return Sum(d => d.Year == today.Year && d.Month == today.Month);
     }
 
+    /// <summary>Per link, largest first; links with no traffic in the period are left out.</summary>
+    public IReadOnlyList<LinkTotals> TodayByLink() => SumByLink(d => d == DayOf(_clock()));
+
+    public IReadOnlyList<LinkTotals> MonthByLink()
+    {
+        var today = DayOf(_clock());
+        return SumByLink(d => d.Year == today.Year && d.Month == today.Month);
+    }
+
     public void Save()
     {
         if (_path is null) return;
@@ -131,6 +142,24 @@ public sealed class UsageTracker
                     if (Parse(key) is { } d && include(d)) { down += v[0]; up += v[1]; }
         }
         return new UsageTotals(down, up);
+    }
+
+    private IReadOnlyList<LinkTotals> SumByLink(Func<DateOnly, bool> include)
+    {
+        lock (_gate)
+        {
+            return _links
+                .Select(kv =>
+                {
+                    long down = 0, up = 0;
+                    foreach (var (key, v) in kv.Value.Days)
+                        if (Parse(key) is { } d && include(d)) { down += v[0]; up += v[1]; }
+                    return new LinkTotals(kv.Key, kv.Value.Name, down, up);
+                })
+                .Where(t => t.Down + t.Up > 0)
+                .OrderByDescending(t => t.Down + t.Up)
+                .ToList();
+        }
     }
 
     private void Touch(string linkId, string name)

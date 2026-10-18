@@ -127,6 +127,13 @@ public sealed class AppServices : IDisposable
 
     public IReadOnlyList<LinkSteerStats> SteerStats() => Demo ? DemoSteerStats() : Steering.Engine.Stats();
 
+    /// <summary>Combined speed of all links right now, in bytes per second.</summary>
+    public (double Down, double Up) CurrentSpeed()
+    {
+        var samples = LatestSamples();
+        return (samples.Sum(s => s.DownBps), samples.Sum(s => s.UpBps));
+    }
+
     public void Dispose()
     {
         _maintenance?.Dispose();

@@ -26,6 +26,7 @@ public sealed class SettingsEvolutionTests : IDisposable
         Assert.True(s.CloseToTray);
         Assert.True(s.Notifications);
         Assert.True(s.ClipboardWatch);
+        Assert.True(s.TaskbarMeter);
     }
 
     [Fact]
@@ -33,13 +34,14 @@ public sealed class SettingsEvolutionTests : IDisposable
     {
         var path = Path.Combine(_dir, "settings.json");
         var store = new JsonSettingsStore(path);
-        store.Save(ArqonSettings.Default() with { CloseToTray = false, Notifications = false, ClipboardWatch = false });
+        store.Save(ArqonSettings.Default() with { CloseToTray = false, Notifications = false, ClipboardWatch = false, TaskbarMeter = false });
 
         var s = store.Load();
 
         Assert.False(s.CloseToTray);
         Assert.False(s.Notifications);
         Assert.False(s.ClipboardWatch);
+        Assert.False(s.TaskbarMeter);
     }
 
     [Fact]
@@ -47,6 +49,6 @@ public sealed class SettingsEvolutionTests : IDisposable
     {
         var s = ArqonSettings.Default();
 
-        Assert.True(s.CloseToTray && s.Notifications && s.ClipboardWatch);
+        Assert.True(s.CloseToTray && s.Notifications && s.ClipboardWatch && s.TaskbarMeter);
     }
 }

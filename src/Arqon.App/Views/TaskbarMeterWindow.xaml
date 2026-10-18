@@ -1,0 +1,115 @@
+<Window x:Class="Arqon.App.Views.TaskbarMeterWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ShowInTaskbar="False" ShowActivated="False" Topmost="True" ResizeMode="NoResize" Focusable="False"
+        WindowStartupLocation="Manual" Left="-10000" Top="-10000" Width="104" Height="32"
+        UseLayoutRounding="True" SnapsToDevicePixels="True" FontFamily="Segoe UI" Title="Arqon meter">
+
+    <Grid>
+        <Border x:Name="Root" CornerRadius="5" Cursor="Hand">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <!-- Nearly transparent, not fully: a fully transparent pixel would let the mouse through and there would be no hover. -->
+                    <Setter Property="Background" Value="#01000000" />
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#26808080" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+
+            <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
+                <Grid Width="104" Height="32" Margin="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="↓" Foreground="#4ADE80" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding DownValue}" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                    <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding DownUnit}" FontSize="10" Opacity="0.7" VerticalAlignment="Center" Margin="3,1,6,0" Width="30" />
+
+                    <TextBlock Grid.Row="1" Text="↑" Foreground="#F59E0B" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding UpValue}" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                    <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding UpUnit}" FontSize="10" Opacity="0.7" VerticalAlignment="Center" Margin="3,1,6,0" Width="30" />
+                </Grid>
+            </Viewbox>
+
+            <Border.ContextMenu>
+                <ContextMenu>
+                    <MenuItem x:Name="OpenItem" Header="{DynamicResource S.Tray.Open}" FontWeight="SemiBold" />
+                    <MenuItem x:Name="HideItem" Header="{DynamicResource S.Meter.Hide}" />
+                </ContextMenu>
+            </Border.ContextMenu>
+        </Border>
+
+        <!-- Opens above the widget while the pointer is over it. Hit-test invisible, so it never steals the hover. -->
+        <Popup x:Name="Details" PlacementTarget="{Binding ElementName=Root}" Placement="Top" VerticalOffset="-6" HorizontalOffset="0"
+               AllowsTransparency="True" StaysOpen="True" PopupAnimation="Fade" IsHitTestVisible="False">
+            <Border Margin="12" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                    CornerRadius="10" Padding="16,14" MinWidth="270" TextElement.Foreground="{StaticResource TextBrush}">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="18" ShadowDepth="2" Opacity="0.5" />
+                </Border.Effect>
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="86" />
+                            <ColumnDefinition Width="86" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Column="1" Style="{StaticResource CardLabel}" HorizontalAlignment="Right" Text="{DynamicResource S.Usage.Today}" />
+                        <TextBlock Grid.Column="2" Style="{StaticResource CardLabel}" HorizontalAlignment="Right" Text="{DynamicResource S.Usage.Month}" />
+
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,8,0,0">
+                            <TextBlock Text="↓" Foreground="#4ADE80" FontWeight="Bold" Margin="0,0,6,0" />
+                            <TextBlock Style="{StaticResource MutedText}" Text="{DynamicResource S.Usage.Down}" />
+                        </StackPanel>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Margin="0,8,0,0" HorizontalAlignment="Right" FontWeight="SemiBold" Text="{Binding TodayDown}" />
+                        <TextBlock Grid.Row="1" Grid.Column="2" Margin="0,8,0,0" HorizontalAlignment="Right" FontWeight="SemiBold" Text="{Binding MonthDown}" />
+
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,4,0,0">
+                            <TextBlock Text="↑" Foreground="#F59E0B" FontWeight="Bold" Margin="0,0,6,0" />
+                            <TextBlock Style="{StaticResource MutedText}" Text="{DynamicResource S.Usage.Up}" />
+                        </StackPanel>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Margin="0,4,0,0" HorizontalAlignment="Right" FontWeight="SemiBold" Text="{Binding TodayUp}" />
+                        <TextBlock Grid.Row="2" Grid.Column="2" Margin="0,4,0,0" HorizontalAlignment="Right" FontWeight="SemiBold" Text="{Binding MonthUp}" />
+                    </Grid>
+
+                    <ItemsControl ItemsSource="{Binding Links}" Margin="0,10,0,0" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Padding="0,8,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="86" />
+                                        <ColumnDefinition Width="86" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse Width="8" Height="8" Fill="{Binding Brush}" Margin="0,1,8,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Name}" MaxWidth="110" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" HorizontalAlignment="Right" Text="{Binding Today}" />
+                                    <TextBlock Grid.Column="2" HorizontalAlignment="Right" Text="{Binding Month}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </Popup>
+    </Grid>
+</Window>

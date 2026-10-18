@@ -190,4 +190,32 @@ public sealed class UsageTrackerTests : IDisposable
         Assert.Equal(0, day.Down);
         Assert.Equal(0, day.Up);
     }
+
+    [Fact]
+    public void Today_and_this_month_can_be_split_by_link_largest_first()
+    {
+        var t = Make();
+        t.Add("wifi", "Wi-Fi", new DateOnly(2026, 10, 18), 1_000, 100);
+        t.Add("wifi", "Wi-Fi", new DateOnly(2026, 10, 3), 5_000, 500);
+        t.Add("wifi", "Wi-Fi", new DateOnly(2026, 9, 30), 99_999, 9);     // last month: not counted
+        t.Add("phone", "Phone", new DateOnly(2026, 10, 18), 20_000, 200);
+
+        var today = t.TodayByLink();
+        var month = t.MonthByLink();
+
+        Assert.Equal(["Phone", "Wi-Fi"], today.Select(l => l.Name));
+        Assert.Equal(new LinkTotals("wifi", "Wi-Fi", 1_000, 100), today.Single(l => l.LinkId == "wifi"));
+        Assert.Equal(6_000, month.Single(l => l.LinkId == "wifi").Down);
+        Assert.Equal(["Phone", "Wi-Fi"], month.Select(l => l.Name));   // 20 000 > 6 000
+    }
+
+    [Fact]
+    public void A_link_without_traffic_in_the_period_is_left_out_of_the_split()
+    {
+        var t = Make();
+        t.Add("wifi", "Wi-Fi", new DateOnly(2026, 10, 18), 1_000, 0);
+        t.Add("phone", "Phone", new DateOnly(2026, 10, 17), 5_000, 0);
+
+        Assert.Equal(["Wi-Fi"], t.TodayByLink().Select(l => l.Name));
+    }
 }

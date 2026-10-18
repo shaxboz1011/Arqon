@@ -9,7 +9,8 @@ public sealed record ArqonSettings(
     string Language,
     bool CloseToTray = true,
     bool Notifications = true,
-    bool ClipboardWatch = true)
+    bool ClipboardWatch = true,
+    bool TaskbarMeter = true)
 {
     public static ArqonSettings Default() => new([], GameProtection: true, SystemMode: false, Language: "uz");
 }

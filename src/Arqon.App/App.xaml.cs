@@ -16,6 +16,7 @@ public partial class App : Application
     private AppServices? _services;
     private ShellViewModel? _shell;
     private TrayService? _tray;
+    private TaskbarMeterService? _meter;
     private Mutex? _instance;
     private EventWaitHandle? _showSignal;
     private bool _exiting;
@@ -74,6 +75,7 @@ public partial class App : Application
         if (shotDir is null)
         {
             _tray = new TrayService(_services, ShowMainWindow, ExitApp);
+            _meter = new TaskbarMeterService(_services, ShowMainWindow);
             ListenForSecondInstance();
         }
         if (!(startHidden && _tray is not null && _services.Settings.CloseToTray)) window.Show();
@@ -83,6 +85,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _meter?.Dispose();
         _tray?.Dispose();
         _shell?.Dispose();
         _services?.Dispose();

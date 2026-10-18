@@ -134,6 +134,9 @@
     <sys:String x:Key="S.Set.NotificationsBody">Ulanish qo'shilgani yoki uzilgani, o'yin aniqlangani haqida xabar beradi.</sys:String>
     <sys:String x:Key="S.Set.Clipboard">Nusxalangan linkni taklif qilish</sys:String>
     <sys:String x:Key="S.Set.ClipboardBody">Fayl linkini nusxalasangiz, Yuklashlar sahifasida bir bosishda yuklashni taklif qiladi.</sys:String>
+    <sys:String x:Key="S.Set.Meter">Vazifalar panelidagi tezlik o'lchagich</sys:String>
+    <sys:String x:Key="S.Set.MeterBody">Tepsi yonida yuklab olish va yuborish tezligi doim ko'rinadi, ustiga kelsangiz bugungi va oylik trafik chiqadi. To'liq ekranli o'yinda o'zi yashirinadi.</sys:String>
+    <sys:String x:Key="S.Meter.Hide">Yashirish</sys:String>
     <sys:String x:Key="S.Usage.Sub">Har bir ulanish qancha trafik o'tkazganini ko'ring.</sys:String>
     <sys:String x:Key="S.Usage.Today">BUGUN</sys:String>
     <sys:String x:Key="S.Usage.Month">SHU OY</sys:String>

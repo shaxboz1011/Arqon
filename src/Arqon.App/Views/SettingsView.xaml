@@ -108,6 +108,14 @@
                         </StackPanel>
                         <ToggleButton Grid.Column="1" Style="{StaticResource Switch}" IsChecked="{Binding ClipboardWatch, Mode=TwoWay}" Margin="16,0,0,0" />
                     </Grid>
+                    <Grid Margin="0,14,0,0">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource RowTitle}" Text="{DynamicResource S.Set.Meter}" />
+                            <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Text="{DynamicResource S.Set.MeterBody}" />
+                        </StackPanel>
+                        <ToggleButton Grid.Column="1" Style="{StaticResource Switch}" IsChecked="{Binding TaskbarMeter, Mode=TwoWay}" Margin="16,0,0,0" />
+                    </Grid>
                 </StackPanel>
             </Border>
 

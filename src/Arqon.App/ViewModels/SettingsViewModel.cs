@@ -111,6 +111,12 @@ public sealed class SettingsViewModel : ViewModelBase
         set { _services.SaveSettings(_services.Settings with { ClipboardWatch = value }); Raise(); }
     }
 
+    public bool TaskbarMeter
+    {
+        get => _services.Settings.TaskbarMeter;
+        set { _services.SaveSettings(_services.Settings with { TaskbarMeter = value }); Raise(); }
+    }
+
     public bool StartWithWindows
     {
         get
