@@ -297,6 +297,42 @@ public class NatSteeringEngineTests
     }
 
     [Fact]
+    public void Taking_a_link_out_of_rotation_is_written_to_the_log_with_the_number_of_stuck_connections()
+    {
+        var rig = new Rig();
+        var log = new List<string>();
+        rig.Engine.Log += log.Add;
+        for (ushort i = 0; i < 5; i++)
+        {
+            rig.Resolver.Ports[(ushort)(52000 + i)] = new ProcessInfo(100, "chrome.exe");
+            rig.Engine.ProcessOutbound(rig.Packet(PacketBuilder.Tcp, (ushort)(52000 + i)).View);
+        }
+        rig.Now += TimeSpan.FromSeconds(10);
+
+        rig.Engine.CheckHealth();
+
+        var line = Assert.Single(log, l => l.Contains("paused"));
+        Assert.Contains("phone", line);
+        Assert.Contains("5", line);
+    }
+
+    [Fact]
+    public void The_first_reply_on_a_steered_link_and_the_first_steered_connection_are_logged_once()
+    {
+        var rig = new Rig();
+        var log = new List<string>();
+        rig.Engine.Log += log.Add;
+
+        rig.Engine.ProcessOutbound(rig.Packet(PacketBuilder.Tcp, 50000).View);
+        rig.Engine.ProcessOutbound(rig.Packet(PacketBuilder.Tcp, 50001).View);
+        rig.Engine.ProcessInbound(rig.Reply(PacketBuilder.Tcp, 50000).View);
+        rig.Engine.ProcessInbound(rig.Reply(PacketBuilder.Tcp, 50001).View);
+
+        Assert.Single(log, l => l.Contains("first connection"));
+        Assert.Single(log, l => l.Contains("first reply"));
+    }
+
+    [Fact]
     public void A_stuck_connection_is_decided_again_when_its_link_is_taken_out()
     {
         var rig = new Rig();
@@ -324,11 +360,31 @@ public class NatSteeringEngineTests
             rig.Engine.ProcessOutbound(rig.Packet(PacketBuilder.Tcp, (ushort)(52000 + i)).View);
         }
         rig.Engine.ProcessInbound(rig.Reply(PacketBuilder.Tcp, 52002).View);
+        rig.Engine.ProcessOutbound(rig.Packet(PacketBuilder.Tcp, 52002, flags: PacketBuilder.FlagAck).View);   // the application carries on
 
         rig.Now += TimeSpan.FromSeconds(10);
         rig.Engine.CheckHealth();
 
         Assert.False(rig.Engine.Stats().Single(s => s.LinkId == "phone").Quarantined);
+    }
+
+    [Fact]
+    public void A_reply_that_the_operating_system_never_accepts_does_not_count_as_an_answer()
+    {
+        // Seen on the first hardware test: with the strong host model Windows silently dropped the rewritten replies.
+        // The engine saw them go by, but the application never continued the handshake, so the link must still be blamed.
+        var rig = new Rig();
+        for (ushort i = 0; i < 5; i++)
+        {
+            rig.Resolver.Ports[(ushort)(52000 + i)] = new ProcessInfo(100, "chrome.exe");
+            rig.Engine.ProcessOutbound(rig.Packet(PacketBuilder.Tcp, (ushort)(52000 + i)).View);
+            rig.Engine.ProcessInbound(rig.Reply(PacketBuilder.Tcp, (ushort)(52000 + i)).View);
+        }
+
+        rig.Now += TimeSpan.FromSeconds(10);
+        rig.Engine.CheckHealth();
+
+        Assert.True(rig.Engine.Stats().Single(s => s.LinkId == "phone").Quarantined);
     }
 
     [Fact]

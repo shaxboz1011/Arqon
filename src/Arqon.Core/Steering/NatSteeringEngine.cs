@@ -48,7 +48,8 @@ public sealed class NatSteeringEngine
         public readonly long Created = nowTicks;
         public long LastSeen = nowTicks;
         public long EndedAt;                                // 0 = still open
-        public volatile bool Answered;
+        public volatile bool ReplySeen;                     // a reply went past us; the application may still not have received it
+        public volatile bool Answered;                      // the application received the reply and carried on
     }
 
     private sealed class Counters
@@ -56,6 +57,7 @@ public sealed class NatSteeringEngine
         public long Flows, BytesOut, BytesIn;
         public long LastAnswered;
         public long QuarantinedUntil;
+        public int LoggedFirstSteer, LoggedFirstReply;   // 0/1, so each is written to the log once per link
     }
 
     private readonly SteeringCoordinator _coordinator;
@@ -83,6 +85,12 @@ public sealed class NatSteeringEngine
 
     public int ActiveFlows => _outbound.Count;
 
+    /// <summary>Rare, human-readable events (first steered connection, first reply, a link taken out), for diagnosing real hardware.</summary>
+    public event Action<string>? Log;
+
+    private string Describe(string linkId) =>
+        _links().FirstOrDefault(l => l.Id == linkId) is { } l ? $"{l.Name} ({l.LocalAddress}, id {linkId})" : linkId;
+
     public SteerVerdict ProcessOutbound(PacketView p)
     {
         if (!IsPublicUnicast(p.Destination)) return SteerVerdict.Pass;
@@ -104,6 +112,10 @@ public sealed class NatSteeringEngine
         if (p.IsTcpEnd) Volatile.Write(ref flow.EndedAt, now);
         if (flow.SteeredTo is null) return SteerVerdict.Pass;
 
+        // A TCP connection counts as answered only when the application continues after the reply (the ACK that
+        // completes the handshake). A reply that Windows silently dropped must not keep a broken link in rotation.
+        if (flow.ReplySeen && p.Protocol == 6 && !p.IsTcpSyn) MarkAnswered(flow, now);
+
         p.SetSource(flow.SteeredTo);
         p.RecalculateChecksums();
         Interlocked.Add(ref Counter(flow.LinkId).BytesOut, p.Length);
@@ -118,16 +130,25 @@ public sealed class NatSteeringEngine
         var now = _clock().UtcTicks;
         Volatile.Write(ref flow.LastSeen, now);
         if (p.IsTcpEnd) Volatile.Write(ref flow.EndedAt, now);
-        if (!flow.Answered)
+        if (!flow.ReplySeen)
         {
-            flow.Answered = true;
-            Volatile.Write(ref Counter(flow.LinkId).LastAnswered, now);
+            flow.ReplySeen = true;
+            if (Interlocked.Exchange(ref Counter(flow.LinkId).LoggedFirstReply, 1) == 0)
+                Log?.Invoke($"first reply received for a connection steered to {Describe(flow.LinkId)}");
+            if (p.Protocol != 6) MarkAnswered(flow, now);   // UDP has no handshake to wait for
         }
 
         p.SetDestination(flow.Original.LocalAddr);
         p.RecalculateChecksums();
         Interlocked.Add(ref Counter(flow.LinkId).BytesIn, p.Length);
         return SteerVerdict.Rewritten;
+    }
+
+    private void MarkAnswered(Flow flow, long now)
+    {
+        if (flow.Answered) return;
+        flow.Answered = true;
+        Volatile.Write(ref Counter(flow.LinkId).LastAnswered, now);
     }
 
     /// <summary>
@@ -151,6 +172,7 @@ public sealed class NatSteeringEngine
 
             Volatile.Write(ref counters.QuarantinedUntil, now + Quarantine.Ticks);
             _coordinator.Exclude(group.Key, Quarantine);
+            Log?.Invoke($"{Describe(group.Key)} paused for {Quarantine.TotalSeconds:0} s: {group.Count()} steered connections got no reply within {AnswerWait.TotalSeconds:0} s");
             // Forget the stuck attempts so the operating system's SYN retransmissions are decided afresh.
             foreach (var flow in group) Forget(flow);
         }
@@ -217,7 +239,10 @@ public sealed class NatSteeringEngine
             var steered = new Flow(key, target.Id, target.LocalAddress, now);
             _outbound[key] = steered;
             _inbound[new FlowKey(key.Protocol, target.LocalAddress, key.LocalPort, key.RemoteAddr, key.RemotePort)] = steered;
-            Interlocked.Increment(ref Counter(target.Id).Flows);
+            var targetCounters = Counter(target.Id);
+            Interlocked.Increment(ref targetCounters.Flows);
+            if (Interlocked.Exchange(ref targetCounters.LoggedFirstSteer, 1) == 0)
+                Log?.Invoke($"first connection steered to {Describe(target.Id)} (default address {key.LocalAddr}, process {owner?.ExeName ?? "?"})");
             return steered;
         }
     }

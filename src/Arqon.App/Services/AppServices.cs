@@ -77,6 +77,15 @@ public sealed class AppServices : IDisposable
         ISteerer steerer = demo ? new DemoSteerer() : new WinDivertSteerer(engine, cachedLinks, cachedDefault);
         Steering = new SteeringService(steerer, coordinator, engine);
         Steering.StateChanged += OnSteeringChanged;
+        if (!demo)
+        {
+            engine.Log += SteeringLog.Write;
+            Steering.StateChanged += () =>
+            {
+                var links = string.Join("; ", cachedLinks().Select(l => $"{l.Name} {l.LocalAddress} gw {l.Gateway}"));
+                SteeringLog.Write($"system mode {Steering.State}{(Steering.Reason is { } r ? $" ({r})" : "")}; default address {cachedDefault()}; links: {links}");
+            };
+        }
     }
 
     public static AppServices Create(bool demo)
