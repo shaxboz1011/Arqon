@@ -74,6 +74,76 @@ public sealed class DownloadJobTests : IDisposable
     }
 
     [Fact]
+    public async Task Backs_off_instead_of_hammering_a_server_that_limits_parallel_requests()
+    {
+        // Seen against a real download server: 8 parallel ranges were fine, 16 got "429 Too Many Requests", and the
+        // job kept growing its worker count until chunks ran out of retries and the whole download failed.
+        // Long enough (several seconds) for the job to try growing its worker count, which is what hit the limit.
+        using var server = new TestRangeServer(40 * MiB) { DelayMs = 150, MaxConcurrentPerClient = 4 };
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+
+        await new DownloadJob().RunAsync(new DownloadRequest(server.Url, Dest(), 256 * 1024), [Loopback("a", "127.0.0.2")], null, cts.Token);
+
+        Assert.Equal(Hash(server.Payload), HashFile(Dest()));
+        Assert.InRange(server.Rejected, 1, 25);   // the limit was really hit, and it learns it quickly instead of pushing against it
+    }
+
+    [Fact]
+    public async Task A_server_that_allows_only_one_connection_still_delivers_the_whole_file()
+    {
+        using var server = new TestRangeServer(3 * MiB) { DelayMs = 20, MaxConcurrentPerClient = 1 };
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(40));
+
+        await new DownloadJob().RunAsync(new DownloadRequest(server.Url, Dest(), 256 * 1024), [Loopback("a", "127.0.0.2")], null, cts.Token);
+
+        Assert.Equal(Hash(server.Payload), HashFile(Dest()));
+    }
+
+    [Fact]
+    public async Task Each_link_is_limited_separately_because_each_has_its_own_address()
+    {
+        using var server = new TestRangeServer(8 * MiB) { DelayMs = 30, MaxConcurrentPerClient = 2 };
+        DownloadProgress? last = null;
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(40));
+
+        await new DownloadJob().RunAsync(new DownloadRequest(server.Url, Dest(), 256 * 1024),
+            [Loopback("a", "127.0.0.2"), Loopback("b", "127.0.0.3")],
+            new SyncProgress<DownloadProgress>(p => last = p), cts.Token);
+
+        Assert.Equal(Hash(server.Payload), HashFile(Dest()));
+        Assert.True(last!.PerLinkBytes["a"] > 0);
+        Assert.True(last.PerLinkBytes["b"] > 0);   // neither link is shut out because the other one hit the limit
+    }
+
+    [Fact]
+    public async Task A_link_that_never_answers_does_not_stop_the_download_from_starting()
+    {
+        // Seen on real hardware: the phone had internet but its path to the server swallowed every packet. The file
+        // information was asked of the links one after the other with no time limit, so nothing ever started.
+        using var server = new TestRangeServer(6 * MiB) { DelayMs = 10 };
+        server.HangFor = ip => ip.Equals(IPAddress.Parse("127.0.0.2"));
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+
+        await new DownloadJob().RunAsync(new DownloadRequest(server.Url, Dest(), 512 * 1024),
+            [Loopback("dead", "127.0.0.2"), Loopback("ok", "127.0.0.3")], null, cts.Token);
+
+        Assert.Equal(Hash(server.Payload), HashFile(Dest()));
+    }
+
+    [Fact]
+    public async Task A_link_that_never_answers_does_not_stop_the_single_stream_fallback_either()
+    {
+        using var server = new TestRangeServer(3 * MiB) { SupportsRanges = false };
+        server.HangFor = ip => ip.Equals(IPAddress.Parse("127.0.0.2"));
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+
+        await new DownloadJob().RunAsync(new DownloadRequest(server.Url, Dest(), 512 * 1024),
+            [Loopback("dead", "127.0.0.2"), Loopback("ok", "127.0.0.3")], null, cts.Token);
+
+        Assert.Equal(Hash(server.Payload), HashFile(Dest()));
+    }
+
+    [Fact]
     public async Task Finishes_on_the_remaining_link_when_one_link_fails()
     {
         using var server = new TestRangeServer(6 * MiB) { DelayMs = 10 };

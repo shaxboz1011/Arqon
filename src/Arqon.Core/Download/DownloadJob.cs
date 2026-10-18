@@ -11,6 +11,15 @@ namespace Arqon.Core.Download;
 /// <summary>The server advertised ranges but ignores them; the job falls back to one stream.</summary>
 internal sealed class RangeNotSupportedException(string message) : IOException(message);
 
+/// <summary>
+/// The server said "too many requests" (429, or 503 with Retry-After). That is a limit to respect, not a broken link:
+/// the job uses fewer parallel requests and tries again, and it does not count as a failure.
+/// </summary>
+internal sealed class ServerBusyException(TimeSpan? retryAfter) : IOException("The server asked to slow down")
+{
+    public TimeSpan? RetryAfter { get; } = retryAfter;
+}
+
 /// <summary>The server's answer does not match what the probe saw (size changed, wrong byte range): continuing would corrupt the file.</summary>
 internal sealed class RemoteChangedException(string message) : IOException(message);
 
@@ -23,6 +32,8 @@ public sealed class DownloadJob
 {
     private const int BufferSize = 64 * 1024;
     private static readonly TimeSpan ReportEvery = TimeSpan.FromMilliseconds(250);
+    private static readonly TimeSpan ProbeTimeout = TimeSpan.FromSeconds(15);
+    private static readonly TimeSpan HeaderTimeout = TimeSpan.FromSeconds(20);
 
     private CancellationTokenSource? _active;
 
@@ -41,7 +52,7 @@ public sealed class DownloadJob
 
         try
         {
-            var info = await ProbeAnyAsync(request.Url, runners, run.Token).ConfigureAwait(false);
+            var (info, winner) = await ProbeAnyAsync(request.Url, runners, run.Token).ConfigureAwait(false);
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(request.DestinationPath))!);
 
             if (info.Length is { } length && length > 0 && info.AcceptsRanges)
@@ -56,7 +67,9 @@ public sealed class DownloadJob
                     // fall through to a single stream
                 }
             }
-            await RunSingleAsync(request, runners, info.Length, progress, run.Token).ConfigureAwait(false);
+            // The link that answered the probe goes first: a link without a route to the server must not hold things up.
+            var ordered = runners.OrderBy(r => r == winner ? 0 : 1).ToList();
+            await RunSingleAsync(request, ordered, info.Length, progress, run.Token).ConfigureAwait(false);
         }
         finally
         {
@@ -65,15 +78,36 @@ public sealed class DownloadJob
         }
     }
 
-    private static async Task<RemoteFileInfo> ProbeAnyAsync(Uri url, List<Runner> runners, CancellationToken ct)
+    private static async Task<(RemoteFileInfo Info, Runner Winner)> ProbeAnyAsync(Uri url, List<Runner> runners, CancellationToken ct)
     {
+        // Ask every link at once and take the first answer. A link can be up and still have no route to this server
+        // (its packets are swallowed), so each probe also has its own time limit.
+        using var done = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        var probes = runners.ToDictionary(r => ProbeOneAsync(url, r, done.Token), r => r);
         Exception? last = null;
-        foreach (var r in runners)
+
+        while (probes.Count > 0)
         {
-            try { return await RemoteFileProbe.ProbeAsync(url, r.Client, ct).ConfigureAwait(false); }
+            var finished = await Task.WhenAny(probes.Keys).ConfigureAwait(false);
+            var runner = probes[finished];
+            probes.Remove(finished);
+            try
+            {
+                var info = await finished.ConfigureAwait(false);
+                done.Cancel();
+                foreach (var other in probes.Keys) _ = other.ContinueWith(t => t.Exception, TaskContinuationOptions.OnlyOnFaulted);
+                return (info, runner);
+            }
             catch (Exception ex) when (!ct.IsCancellationRequested) { last = ex; }
         }
         throw last ?? new InvalidOperationException("No links to probe");
+    }
+
+    private static async Task<RemoteFileInfo> ProbeOneAsync(Uri url, Runner runner, CancellationToken ct)
+    {
+        using var limit = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        limit.CancelAfter(ProbeTimeout);
+        return await RemoteFileProbe.ProbeAsync(url, runner.Client, limit.Token).ConfigureAwait(false);
     }
 
     private static async Task RunSingleAsync(DownloadRequest request, List<Runner> runners, long? knownTotal,
@@ -91,7 +125,9 @@ public sealed class DownloadJob
             try
             {
                 using var req = new HttpRequestMessage(HttpMethod.Get, request.Url);
-                using var resp = await runner.Client.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
+                using var headers = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                headers.CancelAfter(HeaderTimeout);   // a link with no route to the server must fail over to the next one
+                using var resp = await runner.Client.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, headers.Token).ConfigureAwait(false);
                 resp.EnsureSuccessStatusCode();
                 var total = resp.Content.Headers.ContentLength ?? knownTotal ?? 0;
 
@@ -161,13 +197,34 @@ public sealed class DownloadJob
         public readonly string Id = id;
         public readonly HttpClient Client = client;
         public int Target = ParallelSession.InitialWorkersPerLink;
+        public int Ceiling = ParallelSession.MaxWorkersPerLink;   // lowered when the server limits parallel requests
         public int Active;
+        public int Transferring;                                  // workers that are receiving data right now
         public int ConsecutiveFailures;
         public long WonBytes;
 
         private readonly object _restLock = new();
         private long _restUntil;
+        private long _lastBusy;
         private int _backoffSeconds = 2;
+
+        /// <summary>
+        /// The server answered "too many requests". The number of requests it was actually serving is its limit, so
+        /// aim there, and never grow past it again. One step per second, however many workers were refused together.
+        /// </summary>
+        public void OnServerBusy()
+        {
+            lock (_restLock)
+            {
+                var now = Stopwatch.GetTimestamp();
+                if (now - _lastBusy < Stopwatch.Frequency) return;
+                _lastBusy = now;
+
+                var learned = Math.Max(1, Math.Max(Volatile.Read(ref Transferring), Target / 2));
+                Target = Math.Min(learned, Math.Max(1, Target - 1));   // always at least one step down
+                Ceiling = Math.Min(Ceiling, Target);
+            }
+        }
 
         /// <summary>True while the link is resting after repeated failures; it is tried again afterwards.</summary>
         public bool Resting => Stopwatch.GetTimestamp() < Volatile.Read(ref _restUntil);
@@ -203,7 +260,7 @@ public sealed class DownloadJob
     private sealed class ParallelSession
     {
         public const int InitialWorkersPerLink = 4;
-        private const int MaxWorkersPerLink = 16;
+        public const int MaxWorkersPerLink = 16;
         private const int MaxChunkFailures = 8;
         private const int RestAfterFailures = 5;
         private const int StallSeconds = 20;
@@ -364,7 +421,7 @@ public sealed class DownloadJob
                     var wire = Interlocked.Read(ref _wire);
                     var rate = (wire - lastAdaptWire) / Math.Max(0.001, (now - lastAdapt).TotalSeconds);
                     if (rate > previousAdaptRate * 1.10)
-                        foreach (var r in alive) r.Target = Math.Min(MaxWorkersPerLink, r.Target + 2);
+                        foreach (var r in alive) r.Target = Math.Min(r.Ceiling, r.Target + 2);
                     previousAdaptRate = rate;
                     lastAdaptWire = wire;
                     lastAdapt = now;
@@ -372,12 +429,30 @@ public sealed class DownloadJob
             }
         }
 
+        /// <summary>A worker leaves when the link has more of them than its target (the server limit was found to be lower).</summary>
+        private static bool TryRetire(Runner link)
+        {
+            while (true)
+            {
+                var active = Volatile.Read(ref link.Active);
+                if (active <= link.Target) return false;
+                if (Interlocked.CompareExchange(ref link.Active, active - 1, active) == active) return true;
+            }
+        }
+
         private async Task WorkerAsync(Runner link, CancellationToken token)
         {
+            var retired = false;
             try
             {
                 while (!token.IsCancellationRequested && !link.Resting)
                 {
+                    if (TryRetire(link))
+                    {
+                        retired = true;
+                        return;
+                    }
+
                     Track track;
                     var race = false;
                     if (_queue.TryTake(out var range))
@@ -396,11 +471,16 @@ public sealed class DownloadJob
                         track = raced;
                         race = true;
                     }
-                    await ProcessAsync(link, track, race, token).ConfigureAwait(false);
+                    // The pause comes after ProcessAsync has handed the chunk back, so others can take it meanwhile.
+                    var pause = await ProcessAsync(link, track, race, token).ConfigureAwait(false);
+                    if (pause > TimeSpan.Zero) await Task.Delay(pause, token).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested) { }
-            finally { Interlocked.Decrement(ref link.Active); }
+            finally
+            {
+                if (!retired) Interlocked.Decrement(ref link.Active);
+            }
         }
 
         /// <summary>Endgame: when the queue is empty, an idle worker duplicates the oldest slow chunk; the first copy to finish wins.</summary>
@@ -419,11 +499,13 @@ public sealed class DownloadJob
             return best;
         }
 
-        private async Task ProcessAsync(Runner link, Track track, bool race, CancellationToken token)
+        /// <summary>Returns how long the calling worker should wait before its next chunk (zero normally).</summary>
+        private async Task<TimeSpan> ProcessAsync(Runner link, Track track, bool race, CancellationToken token)
         {
+            var pause = TimeSpan.Zero;
             lock (track)
             {
-                if (track.Completed) return;
+                if (track.Completed) return pause;
                 if (!race)
                 {
                     track.StartedTicks = Stopwatch.GetTimestamp();
@@ -439,6 +521,13 @@ public sealed class DownloadJob
                 link.Recovered();
                 Complete(link, track);
                 ok = true;
+            }
+            catch (ServerBusyException busy) when (!token.IsCancellationRequested)
+            {
+                link.OnServerBusy();
+                pause = busy.RetryAfter is { } wait
+                    ? TimeSpan.FromSeconds(Math.Clamp(wait.TotalSeconds, 0.1, 30))
+                    : TimeSpan.FromMilliseconds(750 + Random.Shared.Next(250));
             }
             catch (Exception ex) when (!token.IsCancellationRequested)
             {
@@ -468,6 +557,7 @@ public sealed class DownloadJob
                     }
                 }
             }
+            return pause;
         }
 
         private async Task DownloadRangeAsync(Runner link, Track track, CancellationToken token)
@@ -480,6 +570,9 @@ public sealed class DownloadJob
             req.Headers.Range = new RangeHeaderValue(range.Start, range.End);
             using var resp = await link.Client.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, stall.Token).ConfigureAwait(false);
 
+            if (resp.StatusCode == HttpStatusCode.TooManyRequests
+                || (resp.StatusCode == HttpStatusCode.ServiceUnavailable && resp.Headers.RetryAfter is not null))
+                throw new ServerBusyException(RetryAfterOf(resp));
             if (resp.StatusCode == HttpStatusCode.OK)
                 throw new RangeNotSupportedException("Server ignored the Range header");
             if (resp.StatusCode != HttpStatusCode.PartialContent)
@@ -493,6 +586,7 @@ public sealed class DownloadJob
 
             await using var stream = await resp.Content.ReadAsStreamAsync(stall.Token).ConfigureAwait(false);
             var buf = ArrayPool<byte>.Shared.Rent(BufferSize);
+            Interlocked.Increment(ref link.Transferring);
             try
             {
                 var offset = range.Start;
@@ -510,7 +604,19 @@ public sealed class DownloadJob
                     lock (track) track.Received = Math.Max(track.Received, offset - range.Start);
                 }
             }
-            finally { ArrayPool<byte>.Shared.Return(buf); }
+            finally
+            {
+                Interlocked.Decrement(ref link.Transferring);
+                ArrayPool<byte>.Shared.Return(buf);
+            }
+        }
+
+        private static TimeSpan? RetryAfterOf(HttpResponseMessage resp)
+        {
+            var header = resp.Headers.RetryAfter;
+            if (header?.Delta is { } delta) return delta;
+            if (header?.Date is { } date) return date - DateTimeOffset.UtcNow;
+            return null;
         }
 
         private void Complete(Runner link, Track track)

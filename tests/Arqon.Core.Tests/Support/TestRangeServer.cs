@@ -26,6 +26,23 @@ public sealed class TestRangeServer : IDisposable
 
     public string? ETag { get; set; }
 
+    /// <summary>
+    /// Like a real download server's fair-use limit: when one client address already has this many GETs in flight,
+    /// the next one is answered 429 (with a Retry-After header when <see cref="RetryAfterSeconds"/> is set).
+    /// </summary>
+    public int? MaxConcurrentPerClient { get; set; }
+
+    public int? RetryAfterSeconds { get; set; }
+
+    /// <summary>How many requests were answered 429 so far.</summary>
+    public int Rejected => Volatile.Read(ref _rejected);
+
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<IPAddress, int> _inFlight = new();
+    private int _rejected;
+
+    /// <summary>Return true to never answer this client address at all (a link that is up but has no route to the server).</summary>
+    public Func<IPAddress, bool>? HangFor { get; set; }
+
     /// <summary>Return true to answer 503 for this client address; gets the number of GET requests seen so far.</summary>
     public Func<IPAddress, int, bool>? FailFor { get; set; }
 
@@ -63,11 +80,28 @@ public sealed class TestRangeServer : IDisposable
 
     private async Task Handle(HttpListenerContext c)
     {
+        var client = c.Request.RemoteEndPoint.Address;
+        var counted = c.Request.HttpMethod != "HEAD" && MaxConcurrentPerClient is not null;
         try
         {
             var isHead = c.Request.HttpMethod == "HEAD";
             var seen = isHead ? _requests : Interlocked.Increment(ref _requests);
             var resp = c.Response;
+
+            if (HangFor?.Invoke(client) == true) await Task.Delay(Timeout.Infinite, _cts.Token);
+
+            if (counted)
+            {
+                var inFlight = _inFlight.AddOrUpdate(client, 1, (_, n) => n + 1);
+                if (inFlight > MaxConcurrentPerClient)
+                {
+                    Interlocked.Increment(ref _rejected);
+                    resp.StatusCode = 429;
+                    if (RetryAfterSeconds is { } seconds) resp.AddHeader("Retry-After", seconds.ToString());
+                    resp.Close();
+                    return;
+                }
+            }
 
             if (FailFor?.Invoke(c.Request.RemoteEndPoint.Address, seen) == true)
             {
@@ -111,6 +145,10 @@ public sealed class TestRangeServer : IDisposable
         catch
         {
             // client went away (cancelled download) – expected in tests
+        }
+        finally
+        {
+            if (counted) _inFlight.AddOrUpdate(client, 0, (_, n) => n - 1);
         }
     }
 
