@@ -119,7 +119,7 @@ public sealed class DownloadItemViewModel : ViewModelBase
         var progress = new Progress<DownloadProgress>(OnProgress);
         try
         {
-            await _job.RunAsync(new DownloadRequest(new Uri(Record.Url), Record.Path), _owner.CurrentLinks(), progress, _cts.Token)
+            await _job.RunAsync(new DownloadRequest(new Uri(Record.Url), Record.Path, Throttle: _owner.Throttle), _owner.CurrentLinks(), progress, _cts.Token)
                 .ConfigureAwait(true);
             _done = _total = new FileInfo(Record.Path).Length;
             _speed = 0;
@@ -212,6 +212,8 @@ public sealed class DownloadsViewModel : ViewModelBase
         AddCommand = new RelayCommand(Add);
         PasteCommand = new RelayCommand(Paste);
         ChooseFolderCommand = new RelayCommand(ChooseFolder);
+        AcceptClipboardCommand = new RelayCommand(AcceptClipboard);
+        DismissClipboardCommand = new RelayCommand(DismissClipboard);
 
         if (services.Demo)
         {
@@ -243,6 +245,50 @@ public sealed class DownloadsViewModel : ViewModelBase
         base.Dispose();
     }
 
+
+    private string? _clipboardLink;
+    private string? _dismissedClipboard;
+
+    public RelayCommand AcceptClipboardCommand { get; private set; } = null!;
+    public RelayCommand DismissClipboardCommand { get; private set; } = null!;
+
+    /// <summary>A file link found on the clipboard that the user has not added or dismissed yet.</summary>
+    public string? ClipboardLink
+    {
+        get => _clipboardLink;
+        private set { if (Set(ref _clipboardLink, value)) Raise(nameof(HasClipboardLink)); }
+    }
+
+    public bool HasClipboardLink => _clipboardLink is not null;
+
+    /// <summary>Call when the window is activated or this page is shown; offers a copied download link.</summary>
+    public void CheckClipboard()
+    {
+        if (!_services.Settings.ClipboardWatch) { ClipboardLink = null; return; }
+
+        string? text = null;
+        try { if (Clipboard.ContainsText()) text = Clipboard.GetText(); }
+        catch (System.Runtime.InteropServices.ExternalException) { /* clipboard busy: try again next time */ }
+
+        var link = DownloadLinkDetector.Detect(text)?.ToString();
+        var known = link is not null && Items.Any(i => string.Equals(i.Record.Url, link, StringComparison.OrdinalIgnoreCase));
+        ClipboardLink = link is null || known || link == _dismissedClipboard ? null : link;
+    }
+
+    private void AcceptClipboard()
+    {
+        if (_clipboardLink is null) return;
+        UrlText = _clipboardLink;
+        ClipboardLink = null;
+        Add();
+    }
+
+    private void DismissClipboard()
+    {
+        _dismissedClipboard = _clipboardLink;
+        ClipboardLink = null;
+    }
+
     public RelayCommand AddCommand { get; }
     public RelayCommand PasteCommand { get; }
     public RelayCommand ChooseFolderCommand { get; }
@@ -254,6 +300,8 @@ public sealed class DownloadsViewModel : ViewModelBase
     public bool IsEmpty => Items.Count == 0;
     public int ActiveCount => Items.Count(i => i.IsDownloading);
     public string TotalSpeed => $"{Units.Mbit(Items.Sum(i => i.SpeedBps))} {Loc.Get("S.Unit.Mbit")}";
+
+    public LinkThrottle Throttle => _services.Throttle;
 
     public IReadOnlyList<Core.Links.LinkInfo> CurrentLinks() => _services.Links.GetLinks();
 

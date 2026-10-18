@@ -127,6 +127,37 @@
                     </StackPanel>
                 </Border>
 
+                <!-- System mode -->
+                <Border Style="{StaticResource Card}" Margin="0,0,0,14" Visibility="{Binding ShowSteering, Converter={StaticResource B2V}}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE9D9;" Foreground="#4ADE80" FontSize="18" Margin="0,0,10,0" />
+                            <TextBlock FontWeight="SemiBold" VerticalAlignment="Center" Text="{DynamicResource S.Steer.Title}" />
+                        </StackPanel>
+                        <StackPanel Visibility="{Binding SteeringRunning, Converter={StaticResource B2V}}">
+                            <TextBlock Style="{StaticResource MutedText}" Margin="0,4,0,10" TextWrapping="Wrap" Text="{DynamicResource S.Steer.On}" />
+                            <c:SplitBar Height="8" Parts="{Binding SteerSplit}" Margin="0,0,0,10" />
+                            <ItemsControl ItemsSource="{Binding SteerLinks}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,24,0">
+                                            <Ellipse Width="8" Height="8" Fill="{Binding Brush}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding Name}" Margin="0,0,8,0" />
+                                            <TextBlock Style="{StaticResource MutedText}" Text="{Binding FlowsText}" />
+                                            <TextBlock Foreground="#F59E0B" Margin="8,0,0,0" Text="{Binding Note}" Visibility="{Binding HasNote, Converter={StaticResource B2V}}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                        <TextBlock Foreground="#F59E0B" Margin="0,4,0,0" TextWrapping="Wrap" Text="{Binding SteeringFault}"
+                                   Visibility="{Binding SteeringFaulted, Converter={StaticResource B2V}}" />
+                    </StackPanel>
+                </Border>
+
                 <!-- Game protection -->
                 <Border Style="{StaticResource Card}">
                     <Grid>
@@ -141,6 +172,19 @@
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                             <TextBlock FontWeight="SemiBold" Text="{DynamicResource S.Game.Title}" />
                             <TextBlock Style="{StaticResource MutedText}" Text="{Binding GameHeadline}" TextWrapping="Wrap" />
+                            <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Text="{Binding GameDetail}" FontSize="12"
+                                       Visibility="{Binding HasGameDetail, Converter={StaticResource B2V}}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                        <Setter Property="Foreground" Value="#9FB4FF" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding GameCapped}" Value="True">
+                                                <Setter Property="Foreground" Value="#F59E0B" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
                         </StackPanel>
                         <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
                             <TextBlock Style="{StaticResource CardLabel}" HorizontalAlignment="Right" Text="{DynamicResource S.Link.Ping}" />

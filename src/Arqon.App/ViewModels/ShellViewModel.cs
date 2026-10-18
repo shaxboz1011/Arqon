@@ -17,6 +17,7 @@ public sealed class ShellViewModel : ViewModelBase
             ["panel"] = new PanelViewModel(services),
             ["apps"] = new AppsViewModel(services),
             ["downloads"] = new DownloadsViewModel(services),
+            ["usage"] = new UsageViewModel(services),
             ["settings"] = new SettingsViewModel(services),
         };
         NavigateCommand = new RelayCommand(p => Navigate((string)p!));
@@ -28,6 +29,7 @@ public sealed class ShellViewModel : ViewModelBase
     public bool IsPanel => _key == "panel";
     public bool IsApps => _key == "apps";
     public bool IsDownloads => _key == "downloads";
+    public bool IsUsage => _key == "usage";
     public bool IsSettings => _key == "settings";
 
     public bool Demo => _services.Demo;
@@ -44,10 +46,14 @@ public sealed class ShellViewModel : ViewModelBase
     {
         if (!_pages.ContainsKey(key) || key == _key) return;
         _key = key;
+        if (key == "downloads") OnWindowActivated();
         Raise(string.Empty);
     }
 
     public void Refresh() => Raise(string.Empty);
+
+    /// <summary>The window came to the front: let pages react (the downloads page offers a copied link).</summary>
+    public void OnWindowActivated() => (_pages["downloads"] as DownloadsViewModel)?.CheckClipboard();
 
     public override void Dispose()
     {

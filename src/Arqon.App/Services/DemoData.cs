@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Net;
 using Arqon.Core.Links;
 using Arqon.Core.Monitoring;
+using Arqon.Core.Usage;
 using Arqon.Core.Windows;
 
 namespace Arqon.App.Services;
@@ -52,4 +53,25 @@ internal sealed class DemoWcmPolicy : IWcmPolicy
     private bool? _value = true;
     public bool? GetMinimizeConnections() => _value;
     public void SetMinimizeConnections(bool value) => _value = value;
+}
+
+internal static class DemoUsage
+{
+    /// <summary>Two weeks of believable history so the Usage page has something to show in demo mode.</summary>
+    public static UsageTracker Seeded()
+    {
+        var tracker = new UsageTracker(null);
+        var rng = new Random(3);
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        for (var i = 13; i >= 0; i--)
+        {
+            var day = today.AddDays(-i);
+            var weekend = day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
+            var wifi = (long)((1.2 + rng.NextDouble() * 3.5 + (weekend ? 2.5 : 0)) * 1_000_000_000);
+            var phone = (long)((0.2 + rng.NextDouble() * 1.8 + (weekend ? 1.5 : 0)) * 1_000_000_000);
+            tracker.Add("wifi", "Wi-Fi", day, wifi, wifi / 14);
+            tracker.Add("phone", "Telefon (USB)", day, phone, phone / 12);
+        }
+        return tracker;
+    }
 }

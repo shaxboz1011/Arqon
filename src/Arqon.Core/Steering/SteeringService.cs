@@ -25,6 +25,11 @@ public sealed class SteeringService
 
     public NatSteeringEngine Engine => _engine;
 
+    /// <summary>Whether the driver layer could run right now (driver files present, administrator rights).</summary>
+    public bool IsAvailable => _steerer.IsAvailable;
+
+    public string? UnavailableReason => _steerer.UnavailableReason;
+
     public event Action? StateChanged;
 
     public bool Start()

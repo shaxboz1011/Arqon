@@ -16,6 +16,7 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         StateChanged += (_, _) => AdjustForMaximize();
+        Activated += (_, _) => _shell.OnWindowActivated();
         _summaryTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _summaryTimer.Tick += (_, _) => _shell.Refresh();
         _summaryTimer.Start();
@@ -35,4 +36,15 @@ public partial class MainWindow : Window
         WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
 
     private void OnClose(object sender, RoutedEventArgs e) => Close();
+
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+    {
+        if (Application.Current is App { ShouldHideOnClose: true } app)
+        {
+            e.Cancel = true;
+            Hide();
+            app.Tray?.ShowHiddenHint();
+        }
+        base.OnClosing(e);
+    }
 }

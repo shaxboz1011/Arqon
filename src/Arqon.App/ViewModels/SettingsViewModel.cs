@@ -1,9 +1,9 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Security.Principal;
 using System.Windows;
 using Arqon.App.Infrastructure;
 using Arqon.App.Services;
+using Arqon.Core.Steering;
 using Microsoft.Win32;
 
 namespace Arqon.App.ViewModels;
@@ -21,6 +21,16 @@ public sealed class SettingsViewModel : ViewModelBase
         _services = services;
         FixCommand = new RelayCommand(ApplyFix);
         RestartAsAdminCommand = new RelayCommand(RestartAsAdmin);
+        _services.Steering.StateChanged += OnSteeringChanged;
+    }
+
+    private void OnSteeringChanged() =>
+        Application.Current?.Dispatcher.BeginInvoke(() => Raise(string.Empty));
+
+    public override void Dispose()
+    {
+        _services.Steering.StateChanged -= OnSteeringChanged;
+        base.Dispose();
     }
 
     public RelayCommand FixCommand { get; }
@@ -49,21 +59,57 @@ public sealed class SettingsViewModel : ViewModelBase
         }
     }
 
-    /// <summary>System-wide steering needs the packet driver and administrator rights; it stays unavailable until both are present.</summary>
-    public bool SystemModeAvailable => false;
+    /// <summary>System-wide steering needs the packet driver and administrator rights.</summary>
+    public bool SystemModeAvailable => _services.Steering.IsAvailable;
 
     public bool SystemMode
     {
-        get => _services.Settings.SystemMode && SystemModeAvailable;
+        get => _services.Settings.SystemMode;
         set
         {
-            if (!SystemModeAvailable) return;
-            _services.SaveSettings(_services.Settings with { SystemMode = value });
-            Raise();
+            if (value == _services.Settings.SystemMode) return;
+            var on = value && _services.Steering.Start();
+            if (!value) _services.Steering.Stop();
+            _services.SaveSettings(_services.Settings with { SystemMode = on });
+            Raise(string.Empty);
         }
     }
 
-    public string SystemModeNote => SystemModeAvailable ? Loc.Get("S.Set.SystemModeReady") : Loc.Get("S.Set.SystemModeWip");
+    public string SystemModeNote
+    {
+        get
+        {
+            var steering = _services.Steering;
+            if (steering.State == SteeringState.Running) return Loc.Get("S.Set.SystemModeOn");
+            if (steering.State == SteeringState.Faulted) return Loc.Format("S.Set.SystemModeFault", steering.Reason ?? "");
+            return steering.UnavailableReason switch
+            {
+                "driver-missing" => Loc.Get("S.Set.SystemModeNoDriver"),
+                "not-admin" => Loc.Get("S.Set.SystemModeNoAdmin"),
+                _ => Loc.Get("S.Set.SystemModeReady"),
+            };
+        }
+    }
+
+    public bool SystemModeProblem => !_services.Steering.IsAvailable || _services.Steering.State == SteeringState.Faulted;
+
+    public bool CloseToTray
+    {
+        get => _services.Settings.CloseToTray;
+        set { _services.SaveSettings(_services.Settings with { CloseToTray = value }); Raise(); }
+    }
+
+    public bool Notifications
+    {
+        get => _services.Settings.Notifications;
+        set { _services.SaveSettings(_services.Settings with { Notifications = value }); Raise(); }
+    }
+
+    public bool ClipboardWatch
+    {
+        get => _services.Settings.ClipboardWatch;
+        set { _services.SaveSettings(_services.Settings with { ClipboardWatch = value }); Raise(); }
+    }
 
     public bool StartWithWindows
     {
@@ -76,7 +122,7 @@ public sealed class SettingsViewModel : ViewModelBase
         {
             if (_services.Demo) return;
             using var key = Registry.CurrentUser.CreateSubKey(RunKey, writable: true);
-            if (value && Environment.ProcessPath is { } exe) key.SetValue("Arqon", $"\"{exe}\"");
+            if (value && Environment.ProcessPath is { } exe) key.SetValue("Arqon", $"\"{exe}\" --tray");
             else key.DeleteValue("Arqon", throwOnMissingValue: false);
             Raise();
         }
@@ -86,14 +132,7 @@ public sealed class SettingsViewModel : ViewModelBase
     public string FixStatus => _fixMessage.Length > 0 ? _fixMessage
         : _services.Fix.NeedsFix ? Loc.Get("S.Set.FixNeeded") : Loc.Get("S.Set.FixOk");
 
-    public bool IsAdmin
-    {
-        get
-        {
-            using var id = WindowsIdentity.GetCurrent();
-            return new WindowsPrincipal(id).IsInRole(WindowsBuiltInRole.Administrator);
-        }
-    }
+    public bool IsAdmin => WinDivertSteerer.IsAdministrator();
 
     public bool CanRestartAsAdmin => !IsAdmin;
     public string AdminText => IsAdmin ? Loc.Get("S.Set.AdminYes") : Loc.Get("S.Set.AdminNo");
@@ -121,8 +160,8 @@ public sealed class SettingsViewModel : ViewModelBase
     {
         try
         {
-            Process.Start(new ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute = true, Verb = "runas" });
-            Application.Current.Shutdown();
+            Process.Start(new ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute = true, Verb = "runas", Arguments = "--restarted" });
+            ((App)Application.Current).ExitApp();
         }
         catch (Win32Exception)
         {

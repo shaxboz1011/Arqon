@@ -7,6 +7,7 @@ using Arqon.App.Infrastructure;
 using Arqon.App.Services;
 using Arqon.Core.Links;
 using Arqon.Core.Monitoring;
+using Arqon.Core.Steering;
 
 namespace Arqon.App.ViewModels;
 
@@ -50,13 +51,21 @@ public sealed class LinkCardViewModel(LinkInfo link) : ViewModelBase
     public bool IsHealthy => _sample is { Loss: < 0.05, JitterMs: < 25 };
 }
 
+public sealed record SteerLinkViewModel(string Name, Color Color, long Flows, bool Paused)
+{
+    public Brush Brush => new SolidColorBrush(Color);
+    public string FlowsText => Loc.Format("S.Steer.Flows", Flows);
+    public string Note => Paused ? Loc.Get("S.Steer.Paused") : "";
+    public bool HasNote => Paused;
+}
+
 public sealed class PanelViewModel : ViewModelBase
 {
     private readonly AppServices _services;
     private readonly DispatcherTimer _timer;
-    private string? _gameLinkId;
     private IReadOnlyList<ChartSeries> _totalSeries = [];
     private double _totalDown, _totalUp;
+    private IReadOnlyList<LinkSteerStats> _steerStats = [];
     private bool _needsFix;
     private string _fixMessage = "";
 
@@ -96,13 +105,48 @@ public sealed class PanelViewModel : ViewModelBase
         _ => Loc.Format("S.Panel.SubMany", Links.Count),
     };
 
+    private string? GameLinkId => _services.GameLinkId;
     public bool GameProtectionOn => _services.Settings.GameProtection;
-    public string GameLinkName => Links.FirstOrDefault(l => l.Id == _gameLinkId)?.Name ?? "–";
-    public Brush GameLinkBrush => Links.FirstOrDefault(l => l.Id == _gameLinkId)?.Brush ?? Brushes.Gray;
-    public string GamePing => Links.FirstOrDefault(l => l.Id == _gameLinkId)?.Ping ?? "–";
+    public string GameLinkName => Links.FirstOrDefault(l => l.Id == GameLinkId)?.Name ?? "–";
+    public Brush GameLinkBrush => Links.FirstOrDefault(l => l.Id == GameLinkId)?.Brush ?? Brushes.Gray;
+    public string GamePing => Links.FirstOrDefault(l => l.Id == GameLinkId)?.Ping ?? "–";
     public string GameHeadline => !GameProtectionOn ? Loc.Get("S.Game.Off")
-        : _gameLinkId is null ? Loc.Get("S.Game.NoLink")
+        : GameLinkId is null ? Loc.Get("S.Game.NoLink")
         : Loc.Format("S.Game.Using", GameLinkName);
+
+    /// <summary>Second line of the game card: which game was found, and whether downloads are being held back for it.</summary>
+    public string GameDetail
+    {
+        get
+        {
+            if (!GameProtectionOn || !_services.Games.GameRunning) return "";
+            var capped = Links
+                .Select(l => (Link: l, Limit: _services.Throttle.Get(l.Id)))
+                .FirstOrDefault(x => x.Limit is not null);
+            var found = Loc.Format("S.Game.Detected", string.Join(", ", _services.Games.RunningGames));
+            return capped.Limit is { } limit
+                ? found + " " + Loc.Format("S.Game.Capped", capped.Link.Name, Units.Mbit(limit))
+                : found;
+        }
+    }
+
+    public bool HasGameDetail => GameDetail.Length > 0;
+    public bool GameCapped => Links.Any(l => _services.Throttle.Get(l.Id) is not null);
+
+    public bool SteeringRunning => _services.Steering.State == SteeringState.Running;
+    public bool SteeringFaulted => _services.Steering.State == SteeringState.Faulted;
+    public bool ShowSteering => SteeringRunning || SteeringFaulted;
+    public string SteeringFault => Loc.Format("S.Steer.Fault", _services.Steering.Reason ?? "");
+
+    public IReadOnlyList<SteerLinkViewModel> SteerLinks => Links
+        .Select(l =>
+        {
+            var stat = _steerStats.FirstOrDefault(x => x.LinkId == l.Id);
+            return new SteerLinkViewModel(l.Name, l.Color, stat?.Flows ?? 0, stat?.Quarantined ?? false);
+        })
+        .ToList();
+
+    public IReadOnlyList<BarPart> SteerSplit => SteerLinks.Select(l => new BarPart(l.Color, Math.Max(0, l.Flows))).ToList();
 
     private void Refresh()
     {
@@ -122,7 +166,7 @@ public sealed class PanelViewModel : ViewModelBase
         var samples = links.Where(l => latest.ContainsKey(l.Id)).Select(l => latest[l.Id]).ToList();
         _totalDown = samples.Sum(s => s.DownBps);
         _totalUp = samples.Sum(s => s.UpBps);
-        _gameLinkId = LinkSelector.PickBestForGame(samples, _gameLinkId);
+        _steerStats = _services.SteerStats();
 
         TotalSeries = links
             .Select(l => new ChartSeries(l.Name, LinkPalette.ColorFor(l.Kind),

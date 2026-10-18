@@ -1,0 +1,89 @@
+<UserControl x:Class="Arqon.App.Views.UsageView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:Arqon.App.Controls">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="B2V" />
+    </UserControl.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,10,20">
+            <TextBlock Style="{StaticResource PageTitle}" Text="{DynamicResource S.Nav.Usage}" />
+            <TextBlock Style="{StaticResource MutedText}" Text="{DynamicResource S.Usage.Sub}" Margin="0,2,0,16" />
+
+            <UniformGrid Rows="1" Margin="0,0,-14,0">
+                <Border Style="{StaticResource Card}" Margin="0,0,14,14">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource CardLabel}" Text="{DynamicResource S.Usage.Today}" />
+                        <TextBlock Style="{StaticResource BigNumber}" FontSize="30" Margin="0,6,0,2" Text="{Binding TodayDown}" />
+                        <TextBlock Style="{StaticResource MutedText}">
+                            <Run Text="{DynamicResource S.Usage.Down}" /><Run Text="   ↑ " /><Run Text="{Binding TodayUp, Mode=OneWay}" />
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Card}" Margin="0,0,14,14">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource CardLabel}" Text="{DynamicResource S.Usage.Month}" />
+                        <TextBlock Style="{StaticResource BigNumber}" FontSize="30" Margin="0,6,0,2" Text="{Binding MonthDown}" />
+                        <TextBlock Style="{StaticResource MutedText}">
+                            <Run Text="{DynamicResource S.Usage.Down}" /><Run Text="   ↑ " /><Run Text="{Binding MonthUp, Mode=OneWay}" />
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                <StackPanel>
+                    <Grid>
+                        <TextBlock Style="{StaticResource CardLabel}" Text="{DynamicResource S.Usage.Chart}" />
+                        <ItemsControl ItemsSource="{Binding Legend}" HorizontalAlignment="Right">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="14,0,0,0">
+                                        <Ellipse Width="8" Height="8" Fill="{Binding Brush}" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                        <TextBlock Style="{StaticResource MutedText}" Text="{Binding Name}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Grid>
+                    <c:BarChart Height="220" Margin="0,10,0,0" Series="{Binding Series}" Labels="{Binding Labels}" Tips="{Binding Tips}"
+                                Visibility="{Binding HasData, Converter={StaticResource B2V}}" />
+                    <TextBlock Style="{StaticResource MutedText}" HorizontalAlignment="Center" Margin="0,40" Text="{DynamicResource S.Usage.Empty}"
+                               Visibility="{Binding NoData, Converter={StaticResource B2V}}" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Visibility="{Binding HasData, Converter={StaticResource B2V}}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource CardLabel}" Text="{DynamicResource S.Usage.ByLink}" Margin="0,0,0,10" />
+                    <ItemsControl ItemsSource="{Binding Rows}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" MinWidth="230" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse Width="8" Height="8" Fill="{Binding Brush}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                    </StackPanel>
+                                    <c:SplitBar Grid.Column="1" Height="8" Parts="{Binding Share}" Margin="0,0,16,0" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="2" HorizontalAlignment="Right">
+                                        <Run Text="{Binding Total, Mode=OneWay}" FontWeight="SemiBold" />
+                                        <Run Text="  ↓ " Foreground="#8B93A7" /><Run Text="{Binding Down, Mode=OneWay}" Foreground="#8B93A7" />
+                                        <Run Text="  ↑ " Foreground="#8B93A7" /><Run Text="{Binding Up, Mode=OneWay}" Foreground="#8B93A7" />
+                                    </TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

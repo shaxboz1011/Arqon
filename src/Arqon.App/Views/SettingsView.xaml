@@ -29,7 +29,18 @@
                     <StackPanel>
                         <TextBlock Style="{StaticResource RowTitle}" Text="{DynamicResource S.Set.SystemMode}" />
                         <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Text="{DynamicResource S.Set.SystemModeBody}" />
-                        <TextBlock Foreground="#F59E0B" FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding SystemModeNote}" />
+                        <TextBlock FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding SystemModeNote}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                    <Setter Property="Foreground" Value="#4ADE80" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SystemModeProblem}" Value="True">
+                                            <Setter Property="Foreground" Value="#F59E0B" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                     </StackPanel>
                     <ToggleButton Grid.Column="1" Style="{StaticResource Switch}" IsChecked="{Binding SystemMode, Mode=TwoWay}"
                                   IsEnabled="{Binding SystemModeAvailable}" Margin="16,0,0,0" VerticalAlignment="Top" />
@@ -42,7 +53,18 @@
                     <StackPanel>
                         <TextBlock Style="{StaticResource RowTitle}" Text="{DynamicResource S.Set.FixTitle}" />
                         <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Text="{DynamicResource S.Fix.Body}" />
-                        <TextBlock Foreground="#4ADE80" FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding FixStatus}" />
+                        <TextBlock FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding FixStatus}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                    <Setter Property="Foreground" Value="#4ADE80" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding NeedsFix}" Value="True">
+                                            <Setter Property="Foreground" Value="#F59E0B" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                     </StackPanel>
                     <Button Grid.Column="1" Style="{StaticResource GhostButton}" Content="{DynamicResource S.Fix.Button}" Command="{Binding FixCommand}"
                             Margin="16,0,0,0" VerticalAlignment="Top" />
@@ -58,6 +80,35 @@
                     </StackPanel>
                     <ComboBox Grid.Column="1" ItemsSource="{Binding Languages}" SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}" />
                 </Grid>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource RowTitle}" Text="{DynamicResource S.Set.Tray}" />
+                            <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Text="{DynamicResource S.Set.TrayBody}" />
+                        </StackPanel>
+                        <ToggleButton Grid.Column="1" Style="{StaticResource Switch}" IsChecked="{Binding CloseToTray, Mode=TwoWay}" Margin="16,0,0,0" />
+                    </Grid>
+                    <Grid Margin="0,14,0,0">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource RowTitle}" Text="{DynamicResource S.Set.Notifications}" />
+                            <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Text="{DynamicResource S.Set.NotificationsBody}" />
+                        </StackPanel>
+                        <ToggleButton Grid.Column="1" Style="{StaticResource Switch}" IsChecked="{Binding Notifications, Mode=TwoWay}" Margin="16,0,0,0" />
+                    </Grid>
+                    <Grid Margin="0,14,0,0">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource RowTitle}" Text="{DynamicResource S.Set.Clipboard}" />
+                            <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Text="{DynamicResource S.Set.ClipboardBody}" />
+                        </StackPanel>
+                        <ToggleButton Grid.Column="1" Style="{StaticResource Switch}" IsChecked="{Binding ClipboardWatch, Mode=TwoWay}" Margin="16,0,0,0" />
+                    </Grid>
+                </StackPanel>
             </Border>
 
             <Border Style="{StaticResource Card}" Margin="0,0,0,10">

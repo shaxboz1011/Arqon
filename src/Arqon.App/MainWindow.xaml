@@ -4,7 +4,7 @@
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:vm="clr-namespace:Arqon.App.ViewModels"
         xmlns:v="clr-namespace:Arqon.App.Views"
-        Title="Arqon" Width="1180" Height="760" MinWidth="980" MinHeight="620"
+        Title="Arqon" Icon="pack://application:,,,/Resources/arqon.ico" Width="1180" Height="760" MinWidth="980" MinHeight="620"
         Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}" FontFamily="Segoe UI"
         WindowStartupLocation="CenterScreen"
         UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
@@ -17,6 +17,7 @@
         <DataTemplate DataType="{x:Type vm:PanelViewModel}"><v:PanelView /></DataTemplate>
         <DataTemplate DataType="{x:Type vm:AppsViewModel}"><v:AppsView /></DataTemplate>
         <DataTemplate DataType="{x:Type vm:DownloadsViewModel}"><v:DownloadsView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:UsageViewModel}"><v:UsageView /></DataTemplate>
         <DataTemplate DataType="{x:Type vm:SettingsViewModel}"><v:SettingsView /></DataTemplate>
 
         <Style x:Key="CaptionButton" TargetType="Button">
@@ -98,6 +99,13 @@
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Style="{StaticResource Icon}" Text="&#xE896;" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" Width="26" />
                                     <TextBlock Text="{DynamicResource S.Nav.Downloads}" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" />
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton Style="{StaticResource NavButton}" IsChecked="{Binding IsUsage, Mode=OneWay}"
+                                         Command="{Binding NavigateCommand}" CommandParameter="usage">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xE9D2;" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" Width="26" />
+                                    <TextBlock Text="{DynamicResource S.Nav.Usage}" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" />
                                 </StackPanel>
                             </RadioButton>
                             <RadioButton Style="{StaticResource NavButton}" IsChecked="{Binding IsSettings, Mode=OneWay}"
