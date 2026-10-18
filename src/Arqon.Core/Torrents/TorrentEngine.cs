@@ -2,6 +2,7 @@ using System.Net;
 using MonoTorrent;
 using MonoTorrent.Client;
 using MonoTorrent.Connections.Peer;
+using MonoTorrent.Dht;
 
 namespace Arqon.Core.Torrents;
 
@@ -35,6 +36,8 @@ public sealed record TorrentSnapshot(
 public sealed class TorrentEngine : IDisposable
 {
     private readonly ClientEngine _engine;
+    private readonly DhtEngine? _dht;
+    private volatile bool _disposed;
 
     public TorrentEngine(TorrentEngineOptions options)
     {
@@ -51,6 +54,14 @@ public sealed class TorrentEngine : IDisposable
         }.ToSettings();
 
         var factories = Factories.Default;
+        if (options.EnableDht)
+        {
+            // MonoTorrent's built-in bootstrap hosts (router.bittorrent.com, router.utorrent.com) do not answer on every
+            // network, and then the DHT never starts. Arqon makes its own DHT engine and gives it hosts that do answer.
+            var dht = new DhtEngine();
+            factories = factories.WithDhtCreator(() => dht);
+            _dht = dht;
+        }
         if (options.Links is { } links)
         {
             // The default peer connection opens its own sockets, so the IPv4 peer connection creator is replaced as well.
@@ -60,6 +71,55 @@ public sealed class TorrentEngine : IDisposable
                 .WithPeerConnectionCreator("ipv4", uri => new SocketPeerConnection(uri, connector));
         }
         _engine = new ClientEngine(settings, factories);
+        if (_dht is not null) _ = SeedDhtAsync(_dht);
+    }
+
+    private static readonly (string Host, int Port)[] DhtBootstrap =
+    [
+        ("dht.transmissionbt.com", 6881),
+        ("dht.libtorrent.org", 25401),
+        ("router.bittorrent.com", 6881),
+        ("router.utorrent.com", 6881),
+        ("dht.aelitis.com", 6881),
+    ];
+
+    /// <summary>The "compact node info" of the DHT protocol: a 20 byte node id, the IPv4 address and the port. A bootstrap host does not check the id.</summary>
+    internal static ReadOnlyMemory<byte> CompactNode(IPAddress address, int port)
+    {
+        var bytes = new byte[26];
+        Random.Shared.NextBytes(bytes.AsSpan(0, 20));
+        address.TryWriteBytes(bytes.AsSpan(20, 4), out _);
+        bytes[24] = (byte)(port >> 8);
+        bytes[25] = (byte)port;
+        return bytes;
+    }
+
+    /// <summary>
+    /// The DHT only starts once a torrent is started, and nodes given before that are lost, so the hosts are offered
+    /// again every few seconds until the DHT reports that it is ready (or for a while at most).
+    /// </summary>
+    private async Task SeedDhtAsync(DhtEngine dht)
+    {
+        for (var round = 0; round < 12 && !_disposed; round++)
+        {
+            if (dht.State == DhtState.Ready) return;
+            foreach (var (host, port) in DhtBootstrap)
+            {
+                try
+                {
+                    using var limit = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                    var addresses = await Dns.GetHostAddressesAsync(host, limit.Token).ConfigureAwait(false);
+                    var nodes = addresses.Where(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                        .Select(a => CompactNode(a, port)).ToList();
+                    if (nodes.Count > 0) dht.Add(nodes);
+                }
+                catch (Exception ex) when (ex is System.Net.Sockets.SocketException or OperationCanceledException or ObjectDisposedException or InvalidOperationException)
+                {
+                    // one unreachable host must not stop the others
+                }
+            }
+            await Task.Delay(TimeSpan.FromSeconds(3)).ConfigureAwait(false);
+        }
     }
 
     public async Task<TorrentHandle> AddMagnetAsync(string magnet, string saveFolder)
@@ -71,7 +131,7 @@ public sealed class TorrentEngine : IDisposable
         if (existing is not null) return new TorrentHandle(_engine, existing);
 
         Directory.CreateDirectory(saveFolder);
-        return new TorrentHandle(_engine, await _engine.AddAsync(link, saveFolder).ConfigureAwait(false));
+        return new TorrentHandle(_engine, await _engine.AddAsync(MagnetTrackers.Complete(link), saveFolder).ConfigureAwait(false));
     }
 
     public async Task<TorrentHandle> AddFileAsync(string torrentPath, string saveFolder)
@@ -85,6 +145,11 @@ public sealed class TorrentEngine : IDisposable
         return new TorrentHandle(_engine, await _engine.AddAsync(torrent, saveFolder).ConfigureAwait(false));
     }
 
+    /// <summary>How the DHT (the trackerless peer search that magnet links without trackers depend on) is doing.</summary>
+    public string DhtStatus => _engine.Dht.State.ToString();
+
+    public int DhtNodes => _engine.Dht.NodeCount;
+
     /// <summary>Caps the download speed of all torrents together (used to keep a game's ping steady); null removes the cap.</summary>
     public async Task SetDownloadLimitAsync(long? bytesPerSecond)
     {
@@ -96,6 +161,7 @@ public sealed class TorrentEngine : IDisposable
 
     public void Dispose()
     {
+        _disposed = true;
         try { _engine.StopAllAsync(TimeSpan.FromSeconds(4)).Wait(TimeSpan.FromSeconds(6)); }
         catch (Exception ex) when (ex is AggregateException or TimeoutException or ObjectDisposedException)
         {

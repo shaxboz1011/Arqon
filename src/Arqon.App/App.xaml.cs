@@ -5,6 +5,7 @@ using System.Windows.Media.Imaging;
 using Arqon.App.Infrastructure;
 using Arqon.App.Services;
 using Arqon.App.ViewModels;
+using Arqon.Core.Download;
 
 namespace Arqon.App;
 
@@ -57,7 +58,10 @@ public partial class App : Application
         var demo = args.Contains("--demo") || shotDir is not null;
         var startHidden = args.Contains("--tray");
 
-        if (!demo && !AcquireSingleInstance(args.Contains("--restarted")))
+        // A magnet link or .torrent file handed to Arqon by Windows ("open with", a click in the browser)
+        var requests = ExternalRequests.FromArguments(args);
+
+        if (!demo && !AcquireSingleInstance(args.Contains("--restarted"), requests))
         {
             Shutdown();
             return;
@@ -79,6 +83,7 @@ public partial class App : Application
             ListenForSecondInstance();
         }
         if (!(startHidden && _tray is not null && _services.Settings.CloseToTray)) window.Show();
+        if (shotDir is null) HandleRequests(requests);
 
         if (shotDir is not null) _ = TakeScreenshotsAsync(window, shotDir);
     }
@@ -99,7 +104,7 @@ public partial class App : Application
     }
 
     /// <summary>One Arqon per user session. A second launch asks the first to show itself and exits.</summary>
-    private bool AcquireSingleInstance(bool waitForPrevious)
+    private bool AcquireSingleInstance(bool waitForPrevious, IReadOnlyList<string> requests)
     {
         try
         {
@@ -108,6 +113,14 @@ public partial class App : Application
 
             // Restarting as administrator: the old process is still shutting down, give it a moment.
             if (waitForPrevious && _instance.WaitOne(TimeSpan.FromSeconds(8))) return true;
+
+            // Leave the request where the running copy looks for it, then wake that copy up.
+            try
+            {
+                var inbox = new ExternalRequests();
+                foreach (var request in requests) inbox.Post(request);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* the window still comes up */ }
 
             try { EventWaitHandle.OpenExisting(ShowSignalName).Set(); }
             catch (Exception ex) when (ex is WaitHandleCannotBeOpenedException or UnauthorizedAccessException) { }
@@ -129,11 +142,24 @@ public partial class App : Application
         {
             try
             {
-                while (signal.WaitOne()) Dispatcher.BeginInvoke(ShowMainWindow);
+                while (signal.WaitOne()) Dispatcher.BeginInvoke(OnSecondCopySignal);
             }
             catch (ObjectDisposedException) { /* app is exiting */ }
         }) { IsBackground = true, Name = "arqon-show-signal" };
         thread.Start();
+    }
+
+    /// <summary>A second copy was started: show this window, and add whatever that copy was asked to open.</summary>
+    private void OnSecondCopySignal()
+    {
+        ShowMainWindow();
+        try { HandleRequests(new ExternalRequests().TakeAll()); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* nothing waiting */ }
+    }
+
+    private void HandleRequests(IReadOnlyList<string> requests)
+    {
+        foreach (var request in requests) _shell?.AddDownload(request);
     }
 
     private static void LogCrash(Exception ex)

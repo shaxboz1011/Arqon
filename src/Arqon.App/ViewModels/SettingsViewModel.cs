@@ -4,6 +4,7 @@ using System.Windows;
 using Arqon.App.Infrastructure;
 using Arqon.App.Services;
 using Arqon.Core.Steering;
+using Arqon.Core.Windows;
 using Microsoft.Win32;
 
 namespace Arqon.App.ViewModels;
@@ -104,6 +105,36 @@ public sealed class SettingsViewModel : ViewModelBase
             Raise();
         }
     }
+
+    private readonly ShellAssociations _shellAssociations = new(Environment.ProcessPath ?? "Arqon.exe");
+
+    /// <summary>Windows opens magnet links and .torrent files with this copy of Arqon.</summary>
+    public bool OpensTorrents
+    {
+        get => !_services.Demo && _shellAssociations.IsRegistered();
+        set
+        {
+            if (_services.Demo) return;
+            if (value) _shellAssociations.Register(); else _shellAssociations.Unregister();
+            Raise();
+        }
+    }
+
+    /// <summary>Another program (say a torrent client) still opens magnet links: Windows keeps the choice for the user to make.</summary>
+    public bool MagnetOwnedByOther => !_services.Demo && _shellAssociations.IsRegistered() && _shellAssociations.OtherMagnetHandler() is not null;
+
+    public string ShellOtherNote
+    {
+        get
+        {
+            var command = _shellAssociations.OtherMagnetHandler() ?? "";
+            var exe = command.StartsWith('"') ? command.Split('"', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? command : command.Split(' ')[0];
+            return Loc.Format("S.Set.ShellOther", System.IO.Path.GetFileNameWithoutExtension(exe));
+        }
+    }
+
+    public RelayCommand OpenDefaultAppsCommand { get; } =
+        new(() => Process.Start(new ProcessStartInfo("ms-settings:defaultapps") { UseShellExecute = true }));
 
     public bool SafeGameMode
     {

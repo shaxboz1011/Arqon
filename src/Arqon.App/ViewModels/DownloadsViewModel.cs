@@ -30,6 +30,8 @@ public sealed class DownloadItemViewModel : ViewModelBase
     private string _split = "";
     private TorrentHandle? _torrent;
     private TorrentPhase _phase = TorrentPhase.Stopped;
+    private bool _spaceChecked;
+    private string? _spaceProblem;
 
     public DownloadItemViewModel(DownloadsViewModel owner, DownloadRecord record)
     {
@@ -140,7 +142,20 @@ public sealed class DownloadItemViewModel : ViewModelBase
         if (_running) return;
         _running = true;
         _discard = false;
+        _spaceChecked = false;
+        _spaceProblem = null;
         _ = RunAsync();
+    }
+
+    /// <summary>Called once the size is known: a download that cannot fit on the drive is stopped with a clear message.</summary>
+    private void CheckSpace(long remaining)
+    {
+        _spaceChecked = true;
+        var folder = IsTorrent ? Record.Path : Path.GetDirectoryName(Record.Path);
+        if (string.IsNullOrEmpty(folder) || DiskSpace.FreeBytes(folder) is not { } free || DiskSpace.HasRoom(free, remaining)) return;
+
+        _spaceProblem = Loc.Format("S.Dl.NoSpace", Units.Size(remaining), Units.Size(free));
+        _cts?.Cancel();
     }
 
     public void RefreshQueuePosition()
@@ -177,11 +192,17 @@ public sealed class DownloadItemViewModel : ViewModelBase
             await _torrent.StopAsync();   // finished: Arqon does not stay on to seed
             _speed = _upSpeed = 0;
             SetState(DownloadState.Done);
+            _owner.OnCompleted(this);
         }
         catch (OperationCanceledException)
         {
             await StopTorrentQuietly();
-            if (_discard)
+            if (_spaceProblem is not null)
+            {
+                _error = _spaceProblem;
+                SetState(DownloadState.Failed);
+            }
+            else if (_discard)
             {
                 await DropTorrentAsync(deleteData: true);
                 _owner.Remove(this);
@@ -224,6 +245,7 @@ public sealed class DownloadItemViewModel : ViewModelBase
         _total = s.Size;
         _speed = s.DownBps;
         _upSpeed = s.UpBps;
+        if (!_spaceChecked && s.Size > 0) CheckSpace(s.Size - s.Done);
         if (s.Name.Length > 0 && s.Name != Record.Name)
         {
             Record = Record with { Name = s.Name };   // a magnet link only learns its name once the metadata arrives
@@ -252,10 +274,16 @@ public sealed class DownloadItemViewModel : ViewModelBase
             _done = _total = new FileInfo(Record.Path).Length;
             _speed = 0;
             SetState(DownloadState.Done);
+            _owner.OnCompleted(this);
         }
         catch (OperationCanceledException)
         {
-            if (_discard) _owner.Remove(this);
+            if (_spaceProblem is not null)
+            {
+                _error = _spaceProblem;
+                SetState(DownloadState.Failed);
+            }
+            else if (_discard) _owner.Remove(this);
             else SetState(DownloadState.Paused);
         }
         catch (Exception ex)
@@ -276,6 +304,7 @@ public sealed class DownloadItemViewModel : ViewModelBase
         _done = p.Done;
         _total = p.Total;
         _speed = p.BytesPerSecond;
+        if (!_spaceChecked && p.Total > 0) CheckSpace(p.Total - p.Done);
         ApplyParts(p.PerLinkBytes);
         Raise(string.Empty);
     }
@@ -423,6 +452,9 @@ public sealed class DownloadsViewModel : ViewModelBase
 
     /// <summary>The item stopped running (done, failed or paused): the next one in line may start.</summary>
     public void OnEnded(DownloadItemViewModel item) => Launch(_queue.Finished(item.Record.Key));
+
+    /// <summary>A download finished: say so (tray balloon), because it may have taken a while.</summary>
+    public void OnCompleted(DownloadItemViewModel item) => _services.NotifyDownloadDone(item.Name);
 
     /// <summary>1 for the next download to start, 0 when the item is not waiting.</summary>
     public int QueuePosition(DownloadItemViewModel item) => _queue.PositionOf(item.Record.Key);
@@ -594,6 +626,13 @@ public sealed class DownloadsViewModel : ViewModelBase
         Message = "";
         Persist();
         item.Enqueue();
+    }
+
+    /// <summary>Adds what came from outside the box (a request from another copy, a drop on the window).</summary>
+    public void AddFromText(string text)
+    {
+        UrlText = text;
+        Add();
     }
 
     private void Add()

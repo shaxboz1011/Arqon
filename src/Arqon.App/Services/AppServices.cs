@@ -284,6 +284,9 @@ public sealed class AppServices : IDisposable
         Raise(Loc.Get("S.Notice.GameTitle"), Loc.Format("S.Notice.GameBody", string.Join(", ", Games.RunningGames)));
     }
 
+    /// <summary>A download or torrent finished.</summary>
+    public void NotifyDownloadDone(string name) => Raise(Loc.Get("S.Notice.DownloadDoneTitle"), name);
+
     private void OnSafeGameChanged()
     {
         var key = SafeGame.Paused ? "S.Notice.SafePaused" : "S.Notice.SafeResumed";

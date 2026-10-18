@@ -164,6 +164,21 @@
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                     <StackPanel>
+                        <TextBlock Style="{StaticResource RowTitle}" Text="{DynamicResource S.Set.Shell}" />
+                        <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Text="{DynamicResource S.Set.ShellBody}" />
+                        <TextBlock Foreground="#F59E0B" FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding ShellOtherNote}"
+                                   Visibility="{Binding MagnetOwnedByOther, Converter={StaticResource B2V}}" />
+                        <Button Style="{StaticResource GhostButton}" HorizontalAlignment="Left" Margin="0,10,0,0" Padding="12,6"
+                                Content="{DynamicResource S.Set.DefaultApps}" Command="{Binding OpenDefaultAppsCommand}" />
+                    </StackPanel>
+                    <ToggleButton Grid.Column="1" Style="{StaticResource Switch}" IsChecked="{Binding OpensTorrents, Mode=TwoWay}" Margin="16,0,0,0" VerticalAlignment="Top" />
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel>
                         <TextBlock Style="{StaticResource RowTitle}" Text="{DynamicResource S.Set.Startup}" />
                         <TextBlock Style="{StaticResource MutedText}" Text="{DynamicResource S.Set.StartupBody}" />
                     </StackPanel>

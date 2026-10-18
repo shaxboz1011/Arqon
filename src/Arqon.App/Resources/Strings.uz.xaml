@@ -76,6 +76,12 @@
     <sys:String x:Key="S.Dl.Sub">Link yoki magnet bering: fayl bo'laklarga bo'linib, barcha ulanishlardan bir vaqtda yuklanadi. .torrent fayl ham bo'ladi.</sys:String>
     <sys:String x:Key="S.Dl.Placeholder">https://misol.uz/fayl.zip yoki magnet:?xt=…</sys:String>
     <sys:String x:Key="S.Dl.AddTorrent">Torrent fayl</sys:String>
+    <sys:String x:Key="S.Set.Shell">Torrent va magnet linklarni Arqon bilan ochish</sys:String>
+    <sys:String x:Key="S.Set.ShellBody">Brauzerdagi magnet linklar va .torrent fayllar Arqon'da ochiladi, yuklash o'zi boshlanadi. Windows 10 standart ilovani o'zingiz tasdiqlashingizni so'rashi mumkin (pastdagi tugma).</sys:String>
+    <sys:String x:Key="S.Set.DefaultApps">Windows: standart ilovalar</sys:String>
+    <sys:String x:Key="S.Set.ShellOther">Magnet linklarni hozir "{0}" ochadi. Arqon ro'yxatga olindi, uni standart qilish uchun pastdagi tugma orqali Windows'da "magnet" uchun Arqon'ni tanlang.</sys:String>
+    <sys:String x:Key="S.Dl.NoSpace">Diskda joy yetmaydi: kerak {0}, bo'sh {1}. Joy bo'shatib, qayta urinib ko'ring.</sys:String>
+    <sys:String x:Key="S.Notice.DownloadDoneTitle">Yuklash tugadi</sys:String>
     <sys:String x:Key="S.Dl.FolderAuto">(avto: Yuklashlar papkasi)</sys:String>
     <sys:String x:Key="S.Dl.FolderReset">Avtomatik papkaga qaytarish (Windows Yuklashlar)</sys:String>
     <sys:String x:Key="S.Dl.BadMagnet">Bu magnet link noto'g'ri.</sys:String>

@@ -52,6 +52,13 @@ public sealed class ShellViewModel : ViewModelBase
 
     public void Refresh() => Raise(string.Empty);
 
+    /// <summary>Something to download came from outside the page: a magnet link, a .torrent file, a dropped link.</summary>
+    public void AddDownload(string text)
+    {
+        Navigate("downloads");
+        (_pages["downloads"] as DownloadsViewModel)?.AddFromText(text);
+    }
+
     /// <summary>The window came to the front: let pages react (the downloads page offers a copied link).</summary>
     public void OnWindowActivated() => (_pages["downloads"] as DownloadsViewModel)?.CheckClipboard();
 

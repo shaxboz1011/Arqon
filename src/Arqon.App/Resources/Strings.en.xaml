@@ -76,6 +76,12 @@
     <sys:String x:Key="S.Dl.Sub">Paste a link or magnet link: the file is split into pieces and downloaded over all connections at once. A .torrent file works too.</sys:String>
     <sys:String x:Key="S.Dl.Placeholder">https://example.com/file.zip or magnet:?xt=…</sys:String>
     <sys:String x:Key="S.Dl.AddTorrent">Torrent file</sys:String>
+    <sys:String x:Key="S.Set.Shell">Open torrents and magnet links with Arqon</sys:String>
+    <sys:String x:Key="S.Set.ShellBody">Magnet links and .torrent files from the browser open in Arqon and start downloading. Windows 10 may ask you to confirm the default app yourself (button below).</sys:String>
+    <sys:String x:Key="S.Set.DefaultApps">Windows: default apps</sys:String>
+    <sys:String x:Key="S.Set.ShellOther">Magnet links are currently opened by "{0}". Arqon is registered; to make it the default, choose Arqon for "magnet" under Windows Default apps (button below).</sys:String>
+    <sys:String x:Key="S.Dl.NoSpace">Not enough disk space: {0} needed, {1} free. Free some space and try again.</sys:String>
+    <sys:String x:Key="S.Notice.DownloadDoneTitle">Download finished</sys:String>
     <sys:String x:Key="S.Dl.FolderAuto">(auto: Downloads folder)</sys:String>
     <sys:String x:Key="S.Dl.FolderReset">Back to the automatic folder (Windows Downloads)</sys:String>
     <sys:String x:Key="S.Dl.BadMagnet">That magnet link is not valid.</sys:String>
