@@ -12,6 +12,10 @@
 
     <sys:String x:Key="S.Unit.Mbit">Mbit/s</sys:String>
     <sys:String x:Key="S.Unit.MByte">MB/s</sys:String>
+    <sys:String x:Key="S.Set.Parallel">Downloads at the same time</sys:String>
+    <sys:String x:Key="S.Set.ParallelBody">Any more wait in the queue and start by themselves when an earlier one finishes. Each download still uses all your connections.</sys:String>
+    <sys:String x:Key="S.Dl.State.Queued">Queued · {0}</sys:String>
+    <sys:String x:Key="S.Dl.StartNow">Start now</sys:String>
     <sys:String x:Key="S.Set.Unit">Speed unit</sys:String>
     <sys:String x:Key="S.Set.UnitBody">Mbit/s matches the speed on your tariff; MB/s is what download programs show (1 MB/s = 8 Mbit/s).</sys:String>
 

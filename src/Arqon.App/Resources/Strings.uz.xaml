@@ -12,6 +12,10 @@
 
     <sys:String x:Key="S.Unit.Mbit">Mbit/s</sys:String>
     <sys:String x:Key="S.Unit.MByte">MB/s</sys:String>
+    <sys:String x:Key="S.Set.Parallel">Bir vaqtda yuklashlar soni</sys:String>
+    <sys:String x:Key="S.Set.ParallelBody">Shundan ortig'i navbatda kutadi va oldingisi tugagach o'zi boshlanadi. Har bir yuklash baribir barcha ulanishlardan foydalanadi.</sys:String>
+    <sys:String x:Key="S.Dl.State.Queued">Navbatda · {0}</sys:String>
+    <sys:String x:Key="S.Dl.StartNow">Hozir boshlash</sys:String>
     <sys:String x:Key="S.Set.Unit">Tezlik birligi</sys:String>
     <sys:String x:Key="S.Set.UnitBody">Mbit/s tarif tezligi bilan bir xil, MB/s esa yuklash dasturlarida ko'rinadigan birlik (1 MB/s = 8 Mbit/s).</sys:String>
 

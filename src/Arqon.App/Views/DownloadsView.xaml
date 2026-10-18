@@ -35,6 +35,8 @@
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="14,0,0,0" VerticalAlignment="Center">
                         <Button Style="{StaticResource IconButton}" Content="&#xE769;" Command="{Binding PauseCommand}" ToolTip="{DynamicResource S.Dl.Pause}"
                                 Visibility="{Binding CanPause, Converter={StaticResource B2V}}" />
+                        <Button Style="{StaticResource IconButton}" Content="&#xE768;" Command="{Binding StartNowCommand}" ToolTip="{DynamicResource S.Dl.StartNow}"
+                                Visibility="{Binding CanStartNow, Converter={StaticResource B2V}}" />
                         <Button Style="{StaticResource IconButton}" Content="&#xE768;" Command="{Binding ResumeCommand}" ToolTip="{DynamicResource S.Dl.Resume}"
                                 Visibility="{Binding CanResume, Converter={StaticResource B2V}}" />
                         <Button Style="{StaticResource IconButton}" Content="&#xE8B7;" Command="{Binding OpenFolderCommand}" ToolTip="{DynamicResource S.Dl.OpenFolder}" />

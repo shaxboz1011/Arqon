@@ -11,6 +11,7 @@ Arqon ("rope" in Uzbek) uses Wi-Fi, Ethernet and a USB-tethered phone at the sam
 |---|---|
 | Link discovery (Wi-Fi / Ethernet / phone) and live monitor: speed, ping, jitter, loss | Done |
 | Multi-link download manager: chunked HTTP ranges over every link, resume, endgame racing, speed limit. Respects server limits (429 / Retry-After), and a link with no route to the server no longer blocks the start | Done (140 MB over Wi-Fi + phone in about 10 s) |
+| **Download queue**: at most N downloads run at once (Settings, default 3), the rest wait in order and start by themselves; "Start now" jumps the line | Done (queue logic tested; the screen was checked in demo mode, not clicked through with real downloads) |
 | **Game ping guard**: detects running games, and when ping or loss rises on the game's link it caps downloads on that link only, then gives bandwidth back gradually | Done |
 | Game link choice (lowest latency, jitter, loss, with hysteresis) | Done |
 | Per-app rules, built-in game catalogue, JSON settings | Done |
@@ -36,7 +37,7 @@ Requires Windows 10/11 and the .NET 10 SDK.
 ```powershell
 dotnet run --project src/Arqon.App            # real adapters
 dotnet run --project src/Arqon.App -- --demo  # two pretend links, no phone needed
-dotnet test                                    # 287 tests
+dotnet test                                    # 302 tests
 ```
 
 System mode additionally needs the packet driver, see [docs/steering.md](docs/steering.md):

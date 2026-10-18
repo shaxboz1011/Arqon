@@ -32,6 +32,19 @@ public sealed class SettingsEvolutionTests : IDisposable
     }
 
     [Fact]
+    public void An_older_file_gets_three_parallel_downloads_and_the_choice_survives_a_save_and_load()
+    {
+        var path = Path.Combine(_dir, "settings.json");
+        File.WriteAllText(path, """{ "Rules": [], "GameProtection": true, "SystemMode": false, "Language": "uz" }""");
+        var store = new JsonSettingsStore(path);
+
+        Assert.Equal(3, store.Load().MaxConcurrentDownloads);
+
+        store.Save(ArqonSettings.Default() with { MaxConcurrentDownloads = 5 });
+        Assert.Equal(5, store.Load().MaxConcurrentDownloads);
+    }
+
+    [Fact]
     public void The_safe_game_mode_choice_survives_a_save_and_load()
     {
         var path = Path.Combine(_dir, "settings.json");

@@ -92,6 +92,19 @@ public sealed class SettingsViewModel : ViewModelBase
         }
     }
 
+    public IReadOnlyList<int> ParallelOptions { get; } = [1, 2, 3, 4, 5, 6, 8, 10];
+
+    public int MaxConcurrentDownloads
+    {
+        get => _services.Settings.MaxConcurrentDownloads;
+        set
+        {
+            if (value < 1 || value == _services.Settings.MaxConcurrentDownloads) return;
+            _services.SaveSettings(_services.Settings with { MaxConcurrentDownloads = value });
+            Raise();
+        }
+    }
+
     public bool SafeGameMode
     {
         get => _services.Settings.SafeGameMode;

@@ -11,7 +11,7 @@ using Microsoft.Win32;
 
 namespace Arqon.App.ViewModels;
 
-public enum DownloadState { Downloading, Paused, Done, Failed }
+public enum DownloadState { Downloading, Queued, Paused, Done, Failed }
 
 public sealed class DownloadItemViewModel : ViewModelBase
 {
@@ -36,8 +36,9 @@ public sealed class DownloadItemViewModel : ViewModelBase
             _state = DownloadState.Done;
             _done = _total = new FileInfo(record.Path).Length;
         }
-        PauseCommand = new RelayCommand(Pause, () => _state == DownloadState.Downloading);
-        ResumeCommand = new RelayCommand(() => Start(), () => _state is DownloadState.Paused or DownloadState.Failed);
+        PauseCommand = new RelayCommand(Pause, () => _state is DownloadState.Downloading or DownloadState.Queued);
+        ResumeCommand = new RelayCommand(Enqueue, () => _state is DownloadState.Paused or DownloadState.Failed);
+        StartNowCommand = new RelayCommand(() => _owner.StartNow(this), () => _state == DownloadState.Queued);
         CancelCommand = new RelayCommand(Cancel);
         OpenFolderCommand = new RelayCommand(OpenFolder);
     }
@@ -56,17 +57,20 @@ public sealed class DownloadItemViewModel : ViewModelBase
     public DownloadRecord Record { get; }
     public RelayCommand PauseCommand { get; }
     public RelayCommand ResumeCommand { get; }
+    public RelayCommand StartNowCommand { get; }
     public RelayCommand CancelCommand { get; }
     public RelayCommand OpenFolderCommand { get; }
 
     public string Name => Record.Name;
     public DownloadState State => _state;
     public bool IsDownloading => _state == DownloadState.Downloading;
+    public bool IsQueued => _state == DownloadState.Queued;
     public bool IsDone => _state == DownloadState.Done;
     public bool IsPaused => _state == DownloadState.Paused;
     public bool IsFailed => _state == DownloadState.Failed;
-    public bool CanPause => IsDownloading;
+    public bool CanPause => IsDownloading || IsQueued;
     public bool CanResume => IsPaused || IsFailed;
+    public bool CanStartNow => IsQueued;
     public double Percent => _total > 0 ? Math.Min(100, _done * 100.0 / _total) : 0;
     public double Done => _done;
     public IReadOnlyList<BarPart> Parts => _parts;
@@ -79,6 +83,7 @@ public sealed class DownloadItemViewModel : ViewModelBase
     public string StateText => _state switch
     {
         DownloadState.Downloading => Loc.Get("S.Dl.State.Downloading"),
+        DownloadState.Queued => Loc.Format("S.Dl.State.Queued", Math.Max(1, _owner.QueuePosition(this))),
         DownloadState.Paused => Loc.Get("S.Dl.State.Paused"),
         DownloadState.Done => Loc.Get("S.Dl.State.Done"),
         _ => Loc.Get("S.Dl.State.Failed"),
@@ -101,13 +106,24 @@ public sealed class DownloadItemViewModel : ViewModelBase
 
     private bool _running;
 
-    public void Start()
+    /// <summary>Joins the queue; it starts when there is room (at once if the limit allows).</summary>
+    public void Enqueue() => _owner.Enqueue(this);
+
+    public void MarkQueued() => SetState(DownloadState.Queued);
+
+    /// <summary>Called by the owner when the queue says it is this download's turn.</summary>
+    public void Begin()
     {
         // Guards double-clicks: two jobs on one file would fight over it.
         if (_running) return;
         _running = true;
         _discard = false;
         _ = RunAsync();
+    }
+
+    public void RefreshQueuePosition()
+    {
+        if (IsQueued) Raise(nameof(StateText));
     }
 
     private async Task RunAsync()
@@ -140,6 +156,7 @@ public sealed class DownloadItemViewModel : ViewModelBase
             _running = false;
         }
         _owner.Persist();
+        _owner.OnEnded(this);   // its place goes to the next download in the queue
     }
 
     private void OnProgress(DownloadProgress p)
@@ -165,7 +182,16 @@ public sealed class DownloadItemViewModel : ViewModelBase
         Raise(string.Empty);
     }
 
-    private void Pause() => _cts?.Cancel();
+    private void Pause()
+    {
+        if (_state == DownloadState.Queued)
+        {
+            _owner.Dequeue(this);
+            SetState(DownloadState.Paused);
+            return;
+        }
+        _cts?.Cancel();
+    }
 
     private void Cancel()
     {
@@ -197,6 +223,7 @@ public sealed class DownloadsViewModel : ViewModelBase
 {
     private readonly AppServices _services;
     private readonly DownloadStore _store;
+    private readonly DownloadQueue _queue;
     private string _urlText = "";
     private string _message = "";
     private string _folder;
@@ -207,6 +234,8 @@ public sealed class DownloadsViewModel : ViewModelBase
     {
         _services = services;
         _store = new DownloadStore(DownloadStore.DefaultPath);
+        _queue = new DownloadQueue(services.Settings.MaxConcurrentDownloads);
+        services.SettingsChanged += OnSettingsChanged;
         _folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "Arqon");
 
         AddCommand = new RelayCommand(Add);
@@ -219,6 +248,7 @@ public sealed class DownloadsViewModel : ViewModelBase
         {
             const long gb = 1024L * 1024 * 1024;
             Items.Add(new DownloadItemViewModel(this, "Windows11_24H2.iso", DownloadState.Downloading, (long)(3.1 * gb), (long)(5.2 * gb), (long)(1.8 * gb), (long)(1.3 * gb), 8_500_000));
+            Items.Add(new DownloadItemViewModel(this, "movie-2160p.mkv", DownloadState.Queued, 0, (long)(8.4 * gb), 0, 0, 0));
             Items.Add(new DownloadItemViewModel(this, "ubuntu-24.04-desktop.iso", DownloadState.Paused, (long)(1.0 * gb), (long)(2.7 * gb), (long)(0.55 * gb), (long)(0.45 * gb), 0));
             Items.Add(new DownloadItemViewModel(this, "setup_game.exe", DownloadState.Done, 890L * 1024 * 1024, 890L * 1024 * 1024, 490L * 1024 * 1024, 400L * 1024 * 1024, 0));
         }
@@ -233,6 +263,7 @@ public sealed class DownloadsViewModel : ViewModelBase
         {
             Raise(nameof(TotalSpeed));
             Raise(nameof(ActiveCount));
+            Raise(nameof(QueuedCount));
         };
         _tick.Start();
     }
@@ -242,8 +273,45 @@ public sealed class DownloadsViewModel : ViewModelBase
     public override void Dispose()
     {
         _tick.Stop();
+        _services.SettingsChanged -= OnSettingsChanged;
         base.Dispose();
     }
+
+    // ---- queue ----------------------------------------------------------------------------------------------
+
+    private DownloadItemViewModel? ItemFor(string id) =>
+        Items.FirstOrDefault(i => string.Equals(i.Record.Path, id, StringComparison.OrdinalIgnoreCase));
+
+    private void Launch(IEnumerable<string> ids)
+    {
+        foreach (var id in ids) ItemFor(id)?.Begin();
+        foreach (var queued in Items.Where(i => i.IsQueued)) queued.RefreshQueuePosition();
+        Raise(nameof(QueuedCount));
+    }
+
+    /// <summary>The item joins the line and starts when the limit allows.</summary>
+    public void Enqueue(DownloadItemViewModel item)
+    {
+        var start = _queue.Add(item.Record.Path);
+        if (!start.Contains(item.Record.Path, StringComparer.OrdinalIgnoreCase)) item.MarkQueued();
+        Launch(start);
+    }
+
+    /// <summary>A waiting item starts now, ahead of the line and even beyond the limit.</summary>
+    public void StartNow(DownloadItemViewModel item) => Launch(_queue.StartNow(item.Record.Path));
+
+    /// <summary>The item leaves the line without starting.</summary>
+    public void Dequeue(DownloadItemViewModel item) => Launch(_queue.Remove(item.Record.Path));
+
+    /// <summary>The item stopped running (done, failed or paused): the next one in line may start.</summary>
+    public void OnEnded(DownloadItemViewModel item) => Launch(_queue.Finished(item.Record.Path));
+
+    /// <summary>1 for the next download to start, 0 when the item is not waiting.</summary>
+    public int QueuePosition(DownloadItemViewModel item) => _queue.PositionOf(item.Record.Path);
+
+    private void OnSettingsChanged() => Launch(_queue.SetLimit(_services.Settings.MaxConcurrentDownloads));
+
+    public int QueuedCount => Items.Count(i => i.IsQueued);
 
 
     private string? _clipboardLink;
@@ -327,6 +395,7 @@ public sealed class DownloadsViewModel : ViewModelBase
         if (!item.IsDone) item.DeletePartialFiles();
         Items.Remove(item);
         Persist();
+        Launch(_queue.Remove(item.Record.Path));
     }
 
     private void Add()
@@ -355,7 +424,7 @@ public sealed class DownloadsViewModel : ViewModelBase
         UrlText = "";
         Message = "";
         Persist();
-        item.Start();
+        item.Enqueue();
     }
 
     /// <summary>A path no file on disk and no download already in the list uses (the part file only appears after the probe).</summary>
