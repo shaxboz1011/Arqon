@@ -24,6 +24,7 @@ public sealed class SettingsViewModel : ViewModelBase
         FixCommand = new RelayCommand(ApplyFix);
         RestartAsAdminCommand = new RelayCommand(RestartAsAdmin);
         _services.Steering.StateChanged += OnSteeringChanged;
+        _services.SafeGame.Changed += OnSteeringChanged;
     }
 
     private void OnSteeringChanged() =>
@@ -32,6 +33,7 @@ public sealed class SettingsViewModel : ViewModelBase
     public override void Dispose()
     {
         _services.Steering.StateChanged -= OnSteeringChanged;
+        _services.SafeGame.Changed -= OnSteeringChanged;
         base.Dispose();
     }
 
@@ -64,17 +66,36 @@ public sealed class SettingsViewModel : ViewModelBase
     /// <summary>System-wide steering needs the packet driver and administrator rights.</summary>
     public bool SystemModeAvailable => _services.Steering.IsAvailable;
 
+    /// <summary>On while system mode runs, and also while safe game mode holds it back for a running game (the wish is kept).</summary>
     public bool SystemMode
     {
-        get => _services.Steering.State == SteeringState.Running;
+        get => _services.Steering.State == SteeringState.Running || _services.SafeGame.Paused;
         set
         {
-            if (value == (_services.Steering.State == SteeringState.Running)) return;
-            var on = value && _services.Steering.Start();
-            if (!value) _services.Steering.Stop();
-            _services.SaveSettings(_services.Settings with { SystemMode = on });
+            if (value == SystemMode) return;
+            if (!value)
+            {
+                _services.Steering.Stop();
+                _services.SaveSettings(_services.Settings with { SystemMode = false });
+            }
+            else if (_services.SafeGame.WouldPause)
+            {
+                // A game is running: remember the wish, it starts when the game ends.
+                _services.SaveSettings(_services.Settings with { SystemMode = true });
+            }
+            else
+            {
+                var on = _services.Steering.Start();
+                _services.SaveSettings(_services.Settings with { SystemMode = on });
+            }
             Raise(string.Empty);
         }
+    }
+
+    public bool SafeGameMode
+    {
+        get => _services.Settings.SafeGameMode;
+        set { _services.SaveSettings(_services.Settings with { SafeGameMode = value }); Raise(string.Empty); }
     }
 
     public string SystemModeNote
@@ -82,6 +103,7 @@ public sealed class SettingsViewModel : ViewModelBase
         get
         {
             var steering = _services.Steering;
+            if (_services.SafeGame.Paused) return Loc.Get("S.Set.SystemModePaused");
             if (steering.State == SteeringState.Running) return Loc.Get("S.Set.SystemModeOn");
             if (steering.State == SteeringState.Faulted) return Loc.Format("S.Set.SystemModeFault", steering.Reason ?? "");
             return steering.UnavailableReason switch

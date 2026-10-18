@@ -153,6 +153,8 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </StackPanel>
+                        <TextBlock Style="{StaticResource MutedText}" Margin="0,4,0,0" TextWrapping="Wrap" Text="{DynamicResource S.Steer.PausedForGame}"
+                                   Visibility="{Binding SteeringPaused, Converter={StaticResource B2V}}" />
                         <TextBlock Foreground="#F59E0B" Margin="0,4,0,0" TextWrapping="Wrap" Text="{Binding SteeringFault}"
                                    Visibility="{Binding SteeringFaulted, Converter={StaticResource B2V}}" />
                     </StackPanel>

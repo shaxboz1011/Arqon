@@ -137,7 +137,8 @@ public sealed class PanelViewModel : ViewModelBase
 
     public bool SteeringRunning => _services.Steering.State == SteeringState.Running;
     public bool SteeringFaulted => _services.Steering.State == SteeringState.Faulted;
-    public bool ShowSteering => SteeringRunning || SteeringFaulted;
+    public bool SteeringPaused => _services.SafeGame.Paused;
+    public bool ShowSteering => SteeringRunning || SteeringFaulted || SteeringPaused;
     public string SteeringFault => Loc.Format("S.Steer.Fault", _services.Steering.Reason ?? "");
 
     public IReadOnlyList<SteerLinkViewModel> SteerLinks => Links

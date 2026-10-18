@@ -122,6 +122,14 @@
     <sys:String x:Key="S.Notice.SteerFaultBody">{0}. Internet odatdagidek ishlayveradi.</sys:String>
     <sys:String x:Key="S.Game.Detected">O'yin ishlayapti: {0}.</sys:String>
     <sys:String x:Key="S.Game.Capped">{0} orqali yuklash {1} {2} ga cheklandi, ping barqaror qolishi uchun.</sys:String>
+    <sys:String x:Key="S.Set.SafeGame">Xavfsiz o'yin rejimi</sys:String>
+    <sys:String x:Key="S.Set.SafeGameBody">O'yin ishlayotganda tizim rejimi to'xtatiladi va paket drayveri xotiradan chiqariladi, o'yin yopilgach qaytadi. Anti-cheat (VAC, FACEIT, ESEA, Vanguard) tarmoq drayverini xavfli deb hisoblashi mumkin, shuning uchun yoqiq qoldirishni tavsiya qilamiz.</sys:String>
+    <sys:String x:Key="S.Set.SystemModePaused">Pauzada: o'yin ishlayapti. O'yin yopilgach o'zi qaytadi.</sys:String>
+    <sys:String x:Key="S.Steer.PausedForGame">Pauzada: o'yin ishlayapti, anti-cheat xavfsizligi uchun paket drayveri o'chirilgan. O'yin yopilgach tizim rejimi o'zi qaytadi.</sys:String>
+    <sys:String x:Key="S.Notice.SafePausedTitle">Tizim rejimi pauzada</sys:String>
+    <sys:String x:Key="S.Notice.SafePausedBody">O'yin ishlayapti: anti-cheat xavfsizligi uchun drayver o'chirildi.</sys:String>
+    <sys:String x:Key="S.Notice.SafeResumedTitle">Tizim rejimi qaytdi</sys:String>
+    <sys:String x:Key="S.Notice.SafeResumedBody">O'yin yopildi, tizim rejimi yana ishlayapti.</sys:String>
     <sys:String x:Key="S.Steer.Title">Tizim rejimi</sys:String>
     <sys:String x:Key="S.Steer.On">Barcha dasturlarning yangi ulanishlari tarmoqlar o'rtasida taqsimlanmoqda.</sys:String>
     <sys:String x:Key="S.Steer.Fault">Tizim rejimi to'xtadi: {0}. Internet odatdagidek ishlayapti.</sys:String>

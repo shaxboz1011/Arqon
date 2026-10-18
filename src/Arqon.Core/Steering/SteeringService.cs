@@ -3,7 +3,7 @@ namespace Arqon.Core.Steering;
 public enum SteeringState { Off, Running, Unavailable, Faulted }
 
 /// <summary>Owns the lifecycle of system mode and turns every failure into a state the UI can show. Never throws.</summary>
-public sealed class SteeringService
+public sealed class SteeringService : ISystemModeSwitch
 {
     private readonly ISteerer _steerer;
     private readonly SteeringCoordinator _coordinator;
@@ -19,6 +19,8 @@ public sealed class SteeringService
     }
 
     public SteeringState State { get; private set; } = SteeringState.Off;
+
+    public bool IsRunning => State == SteeringState.Running;
 
     /// <summary>Why steering is unavailable or stopped; null otherwise.</summary>
     public string? Reason { get; private set; }

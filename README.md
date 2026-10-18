@@ -19,6 +19,7 @@ Arqon ("rope" in Uzbek) uses Wi-Fi, Ethernet and a USB-tethered phone at the sam
 | Tray icon, close-to-tray, balloon notifications (link connected/lost, game found, cap engaged), single instance, start hidden with Windows | Done |
 | Clipboard offer: copy a file link anywhere and Downloads offers to fetch it | Done |
 | **Taskbar speed meter**: live download and upload speed next to the tray; hover for today's and this month's traffic, per link. Hides itself while a game runs full screen | Done (Windows 10 tested; bottom taskbar, not auto-hidden) |
+| **Safe game mode**: while a game runs, system mode is stopped and the WinDivert driver unloaded (anti-cheat safety); it comes back when the game closes | Done (tested with a fake game, not with a real anti-cheat) |
 | Speed unit switch: Mbit/s or MB/s, everywhere (meter, Dashboard, charts, Downloads, app speed caps) | Done |
 | Dashboard, Apps, Downloads, Usage, Settings UI (dark theme, live charts, Uzbek/English) | Done |
 | **System mode** (speed up Telegram, Chrome, every app) | **Implemented and unit-tested; first test with Wi-Fi plus a USB phone: 40 parallel downloads finished in 5.3 s instead of 11.3 s.** Not yet tested with a game or over a long session. Needs the WinDivert driver and administrator rights. See [docs/steering.md](docs/steering.md) |
@@ -35,7 +36,7 @@ Requires Windows 10/11 and the .NET 10 SDK.
 ```powershell
 dotnet run --project src/Arqon.App            # real adapters
 dotnet run --project src/Arqon.App -- --demo  # two pretend links, no phone needed
-dotnet test                                    # 267 tests
+dotnet test                                    # 282 tests
 ```
 
 System mode additionally needs the packet driver, see [docs/steering.md](docs/steering.md):

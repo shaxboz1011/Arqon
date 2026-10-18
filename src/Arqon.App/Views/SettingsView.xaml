@@ -51,6 +51,17 @@
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                     <StackPanel>
+                        <TextBlock Style="{StaticResource RowTitle}" Text="{DynamicResource S.Set.SafeGame}" />
+                        <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Text="{DynamicResource S.Set.SafeGameBody}" />
+                    </StackPanel>
+                    <ToggleButton Grid.Column="1" Style="{StaticResource Switch}" IsChecked="{Binding SafeGameMode, Mode=TwoWay}" Margin="16,0,0,0" VerticalAlignment="Top" />
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel>
                         <TextBlock Style="{StaticResource RowTitle}" Text="{DynamicResource S.Set.FixTitle}" />
                         <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Text="{DynamicResource S.Fix.Body}" />
                         <TextBlock FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding FixStatus}">

@@ -22,6 +22,7 @@ public sealed record Notice(string Title, string Message);
 public sealed class AppServices : IDisposable
 {
     private static readonly TimeSpan MaintenanceEvery = TimeSpan.FromSeconds(3);
+    private static readonly TimeSpan GameCheckEvery = TimeSpan.FromSeconds(1);
     private const int SaveUsageEveryTicks = 10;
 
     private readonly TtlCache<IReadOnlyList<LinkInfo>> _linkCache;
@@ -29,6 +30,7 @@ public sealed class AppServices : IDisposable
     private readonly Dictionary<string, DateTimeOffset> _capNotified = new();
     private readonly Stopwatch _uptime = Stopwatch.StartNew();
     private Timer? _maintenance;
+    private Timer? _gameTimer;
     private int _ticks;
 
     public bool Demo { get; }
@@ -44,6 +46,9 @@ public sealed class AppServices : IDisposable
     public GameWatcher Games { get; }
     public UsageTracker Usage { get; }
     public SteeringService Steering { get; }
+
+    /// <summary>Holds system mode (and unloads its driver) while a game runs, so anti-cheat never sees a network driver.</summary>
+    public SafeGameMode SafeGame { get; }
 
     /// <summary>The link a game would use right now (steadiest, with hysteresis); null when no link is measured.</summary>
     public string? GameLinkId { get; private set; }
@@ -79,6 +84,14 @@ public sealed class AppServices : IDisposable
         ISteerer steerer = demo ? new DemoSteerer() : new WinDivertSteerer(engine, cachedLinks, cachedDefault);
         Steering = new SteeringService(steerer, coordinator, engine);
         Steering.StateChanged += OnSteeringChanged;
+
+        // Demo mode has fake games running all the time, which would keep the demo's system mode card paused.
+        SafeGame = new SafeGameMode(Steering, () => Games.GameRunning, demo ? () => { } : WinDivertDriver.Unload)
+        {
+            Enabled = Settings.SafeGameMode && !demo,
+            WantsSystemMode = Settings.SystemMode,
+        };
+        SafeGame.Changed += OnSafeGameChanged;
         if (!demo)
         {
             engine.Log += SteeringLog.Write;
@@ -114,9 +127,28 @@ public sealed class AppServices : IDisposable
         Games.Refresh();
         _maintenance = new Timer(_ => Maintain(), null, MaintenanceEvery, MaintenanceEvery);
 
+        // A game that is already running keeps system mode off (and unloads a driver left over from an earlier session).
+        SafeGame.Evaluate();
+
         // The preference is kept when the driver is missing or Arqon is not elevated (it will start next time it can);
         // it is only cleared when system mode actually fails, see OnSteeringChanged.
-        if (Settings.SystemMode) Steering.Start();
+        if (Settings.SystemMode && !SafeGame.Paused) Steering.Start();
+
+        // Every second, not every 3: the sooner the driver is gone after a game starts, the less an anti-cheat's start-up scan can see.
+        _gameTimer = new Timer(_ => RefreshGames(), null, GameCheckEvery, GameCheckEvery);
+    }
+
+    private void RefreshGames()
+    {
+        try
+        {
+            Games.Refresh();
+            SafeGame.Evaluate();
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            // The next tick tries again.
+        }
     }
 
     public void SaveSettings(ArqonSettings settings)
@@ -125,6 +157,9 @@ public sealed class AppServices : IDisposable
         Units.Unit = UnitOf(settings);
         Guard.Enabled = settings.GameProtection;
         SettingsStore.Save(settings);
+        SafeGame.Enabled = settings.SafeGameMode && !Demo;
+        SafeGame.WantsSystemMode = settings.SystemMode;
+        SafeGame.Evaluate();
         SettingsChanged?.Invoke();
     }
 
@@ -142,9 +177,11 @@ public sealed class AppServices : IDisposable
     public void Dispose()
     {
         _maintenance?.Dispose();
+        _gameTimer?.Dispose();
         Monitor.SampleReady -= OnSample;
         Monitor.Stop();
         Steering.Stop();
+        if (!Demo) WinDivertDriver.Unload();   // do not leave a loaded driver behind for an anti-cheat to find
         Usage.Save();
     }
 
@@ -181,7 +218,6 @@ public sealed class AppServices : IDisposable
     {
         try
         {
-            Games.Refresh();
             foreach (var change in _linkChanges.Update(Links.GetLinks()))
             {
                 var key = change.Kind == LinkChangeKind.Appeared ? "S.Notice.LinkUp" : "S.Notice.LinkDown";
@@ -201,6 +237,12 @@ public sealed class AppServices : IDisposable
     {
         if (!Games.GameRunning) return;
         Raise(Loc.Get("S.Notice.GameTitle"), Loc.Format("S.Notice.GameBody", string.Join(", ", Games.RunningGames)));
+    }
+
+    private void OnSafeGameChanged()
+    {
+        var key = SafeGame.Paused ? "S.Notice.SafePaused" : "S.Notice.SafeResumed";
+        Raise(Loc.Get(key + "Title"), Loc.Get(key + "Body"));
     }
 
     private void OnSteeringChanged()

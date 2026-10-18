@@ -122,6 +122,14 @@
     <sys:String x:Key="S.Notice.SteerFaultBody">{0}. Your internet keeps working normally.</sys:String>
     <sys:String x:Key="S.Game.Detected">Game running: {0}.</sys:String>
     <sys:String x:Key="S.Game.Capped">Downloads over {0} are capped at {1} {2} to keep your ping steady.</sys:String>
+    <sys:String x:Key="S.Set.SafeGame">Safe game mode</sys:String>
+    <sys:String x:Key="S.Set.SafeGameBody">While a game runs, system mode is stopped and its packet driver is unloaded; it comes back when the game closes. Anti-cheat software (VAC, FACEIT, ESEA, Vanguard) may distrust a network driver, so we recommend leaving this on.</sys:String>
+    <sys:String x:Key="S.Set.SystemModePaused">Paused: a game is running. It comes back by itself when the game closes.</sys:String>
+    <sys:String x:Key="S.Steer.PausedForGame">Paused: a game is running and the packet driver is unloaded for anti-cheat safety. System mode returns by itself when the game closes.</sys:String>
+    <sys:String x:Key="S.Notice.SafePausedTitle">System mode paused</sys:String>
+    <sys:String x:Key="S.Notice.SafePausedBody">A game is running: the driver was unloaded for anti-cheat safety.</sys:String>
+    <sys:String x:Key="S.Notice.SafeResumedTitle">System mode is back</sys:String>
+    <sys:String x:Key="S.Notice.SafeResumedBody">The game closed, system mode is running again.</sys:String>
     <sys:String x:Key="S.Steer.Title">System mode</sys:String>
     <sys:String x:Key="S.Steer.On">New connections of every app are being spread across your networks.</sys:String>
     <sys:String x:Key="S.Steer.Fault">System mode stopped: {0}. Your internet works normally.</sys:String>

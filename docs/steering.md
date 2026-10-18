@@ -45,6 +45,14 @@ reply ── dst = B ──► WinDivert (inbound) ─► ProcessInbound ─► 
 - Arqon's own traffic (the download manager binds to links itself).
 - Packets whose source is not the default address.
 
+### Safe game mode (on by default)
+
+Anti-cheat software (VAC, FACEIT, ESEA, Vanguard) looks at loaded drivers and distrusts a network driver such as WinDivert. WinDivert's driver also stays loaded after its handle is closed, until `sc stop WinDivert` or a reboot. So while any game from the catalogue (or one you marked as a game) runs, Arqon stops system mode **and unloads the driver**, then brings system mode back when the game closes (if you had it switched on). It also unloads the driver when Arqon exits, and keeps system mode off when a game is already running at start-up.
+
+- Checked every second, so the driver is gone about one second after the game's process appears. An anti-cheat that scans at the very first moment of the launch can still see it for that second; that residual risk is not zero, so for VAC-protected games prefer to start Arqon's system mode only after the game closes, or leave it off.
+- Tested with a harmless fake game (a renamed `ping.exe` called `dota2.exe`): driver service gone within 1 s of the start, back within 1 s of the end, never installed when Arqon starts with a game running. Not tested with a real anti-cheat game.
+- Switch it off in Settings ("Safe game mode"). If Arqon is killed instead of closed, the driver stays loaded until `sc stop WinDivert` or a reboot.
+
 ### Safety
 
 - The driver diverts packets only while Arqon's handle is open. Closing Arqon, switching the mode off, a crash or killing the process all return traffic to normal at once.

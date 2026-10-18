@@ -28,6 +28,17 @@ public sealed class SettingsEvolutionTests : IDisposable
         Assert.True(s.ClipboardWatch);
         Assert.True(s.TaskbarMeter);
         Assert.False(s.SpeedInBytes);   // an older file keeps showing megabits, as before
+        Assert.True(s.SafeGameMode);    // the safe choice is the default for files written before it existed
+    }
+
+    [Fact]
+    public void The_safe_game_mode_choice_survives_a_save_and_load()
+    {
+        var path = Path.Combine(_dir, "settings.json");
+        var store = new JsonSettingsStore(path);
+        store.Save(ArqonSettings.Default() with { SafeGameMode = false });
+
+        Assert.False(store.Load().SafeGameMode);
     }
 
     [Fact]
