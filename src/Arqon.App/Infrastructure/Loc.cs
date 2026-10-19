@@ -14,7 +14,7 @@ public static class Loc
 
     public static void Apply(string language)
     {
-        var lang = language is "en" or "uz" ? language : "uz";
+        var lang = language is "en" or "uz" or "ru" ? language : "uz";
         var dict = new ResourceDictionary { Source = new Uri($"/Arqon.App;component/Resources/Strings.{lang}.xaml", UriKind.Relative) };
 
         var merged = Application.Current.Resources.MergedDictionaries;

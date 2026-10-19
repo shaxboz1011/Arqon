@@ -86,7 +86,7 @@ flowchart LR
 
 </div>
 
-<sub>The interface is in **Uzbek and English** (switch in Settings). This guide is also in Russian. Screenshots are taken in demo mode.</sub>
+<sub>The interface is in **Uzbek, English and Russian** (switch in Settings, it changes at once). This guide is in the same three languages. Screenshots are taken in demo mode.</sub>
 
 ## 🚀 Install in 1 minute
 
@@ -212,7 +212,7 @@ cd Arqon
 
 dotnet run --project src/Arqon.App            # run with your real adapters
 dotnet run --project src/Arqon.App -- --demo  # run with two pretend connections
-dotnet test                                    # 387 tests
+dotnet test                                    # 392 tests
 
 # one self-contained Arqon.exe (about 75 MB) in publish\win-x64
 powershell -ExecutionPolicy Bypass -File tools\build.ps1
@@ -233,7 +233,7 @@ powershell -ExecutionPolicy Bypass -File tools\build.ps1
 | Taskbar speed meter with hover totals | ✅ Done (tested on Windows 10, bottom taskbar) |
 | Safe game mode (system mode off and driver unloaded while a game runs) | ✅ Done (tested with a fake game, not a real anti-cheat) |
 | Speed unit switch (Mbit/s or MB/s) | ✅ Done |
-| Interface in Uzbek and English | ✅ Done (more languages welcome) |
+| Interface in Uzbek, English and Russian | ✅ Done (more languages welcome) |
 | Torrents and magnet links over every link; choose folder; choose files; optional seeding with a share ratio; open from Windows | ✅ Done (real Debian torrent over Wi-Fi + phone) |
 | **System mode** (speed up Telegram, Chrome, every app) | 🧪 Works in a first real test (Wi-Fi + USB phone). Not yet tested with a game or over a long session |
 | Relay server (one connection split across links, duplicated game packets) | 🗓 Planned |
@@ -257,7 +257,7 @@ powershell -ExecutionPolicy Bypass -File tools\build.ps1
 Bug reports, ideas, translations and pull requests are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md).
 
 - 🧪 **Try it on your own two connections** and tell us the result: [share a test result](https://github.com/shaxboz1011/Arqon/issues/new/choose).
-- 🌐 **Add a language** to the interface (`src/Arqon.App/Resources/Strings.*.xaml`). Russian is the first one wanted.
+- 🌐 **Add a language** to the interface: copy `src/Arqon.App/Resources/Strings.en.xaml`, translate it, and a test checks that no text is missing.
 - 🐛 **Report a bug** or suggest an idea in an [issue](https://github.com/shaxboz1011/Arqon/issues/new/choose).
 
 If Arqon is useful to you, a ⭐ on GitHub helps other people find it.

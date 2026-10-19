@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Russian interface language (Settings → Language).
+
 ## 0.1.1
 
 - Optional seeding of finished torrents (Settings): stops at a chosen share ratio or by hand, held back while the game guard is active.

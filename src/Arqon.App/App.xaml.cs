@@ -180,7 +180,7 @@ public partial class App : Application
         window.Height = 1000;   // tall enough that the whole dashboard fits in one picture
         window.Top = 10;
         await Task.Delay(6500);
-        foreach (var lang in new[] { "uz", "en" })
+        foreach (var lang in new[] { "uz", "en", "ru" })
         {
             Loc.Apply(lang);
             foreach (var page in new[] { "panel", "apps", "downloads", "usage", "settings" })

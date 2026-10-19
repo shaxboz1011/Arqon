@@ -43,7 +43,7 @@ public sealed class SettingsViewModel : ViewModelBase
     public RelayCommand FixCommand { get; }
     public RelayCommand RestartAsAdminCommand { get; }
 
-    public IReadOnlyList<LanguageOption> Languages { get; } = [new("O'zbekcha", "uz"), new("English", "en")];
+    public IReadOnlyList<LanguageOption> Languages { get; } = [new("O'zbekcha", "uz"), new("English", "en"), new("Русский", "ru")];
 
     public LanguageOption SelectedLanguage
     {

@@ -86,7 +86,7 @@ flowchart LR
 
 </div>
 
-<sub>Interfeys **o'zbek va ingliz** tillarida (Sozlamalardan almashtiriladi). Skrinshotlar demo rejimda olingan.</sub>
+<sub>Interfeys **o'zbek, ingliz va rus** tillarida (Sozlamalardan almashtiriladi, darhol o'zgaradi). Skrinshotlar demo rejimda olingan.</sub>
 
 ## 🚀 1 daqiqada o'rnatish
 
@@ -212,7 +212,7 @@ cd Arqon
 
 dotnet run --project src/Arqon.App            # haqiqiy adapterlar bilan ishga tushirish
 dotnet run --project src/Arqon.App -- --demo  # ikkita soxta ulanish bilan
-dotnet test                                    # 387 ta test
+dotnet test                                    # 392 ta test
 
 # bitta mustaqil Arqon.exe (taxminan 75 MB) publish\win-x64 papkasida
 powershell -ExecutionPolicy Bypass -File tools\build.ps1
@@ -233,7 +233,7 @@ powershell -ExecutionPolicy Bypass -File tools\build.ps1
 | Vazifalar panelida tezlik o'lchagichi | ✅ Tayyor (Windows 10, pastdagi panelda sinalgan) |
 | Xavfsiz o'yin rejimi (o'yin paytida system mode o'chadi, drayver chiqariladi) | ✅ Tayyor (soxta o'yin bilan sinalgan, haqiqiy anti-cheat bilan emas) |
 | Tezlik birligi (Mbit/s yoki MB/s) | ✅ Tayyor |
-| Interfeys o'zbek va ingliz tilida | ✅ Tayyor (boshqa tillar xush kelibsiz) |
+| Interfeys o'zbek, ingliz va rus tilida | ✅ Tayyor (boshqa tillar xush kelibsiz) |
 | Torrent va magnet linklar barcha ulanishlar bo'yicha; papka tanlash; fayl tanlash; nisbat bilan ixtiyoriy tarqatish (seeding); Windows'dan ochish | ✅ Tayyor (haqiqiy Debian torrenti Wi-Fi + telefon bilan) |
 | **System mode** (Telegram, Chrome va hamma ilovani tezlatish) | 🧪 Birinchi haqiqiy sinovda ishladi (Wi-Fi + USB telefon). O'yin bilan va uzoq sessiyada hali sinalmagan |
 | Relay server (bitta ulanishni bo'laklash, o'yin paketlarini nusxalash) | 🗓 Rejada |
@@ -253,7 +253,7 @@ powershell -ExecutionPolicy Bypass -File tools\build.ps1
 Xato haqida xabar, g'oya, tarjima va pull request'lar xush kelibsiz. [CONTRIBUTING.md](CONTRIBUTING.md) dan boshlang.
 
 - 🧪 **O'zingizning ikki ulanishingizda sinab ko'ring** va natijani yozing: [sinov natijasini yuborish](https://github.com/shaxboz1011/Arqon/issues/new/choose).
-- 🌐 Interfeysga **til qo'shing** (`src/Arqon.App/Resources/Strings.*.xaml`). Birinchi kerakli til: rus tili.
+- 🌐 Interfeysga **til qo'shing**: `src/Arqon.App/Resources/Strings.en.xaml` ni nusxalab tarjima qiling, test hech narsa tushib qolmaganini tekshiradi.
 - 🐛 [Issue](https://github.com/shaxboz1011/Arqon/issues/new/choose) orqali xato haqida xabar bering yoki g'oya taklif qiling.
 
 Arqon sizga foydali bo'lsa, GitHub'dagi ⭐ boshqalarga uni topishga yordam beradi.
