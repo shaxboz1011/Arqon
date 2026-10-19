@@ -1,0 +1,9 @@
+name: Idea or feature request
+description: Something Arqon could do
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like, and why
+    validations: {required: true}

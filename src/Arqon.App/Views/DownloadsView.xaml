@@ -114,7 +114,7 @@
             <TextBlock Foreground="#F59E0B" FontSize="12" Margin="2,0,0,6" Text="{Binding Message}" Visibility="{Binding HasMessage, Converter={StaticResource B2V}}" />
             <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                 <TextBlock Style="{StaticResource MutedText}" FontSize="12" Text="{DynamicResource S.Dl.SaveTo}" />
-                <TextBlock Style="{StaticResource MutedText}" FontSize="12" Text="{Binding Folder}" Margin="6,0,0,0" Foreground="#E7EAF2" />
+                <TextBlock Style="{StaticResource MutedText}" FontSize="12" Text="{Binding FolderText}" Margin="6,0,0,0" Foreground="#E7EAF2" />
                 <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="6,0,0,0" Text="{DynamicResource S.Dl.FolderAuto}"
                            Visibility="{Binding FolderIsAuto, Converter={StaticResource B2V}}" />
                 <Button Style="{StaticResource IconButton}" Width="22" Height="22" FontSize="11" Content="&#xE70F;" Margin="4,-2,0,0"

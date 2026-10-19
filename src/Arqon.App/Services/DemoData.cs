@@ -14,7 +14,7 @@ internal sealed class DemoLinkProvider : ILinkProvider
     public static readonly LinkInfo Wifi = new("wifi", "Wi-Fi", "Demo Wi-Fi adapter",
         IPAddress.Parse("192.168.1.20"), IPAddress.Parse("192.168.1.1"), LinkKind.Wifi, 144_000_000);
 
-    public static readonly LinkInfo Phone = new("phone", "Telefon (USB)", "Demo USB tethering",
+    public static readonly LinkInfo Phone = new("phone", "Phone (USB)", "Demo USB tethering",
         IPAddress.Parse("192.168.42.129"), IPAddress.Parse("192.168.42.129"), LinkKind.Mobile, 100_000_000);
 
     public IReadOnlyList<LinkInfo> GetLinks() => [Wifi, Phone];
@@ -70,7 +70,7 @@ internal static class DemoUsage
             var wifi = (long)((1.2 + rng.NextDouble() * 3.5 + (weekend ? 2.5 : 0)) * 1_000_000_000);
             var phone = (long)((0.2 + rng.NextDouble() * 1.8 + (weekend ? 1.5 : 0)) * 1_000_000_000);
             tracker.Add("wifi", "Wi-Fi", day, wifi, wifi / 14);
-            tracker.Add("phone", "Telefon (USB)", day, phone, phone / 12);
+            tracker.Add("phone", "Phone (USB)", day, phone, phone / 12);
         }
         return tracker;
     }

@@ -1,0 +1,16 @@
+name: My test result
+description: Tell us how Arqon worked on your connections (very useful!)
+labels: [test-report]
+body:
+  - type: textarea
+    id: setup
+    attributes:
+      label: Setup
+      description: Which connections (Wi-Fi, cable, phone, which provider), Windows version.
+    validations: {required: true}
+  - type: textarea
+    id: result
+    attributes:
+      label: Result
+      description: Speed with one connection vs. with Arqon, games tried, anything odd.
+    validations: {required: true}

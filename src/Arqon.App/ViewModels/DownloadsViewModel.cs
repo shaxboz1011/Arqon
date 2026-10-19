@@ -72,9 +72,14 @@ public sealed class DownloadItemViewModel : ViewModelBase
         {
             _upSpeed = speed / 12;
             _phase = TorrentPhase.Downloading;
-            _split = Loc.Format("S.Dl.Peers", 31, 9) + "  ·  " + _owner.NameFor("wifi") + " 17  ·  " + _owner.NameFor("phone") + " 14";
+            _demoTorrent = true;
         }
     }
+
+    private readonly bool _demoTorrent;
+
+    // The demo torrent's numbers are fixed, but the words around them follow the language chosen at the moment.
+    private string DemoSplit() => Loc.Format("S.Dl.Peers", 31, 9) + "  ·  " + _owner.NameFor("wifi") + " 17  ·  " + _owner.NameFor("phone") + " 14";
 
     public DownloadRecord Record { get; private set; }
     public bool IsTorrent => Record.Kind == DownloadKind.Torrent;
@@ -100,7 +105,7 @@ public sealed class DownloadItemViewModel : ViewModelBase
     public double Done => _done;
     public IReadOnlyList<BarPart> Parts => _parts;
     public double TotalForBar => _total > 0 ? _total : 0;
-    public string Split => _split;
+    public string Split => _demoTorrent ? DemoSplit() : _split;
     public string Error => _error;
     public bool HasError => _error.Length > 0;
     public double SpeedBps => IsDownloading ? _speed : 0;
@@ -513,6 +518,7 @@ public sealed class DownloadsViewModel : ViewModelBase
     {
         Launch(_queue.SetLimit(_services.Settings.MaxConcurrentDownloads));
         Raise(nameof(Folder));
+        Raise(nameof(FolderText));
         Raise(nameof(FolderIsCustom));
         Raise(nameof(FolderIsAuto));
     }
@@ -577,6 +583,9 @@ public sealed class DownloadsViewModel : ViewModelBase
 
     /// <summary>Where new downloads go: the folder chosen in the app, or by default the Downloads folder of Windows.</summary>
     public string Folder => DownloadFolder.Resolve(_services.Settings.DownloadDirectory, DownloadFolder.Windows());
+
+    /// <summary>What the page shows for <see cref="Folder"/>; the demo shows a neutral path instead of the real user name.</summary>
+    public string FolderText => _services.Demo && !FolderIsCustom ? @"C:\Users\you\Downloads" : Folder;
 
     public bool FolderIsCustom => DownloadFolder.IsCustom(_services.Settings.DownloadDirectory);
     public bool FolderIsAuto => !FolderIsCustom;
