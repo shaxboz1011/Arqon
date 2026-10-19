@@ -33,6 +33,8 @@ public sealed class DownloadItemViewModel : ViewModelBase
     private bool _spaceChecked;
     private bool _selectionApplied;
     private bool _seeding;
+    private bool _seedStarting;
+    private bool _seedUnavailable;
     private long _uploaded;
     private CancellationTokenSource? _seedCts;
     private int _fileCount;
@@ -286,6 +288,47 @@ public sealed class DownloadItemViewModel : ViewModelBase
 
     private void StopSeeding() => _seedCts?.Cancel();
 
+    /// <summary>Seeding was switched on again: a torrent whose files were missing before gets another look.</summary>
+    public void RetrySeeding() => _seedUnavailable = false;
+
+    /// <summary>
+    /// Starts sharing a torrent that finished in an earlier session (or earlier in this one and was stopped). It only works when
+    /// all wanted files are still on disk: a deleted file never turns this into a download, the item simply stays "Finished".
+    /// </summary>
+    public async Task ResumeSeedingAsync()
+    {
+        if (!IsTorrent || !IsDone || _seeding || _seedStarting || _seedUnavailable || _running || _owner.IsDemo || !_owner.SeedTorrents) return;
+        _seedStarting = true;
+        try
+        {
+            var handle = await _owner.TorrentEngine().OpenForSeedingAsync(Record.Url, Record.Path, Record.Files?.ToHashSet());
+            if (handle is null)
+            {
+                _seedUnavailable = true;   // its files are gone: do not look again until seeding is switched on anew
+                return;
+            }
+            if (!_owner.Items.Contains(this))
+            {
+                await handle.RemoveAsync(deleteData: false);   // removed from the list while its files were being checked
+                return;
+            }
+            _torrent = handle;
+            _total = _done = handle.Snapshot().Size;
+            _uploaded = 0;
+            _seeding = true;
+            Raise(string.Empty);
+            _ = SeedAsync();
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            // sharing is a bonus; a failure leaves a normal finished download
+        }
+        finally
+        {
+            _seedStarting = false;
+        }
+    }
+
     /// <summary>
     /// The files are known once the metadata is there (at once for a .torrent file, later for a magnet link). The choice made
     /// earlier is applied then, before any data of an unwanted file is requested for long.
@@ -511,6 +554,7 @@ public sealed class DownloadsViewModel : ViewModelBase
             foreach (var r in _store.Load()) Items.Add(new DownloadItemViewModel(this, r));
         }
         Items.CollectionChanged += (_, _) => Raise(string.Empty);
+        _ = ResumeSeedingAsync(TimeSpan.FromSeconds(5));
 
         _tick = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _tick.Tick += (_, _) =>
@@ -566,8 +610,36 @@ public sealed class DownloadsViewModel : ViewModelBase
     /// <summary>1 for the next download to start, 0 when the item is not waiting.</summary>
     public int QueuePosition(DownloadItemViewModel item) => _queue.PositionOf(item.Record.Key);
 
+    private bool _seedingPass;
+
+    /// <summary>
+    /// Finished torrents are shared again when seeding is on: after a start of Arqon (a few seconds late, so start-up is not
+    /// slowed down and the firewall question does not appear at once) and whenever the setting is switched on.
+    /// One at a time, because checking the files of a big torrent is heavy.
+    /// </summary>
+    private async Task ResumeSeedingAsync(TimeSpan delay)
+    {
+        if (_seedingPass || _services.Demo || !_services.Settings.SeedTorrents) return;
+        _seedingPass = true;
+        try
+        {
+            if (delay > TimeSpan.Zero) await Task.Delay(delay);
+            foreach (var item in Items.ToList()) await item.ResumeSeedingAsync();
+        }
+        finally
+        {
+            _seedingPass = false;
+        }
+    }
+
+    private bool _seedWasOn;
+
     private void OnSettingsChanged()
     {
+        var seedOn = _services.Settings.SeedTorrents;
+        if (seedOn && !_seedWasOn) foreach (var item in Items) item.RetrySeeding();
+        _seedWasOn = seedOn;
+        _ = ResumeSeedingAsync(TimeSpan.Zero);
         Launch(_queue.SetLimit(_services.Settings.MaxConcurrentDownloads));
         Raise(nameof(Folder));
         Raise(nameof(FolderText));

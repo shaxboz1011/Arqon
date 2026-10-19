@@ -212,7 +212,7 @@ cd Arqon
 
 dotnet run --project src/Arqon.App            # haqiqiy adapterlar bilan ishga tushirish
 dotnet run --project src/Arqon.App -- --demo  # ikkita soxta ulanish bilan
-dotnet test                                    # 392 ta test
+dotnet test                                    # 395 ta test
 
 # bitta mustaqil Arqon.exe (taxminan 75 MB) publish\win-x64 papkasida
 powershell -ExecutionPolicy Bypass -File tools\build.ps1
@@ -234,12 +234,12 @@ powershell -ExecutionPolicy Bypass -File tools\build.ps1
 | Xavfsiz o'yin rejimi (o'yin paytida system mode o'chadi, drayver chiqariladi) | ✅ Tayyor (soxta o'yin bilan sinalgan, haqiqiy anti-cheat bilan emas) |
 | Tezlik birligi (Mbit/s yoki MB/s) | ✅ Tayyor |
 | Interfeys o'zbek, ingliz va rus tilida | ✅ Tayyor (boshqa tillar xush kelibsiz) |
-| Torrent va magnet linklar barcha ulanishlar bo'yicha; papka tanlash; fayl tanlash; nisbat bilan ixtiyoriy tarqatish (seeding); Windows'dan ochish | ✅ Tayyor (haqiqiy Debian torrenti Wi-Fi + telefon bilan) |
+| Torrent va magnet linklar barcha ulanishlar bo'yicha; papka tanlash; fayl tanlash; nisbat bilan ixtiyoriy tarqatish (seeding), qayta ochilgandan keyin ham; Windows'dan ochish | ✅ Tayyor (haqiqiy Debian torrenti Wi-Fi + telefon bilan) |
 | **System mode** (Telegram, Chrome va hamma ilovani tezlatish) | 🧪 Birinchi haqiqiy sinovda ishladi (Wi-Fi + USB telefon). O'yin bilan va uzoq sessiyada hali sinalmagan |
 | Relay server (bitta ulanishni bo'laklash, o'yin paketlarini nusxalash) | 🗓 Rejada |
 | O'rnatuvchi va kod imzosi | 🗓 Rejada |
 
-**Ochiq cheklovlar:** tarqatish (seeding) ixtiyoriy (standart o'chiq) va faqat joriy sessiyada tugagan torrentlar uchun davom etadi, UPnP port ochish o'chiq, bitta faylli `Arqon.exe` dan system mode drayver bilan hali tekshirilmagan.
+**Ochiq cheklovlar:** tarqatish (seeding) ixtiyoriy (standart o'chiq) va qayta ochilgandan keyin faqat fayllar diskda turgan bo'lsa davom etadi, UPnP port ochish o'chiq, bitta faylli `Arqon.exe` dan system mode drayver bilan hali tekshirilmagan.
 
 ## 🔒 Xavfsizlik
 

@@ -201,6 +201,81 @@ public sealed class TorrentEngineTests : IDisposable
     }
 
     [Fact]
+    public async Task A_finished_torrent_from_an_earlier_session_is_opened_for_seeding_and_serves_a_downloader()
+    {
+        var folder = Path.Combine(_dir, "finished");
+        Directory.CreateDirectory(folder);
+        var data = new byte[1_500_000];
+        new Random(33).NextBytes(data);
+        var dataPath = Path.Combine(folder, "old.bin");
+        await File.WriteAllBytesAsync(dataPath, data);
+        var torrentPath = Path.Combine(_dir, "old.torrent");
+        await File.WriteAllBytesAsync(torrentPath, (await new TorrentCreator().CreateAsync(new TorrentFileSource(dataPath))).Encode());
+
+        var port = FreePort();
+        using var restarted = new TorrentEngine(new TorrentEngineOptions(Path.Combine(_dir, "cache-restarted"), ListenPort: port, EnableDht: false,
+            AllowLocalPeerDiscovery: false));   // knows nothing about the torrent: this is a new session
+        var seeding = await restarted.OpenForSeedingAsync(torrentPath, folder, null);
+
+        Assert.NotNull(seeding);
+        Assert.Equal(TorrentPhase.Complete, seeding!.Snapshot().Phase);
+
+        using var leecher = new TorrentEngine(new TorrentEngineOptions(Path.Combine(_dir, "cache-leech-old"), EnableDht: false, AllowLocalPeerDiscovery: false));
+        var handle = await leecher.AddFileAsync(torrentPath, Path.Combine(_dir, "from-restarted"));
+        await handle.StartAsync();
+        await handle.AddPeerAsync(new IPEndPoint(IPAddress.Loopback, port));
+        var state = await Until(handle.Snapshot, s => s.Phase == TorrentPhase.Complete, TimeSpan.FromSeconds(60));
+
+        Assert.Equal(TorrentPhase.Complete, state.Phase);
+        Assert.Equal(Convert.ToHexString(SHA256.HashData(data)),
+            Convert.ToHexString(SHA256.HashData(await File.ReadAllBytesAsync(Path.Combine(_dir, "from-restarted", "old.bin")))));
+    }
+
+    [Fact]
+    public async Task A_torrent_whose_files_have_been_deleted_is_not_opened_and_nothing_is_downloaded()
+    {
+        var folder = Path.Combine(_dir, "gone");
+        Directory.CreateDirectory(folder);
+        var dataPath = Path.Combine(folder, "lost.bin");
+        await File.WriteAllBytesAsync(dataPath, new byte[400_000]);
+        var torrentPath = Path.Combine(_dir, "lost.torrent");
+        await File.WriteAllBytesAsync(torrentPath, (await new TorrentCreator().CreateAsync(new TorrentFileSource(dataPath))).Encode());
+        File.Delete(dataPath);   // the user deleted the finished download
+        using var engine = new TorrentEngine(new TorrentEngineOptions(Path.Combine(_dir, "cache-lost"), EnableDht: false));
+
+        var seeding = await engine.OpenForSeedingAsync(torrentPath, folder, null);
+
+        Assert.Null(seeding);
+        Assert.False(File.Exists(dataPath), "opening a torrent for seeding must never download or create its files");
+    }
+
+    [Fact]
+    public async Task Only_the_files_that_were_chosen_have_to_be_there_to_seed_a_multi_file_torrent()
+    {
+        var root = Path.Combine(_dir, "multi-old");
+        var pack = Path.Combine(root, "pack");
+        Directory.CreateDirectory(pack);
+        foreach (var (name, seed) in new[] { ("a.bin", 41), ("b.bin", 42), ("c.bin", 43) })
+        {
+            var bytes = new byte[600_000];
+            new Random(seed).NextBytes(bytes);
+            await File.WriteAllBytesAsync(Path.Combine(pack, name), bytes);
+        }
+        var torrentPath = Path.Combine(_dir, "multi-old.torrent");
+        await File.WriteAllBytesAsync(torrentPath, (await new TorrentCreator().CreateAsync(new TorrentFileSource(pack))).Encode());
+        File.Delete(Path.Combine(pack, "b.bin"));   // it was never chosen
+        var torrent = await Torrent.LoadAsync(torrentPath);
+        var chosen = torrent.Files.Select((f, i) => (f, i)).Where(x => Path.GetFileName(x.f.Path) != "b.bin").Select(x => x.i).ToHashSet();
+        using var engine = new TorrentEngine(new TorrentEngineOptions(Path.Combine(_dir, "cache-multi-old"), EnableDht: false));
+
+        var all = await engine.OpenForSeedingAsync(torrentPath, root, null);
+        var some = await engine.OpenForSeedingAsync(torrentPath, root, chosen);
+
+        Assert.Null(all);     // a file is missing and was wanted
+        Assert.NotNull(some);  // the missing one was never wanted
+    }
+
+    [Fact]
     public async Task The_upload_speed_can_be_capped_and_released()
     {
         using var engine = new TorrentEngine(new TorrentEngineOptions(Path.Combine(_dir, "cache"), EnableDht: false));

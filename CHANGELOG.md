@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Seeding continues after a restart: finished torrents are shared again when their files are still on disk (never starts a download).
+
 ## 0.1.2
 
 - Russian interface language (Settings → Language).

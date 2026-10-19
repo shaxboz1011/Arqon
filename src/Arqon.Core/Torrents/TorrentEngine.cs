@@ -162,6 +162,39 @@ public sealed class TorrentEngine : IDisposable
         await handle.RemoveAsync(deleteData: true).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Opens a torrent that finished in an earlier session so it can be shared again. It is only started when every wanted
+    /// file is on disk in full, so it can never turn into a download: if a file is gone (the user deleted it) or the engine
+    /// starts fetching data, the torrent is dropped again and null is returned. A magnet link whose metadata was never saved
+    /// has no known files and is not opened either.
+    /// </summary>
+    public async Task<TorrentHandle?> OpenForSeedingAsync(string source, string saveFolder, IReadOnlySet<int>? selected, TimeSpan? timeout = null)
+    {
+        var handle = source.StartsWith("magnet:", StringComparison.OrdinalIgnoreCase)
+            ? await AddMagnetAsync(source, saveFolder).ConfigureAwait(false)
+            : await AddFileAsync(source, saveFolder).ConfigureAwait(false);
+
+        async Task<TorrentHandle?> GiveUp()
+        {
+            try { await handle.StopAsync().ConfigureAwait(false); } catch (InvalidOperationException) { /* it was not running */ }
+            await handle.RemoveAsync(deleteData: false).ConfigureAwait(false);   // only the engine forgets it; the files stay
+            return null;
+        }
+
+        if (!handle.FilesArePresent(selected)) return await GiveUp().ConfigureAwait(false);
+        await handle.SelectFilesAsync(selected).ConfigureAwait(false);
+        await handle.StartAsync().ConfigureAwait(false);
+
+        var end = DateTime.UtcNow + (timeout ?? TimeSpan.FromMinutes(10));   // checking big files takes a while
+        while (true)
+        {
+            var phase = handle.Snapshot().Phase;
+            if (phase == TorrentPhase.Complete) return handle;
+            if (phase == TorrentPhase.Error || handle.IsFetchingData || DateTime.UtcNow > end) return await GiveUp().ConfigureAwait(false);
+            await Task.Delay(100).ConfigureAwait(false);
+        }
+    }
+
     /// <summary>How the DHT (the trackerless peer search that magnet links without trackers depend on) is doing.</summary>
     public string DhtStatus => _engine.Dht.State.ToString();
 
@@ -216,6 +249,23 @@ public sealed class TorrentHandle
     /// <summary>The files of the torrent; empty while the metadata of a magnet link has not arrived.</summary>
     public IReadOnlyList<TorrentFileInfo> Files =>
         _manager.HasMetadata ? _manager.Files.Select((f, i) => new TorrentFileInfo(i, f.Path, f.Length)).ToList() : [];
+
+    /// <summary>True when every wanted file (null: all) is on disk in full. False while the metadata of a magnet link is missing.</summary>
+    public bool FilesArePresent(IReadOnlySet<int>? selected)
+    {
+        if (!_manager.HasMetadata) return false;
+        for (var i = 0; i < _manager.Files.Count; i++)
+        {
+            if (selected is not null && !selected.Contains(i)) continue;
+            var file = _manager.Files[i];
+            var info = new FileInfo(file.DownloadCompleteFullPath);
+            if (!info.Exists || info.Length < file.Length) return false;
+        }
+        return true;
+    }
+
+    /// <summary>The engine is requesting data from peers (as opposed to hashing, starting or sharing).</summary>
+    internal bool IsFetchingData => _manager.State == TorrentState.Downloading;
 
     /// <summary>Downloads only the files with these indexes (null: all of them). The other files are left alone.</summary>
     public async Task SelectFilesAsync(IReadOnlySet<int>? selected)
