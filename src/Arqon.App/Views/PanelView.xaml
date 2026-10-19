@@ -160,6 +160,26 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Speed test -->
+                <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource CardLabel}" Text="{DynamicResource S.Test.Title}" />
+                        <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,4,0,10" Text="{DynamicResource S.Test.Body}" />
+                        <StackPanel Orientation="Horizontal">
+                            <Button Style="{StaticResource GhostButton}" Padding="12,6" Content="{DynamicResource S.Test.Alone}"
+                                    Command="{Binding TestAloneCommand}" IsEnabled="{Binding TestIdle}" />
+                            <Button Style="{StaticResource GhostButton}" Padding="12,6" Margin="8,0,0,0" Content="{DynamicResource S.Test.Together}"
+                                    Command="{Binding TestTogetherCommand}" IsEnabled="{Binding TestCanCombine}" />
+                            <Button Style="{StaticResource PrimaryButton}" Padding="12,6" Margin="8,0,0,0" Content="{DynamicResource S.Test.Compare}"
+                                    Command="{Binding TestCompareCommand}" IsEnabled="{Binding TestCanCombine}" />
+                            <Button Style="{StaticResource GhostButton}" Padding="12,6" Margin="8,0,0,0" Content="{DynamicResource S.Test.Stop}"
+                                    Command="{Binding TestStopCommand}" Visibility="{Binding TestRunning, Converter={StaticResource B2V}}" />
+                        </StackPanel>
+                        <TextBlock Foreground="#6C8CFF" Margin="0,10,0,0" Text="{Binding TestStatus}" Visibility="{Binding TestRunning, Converter={StaticResource B2V}}" />
+                        <ItemsControl ItemsSource="{Binding TestLines}" Margin="0,6,0,0" Visibility="{Binding HasTestLines, Converter={StaticResource B2V}}" />
+                    </StackPanel>
+                </Border>
+
                 <!-- Game protection -->
                 <Border Style="{StaticResource Card}">
                     <Grid>

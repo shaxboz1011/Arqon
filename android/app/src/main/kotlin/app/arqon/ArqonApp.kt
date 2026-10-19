@@ -23,6 +23,12 @@ class ArqonApp : Application() {
     lateinit var gameMode: app.arqon.gamemode.GameMode
         private set
 
+    lateinit var stats: app.arqon.stats.Stats
+        private set
+
+    lateinit var usage: app.arqon.meter.UsageMonitor
+        private set
+
     override fun onCreate() {
         super.onCreate()
         settings = AppSettings(this)
@@ -30,6 +36,10 @@ class ArqonApp : Application() {
         gameMode = app.arqon.gamemode.GameMode(this, settings, links, scope)
         downloads = DownloadCenter(this, links, settings, scope) { summary -> if (summary.running > 0) DownloadService.ensureRunning(this) }
         speedTester = app.arqon.net.SpeedTester(links, scope)
+        usage = app.arqon.meter.UsageMonitor(this, settings, scope)
+        usage.start()
+        stats = app.arqon.stats.Stats(this, settings, links, scope)
+        stats.start()
         links.start()
         downloads.start()
     }

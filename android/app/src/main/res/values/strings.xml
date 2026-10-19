@@ -135,4 +135,57 @@
     <string name="test_together">All together: %1$s Mbit/s</string>
     <string name="test_gain">That is %1$s× the fastest single connection.</string>
     <string name="test_error">%1$s: %2$s</string>
+
+    <string name="nav_usage">Usage</string>
+
+    <string name="usage_title">Data usage</string>
+    <string name="usage_speed">Speed now</string>
+    <string name="usage_signal">Signal %1$d%%</string>
+    <string name="usage_wifi">Wi-Fi</string>
+    <string name="usage_mobile">Mobile data</string>
+    <string name="usage_today">Today</string>
+    <string name="usage_month">This month</string>
+    <string name="usage_week">Last 7 days</string>
+    <string name="usage_exact">Exact numbers from Android.</string>
+    <string name="usage_estimated">Counted by Arqon while it runs. Allow usage access below for exact numbers.</string>
+    <string name="usage_grant">Allow usage access</string>
+    <string name="usage_grant_body">Android keeps exact data counters. With this permission Arqon shows exact daily and monthly numbers, and which apps used the data. It all stays on your phone.</string>
+    <string name="usage_grant_button">Open settings</string>
+    <string name="usage_top_apps">Apps that used the most data today</string>
+    <string name="usage_android_system">Android system</string>
+    <string name="usage_removed_apps">Removed apps</string>
+    <string name="usage_hotspot">Hotspot sharing</string>
+    <string name="usage_network">Mobile network type</string>
+    <string name="usage_network_now">Now: %1$s</string>
+    <string name="usage_network_body">Android does not let an app switch between 5G, 4G, 3G and 2G. These buttons open the phone\'s own screens where you choose it.</string>
+    <string name="usage_network_settings">Mobile network settings</string>
+    <string name="usage_network_radio">Phone information (advanced)</string>
+    <string name="usage_network_radio_failed">This phone does not open that screen. Use Mobile network settings, or Settings, Connections, Mobile networks, Network mode.</string>
+    <string name="usage_limit">Daily mobile data limit</string>
+    <string name="usage_limit_body" formatted="false">Arqon warns you at 80% and when the limit is reached.</string>
+    <string name="usage_limit_off">Off</string>
+    <string name="usage_limit_used">Today: %1$s of %2$s</string>
+    <string name="usage_meter">Speed meter</string>
+    <string name="usage_meter_notification">Speed meter notification</string>
+    <string name="usage_meter_notification_body">Shows the speed in the status bar, and the signal and today\'s data use in the notification.</string>
+    <string name="usage_bytes">Show speed in bytes</string>
+    <string name="usage_bytes_body">KB/s and MB/s instead of Mbit/s.</string>
+
+    <string name="meter_channel">Speed meter</string>
+    <string name="meter_today">Today: Mobile %1$s · Wi-Fi %2$s</string>
+    <string name="limit_channel">Data limit</string>
+    <string name="limit_near" formatted="false">Mobile data: 80% of today\'s limit used</string>
+    <string name="limit_reached">Mobile data: today\'s limit reached</string>
+    <string name="limit_body">Used %1$s of %2$s today.</string>
+
+    <string name="stats_title">Anonymous statistics</string>
+    <string name="stats_body">Sends one small report a day: which features were used how many times, the phone model and which connections it gave to apps. No links, files, places or numbers. Off unless you allow it.</string>
+    <string name="stats_none_configured">This build has no statistics server, so nothing is ever sent. The counts below stay on your phone.</string>
+    <string name="stats_show">Show what would be sent</string>
+    <string name="stats_local">Counts on this phone</string>
+    <string name="stats_ask_title">Help improve Arqon?</string>
+    <string name="stats_ask_body">Arqon can send one small anonymous report a day: how many times each feature was used, the phone model, the Android version and which connections (Wi-Fi, SIM) the phone gave to apps. It shows the developers which phones and features matter most.</string>
+    <string name="stats_ask_never">Never sent: links, file names, websites, location, phone numbers or anything you download. You can see the exact report and switch it off in Settings.</string>
+    <string name="stats_yes">Allow</string>
+    <string name="stats_no">No thanks</string>
 </resources>

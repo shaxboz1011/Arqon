@@ -34,6 +34,8 @@ public sealed class ShellViewModel : ViewModelBase
 
     public bool Demo => _services.Demo;
 
+    public string VersionLine => "Arqon " + AppInfo.Version + " · MIT";
+
     public int ActiveLinks => _services.Links.GetLinks().Count;
     public string LinkSummary => ActiveLinks switch
     {

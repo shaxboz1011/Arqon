@@ -16,6 +16,7 @@ import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import app.arqon.ArqonApp
+import app.arqon.stats.Features
 import app.arqon.core.input.InputKind
 import app.arqon.core.input.UserInput
 import kotlinx.coroutines.CoroutineScope
@@ -157,6 +158,7 @@ class BrowserController(context: Context, private val app: ArqonApp, private val
     private var scriptAdded = false
 
     fun load(typed: String) {
+        Features.use("browser_page")
         val address = UserInput.addressFor(typed)
         if (address.startsWith("magnet:", ignoreCase = true)) handOver(address) else webView.loadUrl(address)
     }

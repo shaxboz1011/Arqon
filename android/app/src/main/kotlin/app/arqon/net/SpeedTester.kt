@@ -48,6 +48,7 @@ class SpeedTester(private val links: AndroidLinkManager, private val scope: Coro
 
     private fun start(separate: Boolean, combined: Boolean) {
         if (_state.value.running) return
+        app.arqon.stats.Features.use("speed_test")
         val list = candidates()
         if (list.isEmpty()) return
         val names = list.associate { it.first.id to it.second }

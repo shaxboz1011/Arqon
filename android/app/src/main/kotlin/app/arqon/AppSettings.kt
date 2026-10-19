@@ -58,6 +58,40 @@ class AppSettings(context: Context) {
         _gamePackages.value = next
     }
 
+    private val _meterNotification = MutableStateFlow(prefs.getBoolean("meterNotification", true))
+
+    /** A second notification with the live speed, the signal and today's data use (like the speed-meter apps). */
+    val meterNotification: StateFlow<Boolean> = _meterNotification
+
+    private val _speedInBytes = MutableStateFlow(prefs.getBoolean("speedInBytes", true))
+
+    /** The meter shows KB/s and MB/s instead of Mbit/s. */
+    val speedInBytes: StateFlow<Boolean> = _speedInBytes
+
+    private val _dailyLimitMb = MutableStateFlow(prefs.getLong("dailyLimitMb", 0))
+
+    /** Warn when today's mobile data reaches this many megabytes; 0 is no limit. */
+    val dailyMobileLimitMb: StateFlow<Long> = _dailyLimitMb
+
+    fun setMeterNotification(value: Boolean) { prefs.edit().putBoolean("meterNotification", value).apply(); _meterNotification.value = value }
+
+    fun setSpeedInBytes(value: Boolean) { prefs.edit().putBoolean("speedInBytes", value).apply(); _speedInBytes.value = value }
+
+    fun setDailyMobileLimitMb(value: Long) { prefs.edit().putLong("dailyLimitMb", value).apply(); _dailyLimitMb.value = value }
+
+    private val _statsChoice = MutableStateFlow(if (prefs.contains("statsShare")) prefs.getBoolean("statsShare", false) else null)
+
+    /** Whether the user agreed to share anonymous usage counts: null until they were asked. */
+    val statsShare: StateFlow<Boolean?> = _statsChoice
+
+    fun setStatsShare(value: Boolean) { prefs.edit().putBoolean("statsShare", value).apply(); _statsChoice.value = value }
+
+    /** A random number made on first use. It stands for this installation only and says nothing about the person or the phone. */
+    fun installId(): String =
+        prefs.getString("installId", null) ?: java.util.UUID.randomUUID().toString().also { prefs.edit().putString("installId", it).apply() }
+
+    fun prefsRaw() = prefs
+
     fun setDesktopMode(value: Boolean) { prefs.edit().putBoolean("desktopMode", value).apply(); _desktopMode.value = value }
 
     fun setKeepStatus(value: Boolean) { prefs.edit().putBoolean("keepStatus", value).apply(); _keepStatus.value = value }

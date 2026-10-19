@@ -15,6 +15,8 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "0.1.0"
+        // Where anonymous usage reports go (only if the user agrees). Empty = this build cannot send any: -PstatsUrl=https://...
+        buildConfigField("String", "STATS_URL", "\"${project.findProperty("statsUrl") ?: ""}\"")
     }
 
     buildTypes {

@@ -35,10 +35,25 @@ public sealed class UsageViewModel : ViewModelBase
     public UsageViewModel(AppServices services)
     {
         _services = services;
+        ExportCommand = new RelayCommand(Export);
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
         _timer.Tick += (_, _) => Refresh();
         _timer.Start();
         Refresh();
+    }
+
+    public RelayCommand ExportCommand { get; }
+
+    /// <summary>Saves every day and connection as a spreadsheet file (CSV), so the numbers can be used elsewhere.</summary>
+    private void Export()
+    {
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            FileName = "arqon-usage.csv",
+            Filter = "CSV (*.csv)|*.csv",
+        };
+        if (dialog.ShowDialog() != true) return;
+        System.IO.File.WriteAllText(dialog.FileName, UsageCsv.Build(_services.Usage.Last(400)), new System.Text.UTF8Encoding(true));
     }
 
     public IReadOnlyList<ChartSeries> Series => _series;

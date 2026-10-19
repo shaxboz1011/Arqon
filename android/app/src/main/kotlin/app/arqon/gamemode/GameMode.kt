@@ -53,6 +53,7 @@ class GameMode(
 
     /** Asks the service to build the tunnel (the user has already agreed to the VPN in Android's dialog). */
     fun start() {
+        app.arqon.stats.Features.use("game_mode")
         if (settings.gamePackages.value.isEmpty()) {
             _state.value = GameState(error = "no apps")
             return

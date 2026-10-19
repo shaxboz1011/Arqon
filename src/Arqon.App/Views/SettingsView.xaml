@@ -136,6 +136,48 @@
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                     <StackPanel>
+                        <TextBlock Style="{StaticResource RowTitle}" Text="{DynamicResource S.Set.Limit}" />
+                        <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Text="{DynamicResource S.Set.LimitBody}" />
+                    </StackPanel>
+                    <ComboBox Grid.Column="1" Margin="16,0,0,0" MinWidth="90" ItemsSource="{Binding DailyLimits}" DisplayMemberPath="Label"
+                              SelectedItem="{Binding SelectedDailyLimit, Mode=TwoWay}" />
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource RowTitle}" Text="{DynamicResource S.Set.Updates}" />
+                            <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Text="{DynamicResource S.Set.UpdatesBody}" />
+                        </StackPanel>
+                        <ToggleButton Grid.Column="1" Style="{StaticResource Switch}" IsChecked="{Binding CheckUpdates, Mode=TwoWay}" Margin="16,0,0,0" VerticalAlignment="Top" />
+                    </Grid>
+                    <TextBlock FontSize="12" Margin="0,8,0,0" TextWrapping="Wrap" Text="{Binding UpdateStatus}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                <Setter Property="Foreground" Value="#8B93A7" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasUpdate}" Value="True">
+                                        <Setter Property="Foreground" Value="#4ADE80" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <Button Style="{StaticResource GhostButton}" Padding="12,6" Content="{DynamicResource S.Upd.Check}" Command="{Binding CheckNowCommand}" />
+                        <Button Style="{StaticResource PrimaryButton}" Padding="12,6" Margin="8,0,0,0" Content="{Binding UpdateButton}" Command="{Binding DownloadUpdateCommand}"
+                                Visibility="{Binding HasUpdate, Converter={StaticResource B2V}}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel>
                         <TextBlock Style="{StaticResource RowTitle}" Text="{DynamicResource S.Set.Unit}" />
                         <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Text="{DynamicResource S.Set.UnitBody}" />
                     </StackPanel>

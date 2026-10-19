@@ -151,6 +151,7 @@ class DownloadCenter(
     }
 
     private fun add(item: DownloadItem) {
+        app.arqon.stats.Features.use(if (item.kind == ItemKind.TORRENT) "download_torrent" else "download_http")
         _items.update { it + item }
         save()
         schedule()

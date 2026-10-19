@@ -1,11 +1,14 @@
 using System.Collections.ObjectModel;
+using System.Net.Http;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Arqon.App.Controls;
 using Arqon.App.Infrastructure;
 using Arqon.App.Services;
+using Arqon.Core.Download;
 using Arqon.Core.Links;
+using Arqon.Core.Speed;
 using Arqon.Core.Monitoring;
 using Arqon.Core.Steering;
 
@@ -76,6 +79,10 @@ public sealed class PanelViewModel : ViewModelBase
     {
         _services = services;
         ApplyFixCommand = new RelayCommand(ApplyFix);
+        TestAloneCommand = new RelayCommand(() => _ = RunTest(alone: true, together: false));
+        TestTogetherCommand = new RelayCommand(() => _ = RunTest(alone: false, together: true));
+        TestCompareCommand = new RelayCommand(() => _ = RunTest(alone: true, together: true));
+        TestStopCommand = new RelayCommand(() => _testCancel?.Cancel());
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _timer.Tick += (_, _) => Refresh();
         _timer.Start();
@@ -84,6 +91,83 @@ public sealed class PanelViewModel : ViewModelBase
     }
 
     public RelayCommand ApplyFixCommand { get; }
+
+    // ---- speed test: each connection alone, all together, and the gain from combining them
+
+    private const double TestSeconds = 6;
+    private CancellationTokenSource? _testCancel;
+    private bool _testRunning;
+    private string _testStatus = "";
+    private IReadOnlyList<string> _testLines = [];
+
+    public RelayCommand TestAloneCommand { get; }
+    public RelayCommand TestTogetherCommand { get; }
+    public RelayCommand TestCompareCommand { get; }
+    public RelayCommand TestStopCommand { get; }
+
+    public bool TestRunning { get => _testRunning; private set { Set(ref _testRunning, value); Raise(nameof(TestIdle)); } }
+    public bool TestIdle => !_testRunning && !_services.Demo;
+    public bool TestCanCombine => Links.Count >= 2 && TestIdle;
+    public string TestStatus { get => _testStatus; private set => Set(ref _testStatus, value); }
+    public IReadOnlyList<string> TestLines { get => _testLines; private set => Set(ref _testLines, value); }
+    public bool HasTestLines => _testLines.Count > 0;
+
+    private async Task RunTest(bool alone, bool together)
+    {
+        if (_testRunning || _services.Demo) return;
+        var links = _services.Links.GetLinks().ToList();
+        if (links.Count == 0 || (together && !alone && links.Count < 2)) return;
+
+        _testCancel = new CancellationTokenSource();
+        var clients = new List<HttpClient>();
+        HttpClient Make(LinkInfo link) { var c = BoundHttp.Create(link); lock (clients) clients.Add(c); return c; }
+        var tester = new LinkSpeedTest(Make, LinkSpeedTest.DefaultUrl);
+        var lines = new List<string>();
+        TestRunning = true;
+        TestLines = [];
+        try
+        {
+            var single = new List<double>();
+            if (alone)
+            {
+                foreach (var link in links)
+                {
+                    TestStatus = Loc.Format("S.Test.Running", link.Name);
+                    var result = await tester.RunAsync([link], TimeSpan.FromSeconds(TestSeconds), _testCancel.Token);
+                    if (_testCancel.IsCancellationRequested) break;
+                    single.Add(result.TotalMbit);
+                    lines.Add(result.Errors.TryGetValue(link.Id, out var error)
+                        ? Loc.Format("S.Test.Error", link.Name, error)
+                        : Loc.Format("S.Test.Line", link.Name, Mbit(result.TotalMbit)));
+                    TestLines = lines.ToList();
+                }
+            }
+            if (together && links.Count >= 2 && !_testCancel.IsCancellationRequested)
+            {
+                TestStatus = Loc.Get("S.Test.RunningAll");
+                var result = await tester.RunAsync(links, TimeSpan.FromSeconds(TestSeconds), _testCancel.Token);
+                if (!_testCancel.IsCancellationRequested)
+                {
+                    foreach (var link in links) lines.Add("   " + Loc.Format("S.Test.Line", link.Name, Mbit(result.Mbit(link.Id))));
+                    lines.Add(Loc.Format("S.Test.Total", Mbit(result.TotalMbit)));
+                    if (single.Count > 0 && single.Max() > 0)
+                        lines.Add(Loc.Format("S.Test.Gain", (result.TotalMbit / single.Max()).ToString("0.00", System.Globalization.CultureInfo.CurrentCulture)));
+                    TestLines = lines.ToList();
+                }
+            }
+        }
+        finally
+        {
+            lock (clients) foreach (var c in clients) c.Dispose();
+            _testCancel.Dispose();
+            _testCancel = null;
+            TestStatus = "";
+            TestRunning = false;
+            Raise(string.Empty);
+        }
+    }
+
+    private static string Mbit(double value) => value.ToString("0.0", System.Globalization.CultureInfo.CurrentCulture);
 
     public IReadOnlyList<ChartSeries> TotalSeries { get => _totalSeries; private set => Set(ref _totalSeries, value); }
     public string TotalDown => Units.Speed(_totalDown);

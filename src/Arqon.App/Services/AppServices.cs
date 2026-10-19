@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.Net.Http;
 using System.Windows.Media;
 using Arqon.App.Infrastructure;
 using Arqon.Core;
@@ -12,6 +13,7 @@ using Arqon.Core.Policy;
 using Arqon.Core.Settings;
 using Arqon.Core.Steering;
 using Arqon.Core.Torrents;
+using Arqon.Core.Updates;
 using Arqon.Core.Usage;
 using Arqon.Core.Windows;
 
@@ -37,6 +39,9 @@ public sealed class AppServices : IDisposable
     private TorrentEngine? _torrents;
     private LinkRoundRobin? _torrentLinks;
     private int _ticks;
+    private readonly DailyLimit _dailyLimit = new();
+    private static readonly HttpClient UpdateHttp = new() { Timeout = TimeSpan.FromSeconds(15) };
+    private CancellationTokenSource? _updateLoop;
 
     public bool Demo { get; }
     public ILinkProvider Links { get; }
@@ -81,6 +86,15 @@ public sealed class AppServices : IDisposable
 
     /// <summary>The link a game would use right now (steadiest, with hysteresis); null when no link is measured.</summary>
     public string? GameLinkId { get; private set; }
+
+    /// <summary>The newest release when it is newer than this copy; null when this is the newest or it is not known.</summary>
+    public ReleaseInfo? AvailableUpdate { get; private set; }
+
+    /// <summary>When the last check finished (null: none yet), and whether it could reach GitHub.</summary>
+    public DateTimeOffset? LastUpdateCheck { get; private set; }
+    public bool LastUpdateCheckFailed { get; private set; }
+
+    public event Action? UpdateChanged;
 
     public event Action? SettingsChanged;
     public event Action<Notice>? NoticeRaised;
@@ -165,6 +179,47 @@ public sealed class AppServices : IDisposable
 
         // Every second, not every 3: the sooner the driver is gone after a game starts, the less an anti-cheat's start-up scan can see.
         _gameTimer = new Timer(_ => RefreshGames(), null, GameCheckEvery, GameCheckEvery);
+
+        if (!Demo) _ = RunUpdateLoop();
+    }
+
+    /// <summary>Looks for a new release a little after start-up and then twice a day, as long as the user allows it.</summary>
+    private async Task RunUpdateLoop()
+    {
+        _updateLoop = new CancellationTokenSource();
+        var token = _updateLoop.Token;
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(30), token).ConfigureAwait(false);
+            while (!token.IsCancellationRequested)
+            {
+                if (Settings.CheckUpdates) await CheckForUpdatesAsync().ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromHours(12), token).ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Arqon is closing
+        }
+    }
+
+    /// <summary>Asks GitHub for the newest release now (also used by the "check now" button).</summary>
+    public async Task CheckForUpdatesAsync()
+    {
+        var latest = await UpdateChecker.LatestAsync(UpdateHttp).ConfigureAwait(false);
+        LastUpdateCheck = DateTimeOffset.Now;
+        LastUpdateCheckFailed = latest is null;
+        if (latest is not null)
+        {
+            AvailableUpdate = UpdateChecker.IsNewer(AppInfo.Version, latest.Tag) ? latest : null;
+            if (AvailableUpdate is { } found && Settings.LastNoticedUpdate != found.Tag)
+            {
+                Raise(Loc.Get("S.Notice.UpdateTitle"), Loc.Format("S.Notice.UpdateBody", found.Tag));
+                var tag = found.Tag;
+                System.Windows.Application.Current?.Dispatcher.BeginInvoke(() => SaveSettings(Settings with { LastNoticedUpdate = tag }));
+            }
+        }
+        UpdateChanged?.Invoke();
     }
 
     private void RefreshGames()
@@ -207,6 +262,7 @@ public sealed class AppServices : IDisposable
     {
         _maintenance?.Dispose();
         _gameTimer?.Dispose();
+        _updateLoop?.Cancel();
         lock (_torrentGate) _torrents?.Dispose();
         Monitor.SampleReady -= OnSample;
         Monitor.Stop();
@@ -256,6 +312,7 @@ public sealed class AppServices : IDisposable
 
             if (Steering.State == SteeringState.Running && !Demo) Steering.Engine.CheckHealth();
             LimitTorrentsForGames();
+            CheckDailyLimit();
             if (++_ticks % SaveUsageEveryTicks == 0) Usage.Save();
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
@@ -278,6 +335,17 @@ public sealed class AppServices : IDisposable
         var cap = caps.Count == 0 ? (long?)null : caps.Min();
         _ = engine.SetDownloadLimitAsync(cap);
         _ = engine.SetUploadLimitAsync(cap);   // seeding must not undo the protection either
+    }
+
+    /// <summary>Tells the user when today's traffic reaches 80% of the limit they set, and when it reaches the limit.</summary>
+    private void CheckDailyLimit()
+    {
+        var today = Usage.Today();
+        var limitBytes = (long)Settings.DailyLimitMb * 1024 * 1024;
+        var level = _dailyLimit.Check(DateOnly.FromDateTime(DateTime.Now), today.Down + today.Up, limitBytes);
+        if (level is null) return;
+        var key = level == LimitLevel.Reached ? "S.Notice.LimitReached" : "S.Notice.LimitNear";
+        Raise(Loc.Get(key + "Title"), Loc.Format("S.Notice.LimitBody", Units.Size(today.Down + today.Up), Units.Size(limitBytes)));
     }
 
     private void OnGamesChanged()

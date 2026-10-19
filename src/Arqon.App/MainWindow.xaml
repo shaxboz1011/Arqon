@@ -116,7 +116,7 @@
                                 </StackPanel>
                             </RadioButton>
                         </StackPanel>
-                        <TextBlock VerticalAlignment="Bottom" Style="{StaticResource MutedText}" FontSize="11" Margin="12,0,0,2" Text="Arqon 0.1 · MIT" />
+                        <TextBlock VerticalAlignment="Bottom" Style="{StaticResource MutedText}" FontSize="11" Margin="12,0,0,2" Text="{Binding VersionLine}" />
                     </Grid>
                 </Border>
 

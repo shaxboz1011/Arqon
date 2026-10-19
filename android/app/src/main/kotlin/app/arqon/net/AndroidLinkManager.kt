@@ -91,6 +91,7 @@ class AndroidLinkManager(
     }
 
     /** Whether "mobile data" is switched on in the phone's own settings (for the SIM Android uses for data); null when it cannot be read. */
+    @android.annotation.SuppressLint("MissingPermission")   // a refused permission throws inside the try, which answers null
     fun mobileDataEnabled(): Boolean? = try {
         val tm = context.getSystemService(android.telephony.TelephonyManager::class.java)
         val sub = SubscriptionManager.getDefaultDataSubscriptionId()

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DataUsage
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.SportsEsports
@@ -47,6 +48,8 @@ import app.arqon.ui.Muted
 import app.arqon.ui.Panel
 import app.arqon.ui.PanelScreen
 import app.arqon.ui.SettingsScreen
+import app.arqon.ui.StatsQuestion
+import app.arqon.ui.UsageScreen
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -73,7 +76,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
-        if (app.settings.keepStatus.value) DownloadService.ensureRunning(this)
+        if (app.settings.keepStatus.value || app.settings.meterNotification.value) DownloadService.ensureRunning(this)
         // the game mode was on when Arqon was closed: bring it back (Android already has the user's consent for the VPN)
         if (app.settings.gameMode.value && !app.gameMode.state.value.running && android.net.VpnService.prepare(this) == null) {
             app.gameMode.start()
@@ -118,6 +121,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun Root() {
         val controller = remember { browser ?: BrowserController(this, app) { text -> say(text) }.also { browser = it } }
+        StatsQuestion(app)
         Scaffold(
             containerColor = Bg,
             bottomBar = {
@@ -129,6 +133,7 @@ class MainActivity : ComponentActivity() {
                     NavigationBarItem(tab == 0, { tab = 0 }, { Icon(Icons.Filled.Wifi, null) }, label = { Text(stringResource(R.string.nav_panel)) }, colors = colors)
                     NavigationBarItem(tab == 1, { tab = 1 }, { Icon(Icons.Filled.Language, null) }, label = { Text(stringResource(R.string.nav_browser)) }, colors = colors)
                     NavigationBarItem(tab == 2, { tab = 2 }, { Icon(Icons.Filled.Download, null) }, label = { Text(stringResource(R.string.nav_downloads)) }, colors = colors)
+                    NavigationBarItem(tab == 5, { tab = 5 }, { Icon(Icons.Filled.DataUsage, null) }, label = { Text(stringResource(R.string.nav_usage)) }, colors = colors)
                     NavigationBarItem(tab == 4, { tab = 4 }, { Icon(Icons.Filled.SportsEsports, null) }, label = { Text(stringResource(R.string.nav_game)) }, colors = colors)
                     NavigationBarItem(tab == 3, { tab = 3 }, { Icon(Icons.Filled.Settings, null) }, label = { Text(stringResource(R.string.nav_settings)) }, colors = colors)
                 }
@@ -140,6 +145,7 @@ class MainActivity : ComponentActivity() {
                     1 -> BrowserScreen(app, controller, active = true)
                     2 -> DownloadsScreen(app) { text -> say(text) }
                     4 -> GameScreen(app)
+                    5 -> UsageScreen(app)
                     else -> SettingsScreen(app)
                 }
             }

@@ -8,7 +8,11 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="0,0,10,20">
             <TextBlock Style="{StaticResource PageTitle}" Text="{DynamicResource S.Nav.Usage}" />
-            <TextBlock Style="{StaticResource MutedText}" Text="{DynamicResource S.Usage.Sub}" Margin="0,2,0,16" />
+            <Grid Margin="0,2,0,16">
+                <TextBlock Style="{StaticResource MutedText}" Text="{DynamicResource S.Usage.Sub}" VerticalAlignment="Center" />
+                <Button Style="{StaticResource GhostButton}" HorizontalAlignment="Right" Padding="12,6" Content="{DynamicResource S.Usage.Export}"
+                        Command="{Binding ExportCommand}" Visibility="{Binding HasData, Converter={StaticResource B2V}}" />
+            </Grid>
 
             <UniformGrid Rows="1" Margin="0,0,-14,0">
                 <Border Style="{StaticResource Card}" Margin="0,0,14,14">

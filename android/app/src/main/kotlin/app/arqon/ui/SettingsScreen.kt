@@ -132,6 +132,7 @@ fun SettingsScreen(app: ArqonApp) {
                 Button(onClick = { notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS) }) { Text(stringResource(R.string.panel_permission_button)) }
             }
         }
+        StatsCard(app)
         Text(stringResource(R.string.settings_about, BuildConfig.VERSION_NAME), color = Muted, fontSize = 12.sp, modifier = Modifier.padding(vertical = 12.dp))
     }
 }

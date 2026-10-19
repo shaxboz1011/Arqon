@@ -15,6 +15,8 @@ public sealed record RatioOption(string Label, double Value);
 
 public sealed record SpeedUnitOption(string Label, bool InBytes);
 
+public sealed record LimitOption(string Label, int Megabytes);
+
 public sealed class SettingsViewModel : ViewModelBase
 {
     private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
@@ -26,8 +28,11 @@ public sealed class SettingsViewModel : ViewModelBase
         _services = services;
         FixCommand = new RelayCommand(ApplyFix);
         RestartAsAdminCommand = new RelayCommand(RestartAsAdmin);
+        CheckNowCommand = new RelayCommand(() => _ = CheckNow());
+        DownloadUpdateCommand = new RelayCommand(OpenUpdatePage);
         _services.Steering.StateChanged += OnSteeringChanged;
         _services.SafeGame.Changed += OnSteeringChanged;
+        _services.UpdateChanged += OnSteeringChanged;
     }
 
     private void OnSteeringChanged() =>
@@ -37,10 +42,70 @@ public sealed class SettingsViewModel : ViewModelBase
     {
         _services.Steering.StateChanged -= OnSteeringChanged;
         _services.SafeGame.Changed -= OnSteeringChanged;
+        _services.UpdateChanged -= OnSteeringChanged;
         base.Dispose();
     }
 
     public RelayCommand FixCommand { get; }
+    public RelayCommand CheckNowCommand { get; }
+    public RelayCommand DownloadUpdateCommand { get; }
+
+    private bool _checking;
+
+    public bool CheckUpdates
+    {
+        get => _services.Settings.CheckUpdates;
+        set { _services.SaveSettings(_services.Settings with { CheckUpdates = value }); Raise(); }
+    }
+
+    public bool HasUpdate => _services.AvailableUpdate is not null;
+
+    public string UpdateButton => _services.AvailableUpdate is { } u ? Loc.Format("S.Upd.Download", u.Tag) : "";
+
+    public string UpdateStatus
+    {
+        get
+        {
+            if (_checking) return Loc.Get("S.Upd.Checking");
+            if (_services.AvailableUpdate is { } update) return Loc.Format("S.Upd.Available", update.Tag, AppInfo.Version);
+            if (_services.LastUpdateCheck is null) return Loc.Get("S.Upd.Never");
+            return _services.LastUpdateCheckFailed ? Loc.Get("S.Upd.Failed") : Loc.Format("S.Upd.Latest", AppInfo.Version);
+        }
+    }
+
+    private async Task CheckNow()
+    {
+        _checking = true;
+        Raise(string.Empty);
+        try { await _services.CheckForUpdatesAsync(); }
+        finally
+        {
+            _checking = false;
+            Application.Current?.Dispatcher.BeginInvoke(() => Raise(string.Empty));
+        }
+    }
+
+    private void OpenUpdatePage()
+    {
+        if (_services.AvailableUpdate is { } update)
+            Process.Start(new ProcessStartInfo(update.Url) { UseShellExecute = true });
+    }
+
+    public IReadOnlyList<LimitOption> DailyLimits { get; } =
+    [
+        new("–", 0), new("500 MB", 500), new("1 GB", 1024), new("2 GB", 2048), new("5 GB", 5120), new("10 GB", 10240), new("20 GB", 20480),
+    ];
+
+    public LimitOption SelectedDailyLimit
+    {
+        get => DailyLimits.FirstOrDefault(l => l.Megabytes == _services.Settings.DailyLimitMb) ?? DailyLimits[0];
+        set
+        {
+            if (value is null || value.Megabytes == _services.Settings.DailyLimitMb) return;
+            _services.SaveSettings(_services.Settings with { DailyLimitMb = value.Megabytes });
+            Raise();
+        }
+    }
     public RelayCommand RestartAsAdminCommand { get; }
 
     public IReadOnlyList<LanguageOption> Languages { get; } = [new("O'zbekcha", "uz"), new("English", "en"), new("Русский", "ru")];
@@ -250,7 +315,7 @@ public sealed class SettingsViewModel : ViewModelBase
 
     public bool CanRestartAsAdmin => !IsAdmin;
     public string AdminText => IsAdmin ? Loc.Get("S.Set.AdminYes") : Loc.Get("S.Set.AdminNo");
-    public string Version => "Arqon 0.1.0";
+    public string Version => "Arqon " + AppInfo.Version;
 
     private void ApplyFix()
     {

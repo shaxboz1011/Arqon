@@ -13,6 +13,7 @@ import android.os.IBinder
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import app.arqon.meter.MeterNotification
 import app.arqon.net.LinkState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -50,9 +51,15 @@ class DownloadService : Service() {
                 val manager = getSystemService(NotificationManager::class.java)
                 while (isActive) {
                     val running = app.downloads.summary.value.running
-                    if (!app.settings.keepStatus.value && running == 0 && !app.gameMode.state.value.running) {
+                    val meter = app.settings.meterNotification.value
+                    if (!app.settings.keepStatus.value && !meter && running == 0 && !app.gameMode.state.value.running) {
                         stopSelf()
                         break
+                    }
+                    if (meter) {
+                        manager.notify(MeterNotification.ID, MeterNotification.build(this@DownloadService, app.usage.state.value, app.settings.speedInBytes.value))
+                    } else {
+                        manager.cancel(MeterNotification.ID)
                     }
                     manager.notify(NOTIFICATION_ID, notification(this@DownloadService, app.statusText(), app.statusDetail()))
                     if (app.settings.overlay.value) overlay?.update(app.statusShort(), app.activeLinkCount() >= 2) else overlay?.hide()
@@ -77,6 +84,7 @@ class DownloadService : Service() {
     override fun onDestroy() {
         loop?.cancel()
         scope.cancel()
+        getSystemService(NotificationManager::class.java).cancel(MeterNotification.ID)
         overlay?.hide()
         wakeLock?.let { if (it.isHeld) it.release() }
         super.onDestroy()

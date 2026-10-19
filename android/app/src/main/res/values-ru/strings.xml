@@ -134,4 +134,57 @@
     <string name="test_together">Все вместе: %1$s Мбит/с</string>
     <string name="test_gain">Это в %1$s раза быстрее самого быстрого одного подключения.</string>
     <string name="test_error">%1$s: %2$s</string>
+
+    <string name="nav_usage">Расход</string>
+
+    <string name="usage_title">Расход трафика</string>
+    <string name="usage_speed">Скорость сейчас</string>
+    <string name="usage_signal">Сигнал %1$d%%</string>
+    <string name="usage_wifi">Wi-Fi</string>
+    <string name="usage_mobile">Мобильный интернет</string>
+    <string name="usage_today">Сегодня</string>
+    <string name="usage_month">В этом месяце</string>
+    <string name="usage_week">Последние 7 дней</string>
+    <string name="usage_exact">Точные цифры из счётчиков Android.</string>
+    <string name="usage_estimated">Считает сам Arqon, пока работает. Для точных цифр разрешите доступ к статистике ниже.</string>
+    <string name="usage_grant">Разрешить доступ к статистике</string>
+    <string name="usage_grant_body">Android хранит точные счётчики трафика. С этим разрешением Arqon покажет точные цифры за день и месяц и какие приложения расходовали трафик. Всё остаётся на телефоне.</string>
+    <string name="usage_grant_button">Открыть настройки</string>
+    <string name="usage_top_apps">Приложения, расходовавшие больше всего сегодня</string>
+    <string name="usage_android_system">Система Android</string>
+    <string name="usage_removed_apps">Удалённые приложения</string>
+    <string name="usage_hotspot">Раздача интернета</string>
+    <string name="usage_network">Тип мобильной сети</string>
+    <string name="usage_network_now">Сейчас: %1$s</string>
+    <string name="usage_network_body">Android не позволяет приложению переключать 5G, 4G, 3G и 2G. Эти кнопки открывают экраны самого телефона, где это выбирается.</string>
+    <string name="usage_network_settings">Настройки мобильной сети</string>
+    <string name="usage_network_radio">Информация о телефоне (дополнительно)</string>
+    <string name="usage_network_radio_failed">Этот телефон не открывает такой экран. Используйте «Настройки мобильной сети» или Настройки, Подключения, Мобильные сети, Сетевой режим.</string>
+    <string name="usage_limit">Дневной лимит мобильного интернета</string>
+    <string name="usage_limit_body" formatted="false">Arqon предупредит на 80% и когда лимит будет исчерпан.</string>
+    <string name="usage_limit_off">Выкл.</string>
+    <string name="usage_limit_used">Сегодня: %1$s из %2$s</string>
+    <string name="usage_meter">Измеритель скорости</string>
+    <string name="usage_meter_notification">Уведомление со скоростью</string>
+    <string name="usage_meter_notification_body">Показывает скорость в строке состояния, а сигнал и сегодняшний расход в уведомлении.</string>
+    <string name="usage_bytes">Скорость в байтах</string>
+    <string name="usage_bytes_body">КБ/с и МБ/с вместо Мбит/с.</string>
+
+    <string name="meter_channel">Измеритель скорости</string>
+    <string name="meter_today">Сегодня: мобильный %1$s · Wi-Fi %2$s</string>
+    <string name="limit_channel">Лимит трафика</string>
+    <string name="limit_near" formatted="false">Мобильный интернет: использовано 80% дневного лимита</string>
+    <string name="limit_reached">Мобильный интернет: дневной лимит исчерпан</string>
+    <string name="limit_body">Сегодня использовано %1$s из %2$s.</string>
+
+    <string name="stats_title">Анонимная статистика</string>
+    <string name="stats_body">Раз в день отправляет один небольшой отчёт: сколько раз использовалась каждая функция, модель телефона и какие соединения он дал приложениям. Без ссылок, файлов, местоположения и номеров. Выключено, пока вы не разрешите.</string>
+    <string name="stats_none_configured">В этой сборке нет сервера статистики, поэтому ничего не отправляется. Счётчики ниже остаются на телефоне.</string>
+    <string name="stats_show">Показать, что будет отправлено</string>
+    <string name="stats_local">Счётчики на этом телефоне</string>
+    <string name="stats_ask_title">Помочь улучшить Arqon?</string>
+    <string name="stats_ask_body">Arqon может раз в день отправлять один небольшой анонимный отчёт: сколько раз использовалась каждая функция, модель телефона, версия Android и какие соединения (Wi-Fi, SIM) телефон дал приложениям. Это показывает разработчикам, какие телефоны и функции важнее всего.</string>
+    <string name="stats_ask_never">Никогда не отправляются: ссылки, имена файлов, сайты, местоположение, номера телефонов и то, что вы скачиваете. Точный отчёт можно посмотреть и отключить в настройках.</string>
+    <string name="stats_yes">Разрешить</string>
+    <string name="stats_no">Нет, спасибо</string>
 </resources>
