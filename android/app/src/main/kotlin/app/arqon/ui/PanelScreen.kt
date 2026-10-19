@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import app.arqon.ArqonApp
 import app.arqon.Format
 import app.arqon.R
+import app.arqon.core.net.LinkKind
 import app.arqon.net.LinkInfo
 import app.arqon.net.LinkState
 
@@ -84,6 +85,17 @@ fun PanelScreen(app: ArqonApp) {
                     Text(stringResource(R.string.panel_permission), color = Muted, fontSize = 14.sp)
                     Spacer(Modifier.size(8.dp))
                     Button(onClick = { askPhone.launch(Manifest.permission.READ_PHONE_STATE) }) { Text(stringResource(R.string.panel_permission_button)) }
+                }
+            }
+        }
+        if (links.any { it.kind == LinkKind.WIFI && it.state == LinkState.ACTIVE } &&
+            links.none { it.kind == LinkKind.CELLULAR && it.state == LinkState.ACTIVE } &&
+            links.any { it.kind == LinkKind.CELLULAR && it.state == LinkState.UNAVAILABLE }
+        ) {
+            item {
+                InfoCard {
+                    val off = app.links.mobileDataEnabled() == false
+                    Text(stringResource(if (off) R.string.hint_data_off else R.string.hint_data_refused), color = Muted, fontSize = 14.sp)
                 }
             }
         }

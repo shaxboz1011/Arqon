@@ -27,6 +27,8 @@
     <string name="link_test">Shu ulanishni sinash</string>
     <string name="report_copy">Hisobotni nusxalash</string>
     <string name="report_copied">Hisobot nusxalandi. Xabarga qo\'ying.</string>
+    <string name="hint_data_off">Telefon sozlamalarida mobil internet o\'chiq, shuning uchun Android SIM\'ni ilovalarga bermayapti. Mobil internetni yoqing.</string>
+    <string name="hint_data_refused">Mobil internet yoqilgan, lekin bu telefon Wi-Fi ulanganda SIM\'ni ilovalarga bermayapti. Sinab ko\'ring: Sozlamalar → Dasturchilar uchun → Mobile data always active. Telefonda bunday variant bo\'lmasa, ishlab chiqaruvchi dasturi buni taqiqlagan va bu yerda faqat bitta ulanish ishlaydi.</string>
     <string name="link_ping_none">Internetdan javob yo\'q</string>
 
     <string name="downloads_title">Yuklashlar</string>

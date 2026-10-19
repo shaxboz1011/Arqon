@@ -90,11 +90,28 @@ class AndroidLinkManager(
         return parts.joinToString("+")
     }
 
+    /** Whether "mobile data" is switched on in the phone's own settings (for the SIM Android uses for data); null when it cannot be read. */
+    fun mobileDataEnabled(): Boolean? = try {
+        val tm = context.getSystemService(android.telephony.TelephonyManager::class.java)
+        val sub = SubscriptionManager.getDefaultDataSubscriptionId()
+        (if (sub != SubscriptionManager.INVALID_SUBSCRIPTION_ID) tm.createForSubscriptionId(sub) else tm).isDataEnabled
+    } catch (_: Exception) {
+        null
+    }
+
+    /** The developer option "Mobile data always active": it keeps the SIM connected next to Wi-Fi, so apps can use both. */
+    fun mobileAlwaysOn(): Boolean? = try {
+        android.provider.Settings.Global.getInt(context.contentResolver, "mobile_data_always_on", -1).let { if (it < 0) null else it == 1 }
+    } catch (_: Exception) {
+        null
+    }
+
     /** A text a user can copy and send: phone, Android version, permissions, every request and what came of it. */
     @Synchronized
     fun report(): String = buildString {
         appendLine("Arqon ${app.arqon.BuildConfig.VERSION_NAME} · ${Build.MANUFACTURER} ${Build.MODEL} · Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
         appendLine("phone permission: ${hasPhonePermission()}")
+        appendLine("mobile data switched on in settings: ${mobileDataEnabled()} · always-active developer option: ${mobileAlwaysOn()}")
         appendLine("active network: " + cm.activeNetwork?.let { describe(cm.getNetworkCapabilities(it)) })
         appendLine("--- links")
         for (info in _all.value) appendLine("${info.id} \"${info.name}\" ${info.state} enabled=${info.enabled} metered=${info.metered} ping=${info.pingMillis}")

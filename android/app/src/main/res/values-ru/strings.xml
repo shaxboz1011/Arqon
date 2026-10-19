@@ -27,6 +27,8 @@
     <string name="link_test">Проверить это подключение</string>
     <string name="report_copy">Скопировать отчёт</string>
     <string name="report_copied">Отчёт скопирован. Вставьте его в сообщение.</string>
+    <string name="hint_data_off">Мобильный интернет выключен в настройках телефона, поэтому Android не отдаёт SIM приложениям. Включите мобильный интернет.</string>
+    <string name="hint_data_refused">Мобильный интернет включён, но этот телефон не отдаёт SIM приложениям, пока подключён Wi-Fi. Попробуйте: Настройки → Для разработчиков → «Мобильный интернет всегда включён» (Mobile data always active). Если такого пункта нет, прошивка производителя это запрещает, и здесь работает только одно подключение.</string>
     <string name="link_ping_none">Нет ответа из интернета</string>
 
     <string name="downloads_title">Загрузки</string>

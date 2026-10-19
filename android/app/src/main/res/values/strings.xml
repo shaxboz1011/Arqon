@@ -27,6 +27,8 @@
     <string name="link_test">Test this connection</string>
     <string name="report_copy">Copy report</string>
     <string name="report_copied">Report copied. Paste it into a message.</string>
+    <string name="hint_data_off">Mobile data is switched off in the phone\'s settings, so Android gives no SIM to apps. Turn on mobile data.</string>
+    <string name="hint_data_refused">Mobile data is on, but this phone does not give the SIM to apps while Wi-Fi is connected. Try: Settings → Developer options → Mobile data always active. If the phone has no such option, the maker\'s firmware blocks it and only one connection can be used here.</string>
     <string name="link_ping_none">No internet answer</string>
 
     <string name="downloads_title">Downloads</string>
