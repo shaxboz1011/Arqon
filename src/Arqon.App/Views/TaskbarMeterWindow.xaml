@@ -45,6 +45,7 @@
             <Border.ContextMenu>
                 <ContextMenu>
                     <MenuItem x:Name="OpenItem" Header="{DynamicResource S.Tray.Open}" FontWeight="SemiBold" />
+                    <MenuItem x:Name="LayoutItem" Header="{DynamicResource S.Meter.Layout}" />
                     <MenuItem x:Name="HideItem" Header="{DynamicResource S.Meter.Hide}" />
                 </ContextMenu>
             </Border.ContextMenu>

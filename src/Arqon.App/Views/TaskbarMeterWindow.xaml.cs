@@ -15,7 +15,7 @@ namespace Arqon.App.Views;
 /// </summary>
 public partial class TaskbarMeterWindow : Window
 {
-    private const double WidthDip = 104, HeightDip = 32, GapDip = 6;
+    private const double WidthDip = 104, HeightDip = 32, GapDip = 6, MinWidthDip = 74;
     private const int ThemeCheckEveryTicks = 5;
     private const int ScanEveryTicks = 3;
 
@@ -25,6 +25,7 @@ public partial class TaskbarMeterWindow : Window
     private int _ticks;
     private volatile IReadOnlyList<PixelRect> _taskbarItems = [];
     private int _scanning;
+    private string _layout = "";
 
     public TaskbarMeterWindow(TaskbarMeterViewModel vm, Action open, Action hide)
     {
@@ -45,6 +46,7 @@ public partial class TaskbarMeterWindow : Window
         Root.MouseLeftButtonUp += (_, _) => open();
         OpenItem.Click += (_, _) => open();
         HideItem.Click += (_, _) => hide();
+        LayoutItem.Click += (_, _) => CopyLayout();
         Root.ContextMenuOpening += (_, _) => Details.IsOpen = false;
         Closed += (_, _) => _timer.Stop();
     }
@@ -94,9 +96,35 @@ public partial class TaskbarMeterWindow : Window
 
         ScanTaskbarItems(bar);
         var scale = VisualTreeHelper.GetDpi(this).DpiScaleX;
-        var rect = TaskbarPlacement.For(bar, tray, (int)Math.Round(WidthDip * scale), (int)Math.Round(HeightDip * scale),
-            (int)Math.Round(GapDip * scale), _taskbarItems);
+        var items = _taskbarItems;
+        var spot = TaskbarPlacement.For(bar, tray, (int)Math.Round(WidthDip * scale), (int)Math.Round(HeightDip * scale),
+            (int)Math.Round(GapDip * scale), items, (int)Math.Round(MinWidthDip * scale));
+        _layout = DescribeLayout(bar, tray, scale, items, spot);
+        if (spot is not { } rect)
+        {
+            Details.IsOpen = false;   // nowhere free on this taskbar: stay out of the way, the tray icon still opens Arqon
+            if (IsVisible) Hide();
+            return;
+        }
         if (!IsVisible) Show();
         TaskbarNative.Place(_handle, rect);   // every tick: it also lifts us back above the taskbar if that took the top spot
+    }
+
+    private static string DescribeLayout(PixelRect bar, PixelRect tray, double scale, IReadOnlyList<PixelRect> items, PixelRect? spot) =>
+        string.Join(Environment.NewLine,
+        [
+            $"Arqon taskbar layout (Windows {Environment.OSVersion.Version}, scale {scale:0.##})",
+            $"taskbar {bar}",
+            $"tray {tray}",
+            $"meter {(spot is { } r ? r.ToString() : "none: no free space")}",
+            $"items ({items.Count}):",
+            .. items.Take(80).Select(i => "  " + i),
+        ]);
+
+    /// <summary>Puts what the meter sees of the taskbar on the clipboard, so a wrong placement can be reported with facts.</summary>
+    private void CopyLayout()
+    {
+        try { Clipboard.SetText(_layout); }
+        catch (System.Runtime.InteropServices.COMException) { /* the clipboard is busy: try again from the menu */ }
     }
 }

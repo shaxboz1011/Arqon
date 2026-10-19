@@ -180,6 +180,7 @@
     <sys:String x:Key="S.Set.ClipboardBody">Copy a file link anywhere and Downloads offers to fetch it with one click.</sys:String>
     <sys:String x:Key="S.Set.Meter">Taskbar speed meter</sys:String>
     <sys:String x:Key="S.Set.MeterBody">Download and upload speed next to the tray at all times; hover for today's and this month's traffic. It hides itself while a game runs full screen.</sys:String>
+    <sys:String x:Key="S.Meter.Layout">Copy taskbar layout</sys:String>
     <sys:String x:Key="S.Meter.Hide">Hide</sys:String>
     <sys:String x:Key="S.Usage.Sub">See how much traffic each connection carried.</sys:String>
     <sys:String x:Key="S.Usage.Today">TODAY</sys:String>
