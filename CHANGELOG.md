@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Optional seeding of finished torrents (Settings): stops at a chosen share ratio or by hand, held back while the game guard is active.
+- Removing an unfinished torrent deletes its files also after a restart.
+- Choice of files inside a multi-file torrent.
+
 ## 0.1.0
 
 First public release.

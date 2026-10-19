@@ -93,6 +93,12 @@
     <sys:String x:Key="S.Dl.Files.Cancel">Bekor qilish</sys:String>
     <sys:String x:Key="S.Dl.Files.Ok">Shularni yuklash</sys:String>
     <sys:String x:Key="S.Dl.Files.Summary">{1} ta fayldan {0} tasi · {2}</sys:String>
+    <sys:String x:Key="S.Set.Seed">Tugagan torrentni tarqatishda davom etish</sys:String>
+    <sys:String x:Key="S.Set.SeedBody">Torrent tugagach, Arqon uni quyidagi nisbatgacha boshqalarga tarqatadi. Tarqatish upload tezligingizni ishlatadi; o'yin himoya qilinayotganda tarqatish ham sekinlashtiriladi. Standart holatda o'chiq.</sys:String>
+    <sys:String x:Key="S.Set.SeedRatio">Tarqatishni to'xtatish nisbati</sys:String>
+    <sys:String x:Key="S.Set.SeedRatioBody">Nisbat: yuborilgan hajm / yuklangan hajm, Arqon ochiq turganda hisoblanadi. Cheksizlik belgisi: o'zingiz to'xtatguncha.</sys:String>
+    <sys:String x:Key="S.Dl.State.Seeding">Tarqatilmoqda · nisbat {0}</sys:String>
+    <sys:String x:Key="S.Dl.StopSeed">Tarqatishni to'xtatish</sys:String>
     <sys:String x:Key="S.Dl.AlreadyAdded">Bu torrent ro'yxatda allaqachon bor.</sys:String>
     <sys:String x:Key="S.Dl.TorrentDownloadFailed">.torrent faylni yuklab bo'lmadi: {0}</sys:String>
     <sys:String x:Key="S.Dl.State.Metadata">Torrent ma'lumoti olinmoqda</sys:String>

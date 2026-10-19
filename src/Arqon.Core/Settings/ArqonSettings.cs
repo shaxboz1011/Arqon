@@ -14,7 +14,9 @@ public sealed record ArqonSettings(
     bool SpeedInBytes = false,
     bool SafeGameMode = true,
     int MaxConcurrentDownloads = 3,
-    string? DownloadDirectory = null)
+    string? DownloadDirectory = null,
+    bool SeedTorrents = false,
+    double SeedRatio = 1.0)
 {
     public static ArqonSettings Default() => new([], GameProtection: true, SystemMode: false, Language: "uz");
 }

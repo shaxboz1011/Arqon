@@ -33,7 +33,8 @@ public sealed record TorrentSnapshot(
     int Peers,
     int Seeds,
     TorrentPhase Phase,
-    string? Error);
+    string? Error,
+    long Uploaded = 0);
 
 /// <summary>A thin layer over MonoTorrent: add torrents by magnet link or file, and read plain numbers back.</summary>
 public sealed class TorrentEngine : IDisposable
@@ -175,6 +176,18 @@ public sealed class TorrentEngine : IDisposable
             .ConfigureAwait(false);
     }
 
+    /// <summary>The cap on the upload speed of all torrents together, or null when there is none.</summary>
+    public long? UploadLimit => _engine.Settings.MaximumUploadRate is > 0 and var rate ? rate : null;
+
+    /// <summary>Caps the upload speed of all torrents together (seeding must not hold a game's link back either); null removes the cap.</summary>
+    public async Task SetUploadLimitAsync(long? bytesPerSecond)
+    {
+        var rate = bytesPerSecond is { } bps ? (int)Math.Clamp(bps, 1, int.MaxValue) : 0;   // 0 means unlimited
+        if (_engine.Settings.MaximumUploadRate == rate) return;
+        await _engine.UpdateSettingsAsync(new EngineSettingsBuilder(_engine.Settings) { MaximumUploadRate = rate }.ToSettings())
+            .ConfigureAwait(false);
+    }
+
     public void Dispose()
     {
         _disposed = true;
@@ -248,6 +261,7 @@ public sealed class TorrentHandle
         if (phase == TorrentPhase.Complete) done = size;
 
         return new TorrentSnapshot(name, size, done, m.Monitor.DownloadRate, m.Monitor.UploadRate, m.OpenConnections, m.Peers.Seeds,
-            phase, m.Error?.Exception?.Message ?? (phase == TorrentPhase.Error ? m.Error?.Reason.ToString() : null));
+            phase, m.Error?.Exception?.Message ?? (phase == TorrentPhase.Error ? m.Error?.Reason.ToString() : null),
+            m.Monitor.DataBytesSent);
     }
 }

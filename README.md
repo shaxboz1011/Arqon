@@ -212,7 +212,7 @@ cd Arqon
 
 dotnet run --project src/Arqon.App            # run with your real adapters
 dotnet run --project src/Arqon.App -- --demo  # run with two pretend connections
-dotnet test                                    # 379 tests
+dotnet test                                    # 387 tests
 
 # one self-contained Arqon.exe (about 75 MB) in publish\win-x64
 powershell -ExecutionPolicy Bypass -File tools\build.ps1
@@ -234,12 +234,12 @@ powershell -ExecutionPolicy Bypass -File tools\build.ps1
 | Safe game mode (system mode off and driver unloaded while a game runs) | ✅ Done (tested with a fake game, not a real anti-cheat) |
 | Speed unit switch (Mbit/s or MB/s) | ✅ Done |
 | Interface in Uzbek and English | ✅ Done (more languages welcome) |
-| Torrents and magnet links over every link; choose folder; choose files; open from Windows | ✅ Done (real Debian torrent over Wi-Fi + phone) |
+| Torrents and magnet links over every link; choose folder; choose files; optional seeding with a share ratio; open from Windows | ✅ Done (real Debian torrent over Wi-Fi + phone) |
 | **System mode** (speed up Telegram, Chrome, every app) | 🧪 Works in a first real test (Wi-Fi + USB phone). Not yet tested with a game or over a long session |
 | Relay server (one connection split across links, duplicated game packets) | 🗓 Planned |
 | Installer and code signing | 🗓 Planned |
 
-**Honest limits:** torrents stop when finished (no seeding yet), UPnP port mapping is off, and system mode has not yet been checked with the driver when running from the single-file `Arqon.exe`.
+**Honest limits:** seeding is optional (off by default) and only continues for torrents finished in the current session, UPnP port mapping is off, and system mode has not yet been checked with the driver when running from the single-file `Arqon.exe`.
 
 ## 🔒 Security
 

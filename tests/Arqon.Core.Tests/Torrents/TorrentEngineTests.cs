@@ -156,6 +156,63 @@ public sealed class TorrentEngineTests : IDisposable
     }
 
     [Fact]
+    public async Task A_finished_torrent_that_is_left_running_seeds_the_next_downloader_and_counts_what_it_uploaded()
+    {
+        var seedDir = Path.Combine(_dir, "seed-first");
+        Directory.CreateDirectory(seedDir);
+        var data = new byte[2 * 1024 * 1024 + 77];
+        new Random(21).NextBytes(data);
+        var dataPath = Path.Combine(seedDir, "share.bin");
+        await File.WriteAllBytesAsync(dataPath, data);
+        var torrentPath = Path.Combine(_dir, "share.torrent");
+        await File.WriteAllBytesAsync(torrentPath, (await new TorrentCreator().CreateAsync(new TorrentFileSource(dataPath))).Encode());
+
+        // The origin seeder
+        var originPort = FreePort();
+        using var origin = new TorrentEngine(new TorrentEngineOptions(Path.Combine(_dir, "cache-origin"), ListenPort: originPort, EnableDht: false,
+            AllowLocalPeerDiscovery: false));
+        var originHandle = await origin.AddFileAsync(torrentPath, seedDir);
+        await originHandle.StartAsync();
+        await Until(originHandle.Snapshot, s => s.Phase == TorrentPhase.Complete, TimeSpan.FromSeconds(30));
+
+        // The first downloader finishes and is NOT stopped: it keeps seeding
+        var firstPort = FreePort();
+        using var first = new TorrentEngine(new TorrentEngineOptions(Path.Combine(_dir, "cache-first"), ListenPort: firstPort, EnableDht: false,
+            AllowLocalPeerDiscovery: false));
+        var firstHandle = await first.AddFileAsync(torrentPath, Path.Combine(_dir, "first"));
+        await firstHandle.StartAsync();
+        await firstHandle.AddPeerAsync(new IPEndPoint(IPAddress.Loopback, originPort));
+        var firstDone = await Until(firstHandle.Snapshot, s => s.Phase == TorrentPhase.Complete, TimeSpan.FromSeconds(60));
+        Assert.Equal(TorrentPhase.Complete, firstDone.Phase);
+
+        // The origin goes away, so the second downloader can only get the data from the first one
+        await originHandle.StopAsync();
+        origin.Dispose();
+        using var second = new TorrentEngine(new TorrentEngineOptions(Path.Combine(_dir, "cache-second"), EnableDht: false, AllowLocalPeerDiscovery: false));
+        var secondHandle = await second.AddFileAsync(torrentPath, Path.Combine(_dir, "second"));
+        await secondHandle.StartAsync();
+        await secondHandle.AddPeerAsync(new IPEndPoint(IPAddress.Loopback, firstPort));
+        var secondDone = await Until(secondHandle.Snapshot, s => s.Phase == TorrentPhase.Complete, TimeSpan.FromSeconds(60));
+
+        Assert.Equal(TorrentPhase.Complete, secondDone.Phase);
+        Assert.Equal(Convert.ToHexString(SHA256.HashData(data)),
+            Convert.ToHexString(SHA256.HashData(await File.ReadAllBytesAsync(Path.Combine(_dir, "second", "share.bin")))));
+        Assert.True(firstHandle.Snapshot().Uploaded >= data.Length, "the first downloader should have counted what it uploaded");
+    }
+
+    [Fact]
+    public async Task The_upload_speed_can_be_capped_and_released()
+    {
+        using var engine = new TorrentEngine(new TorrentEngineOptions(Path.Combine(_dir, "cache"), EnableDht: false));
+
+        await engine.SetUploadLimitAsync(750_000);
+        Assert.Equal(750_000, engine.UploadLimit);
+
+        await engine.SetUploadLimitAsync(null);
+        Assert.Null(engine.UploadLimit);
+    }
+
+    [Fact]
     public async Task A_magnet_link_that_is_not_valid_is_refused_with_a_clear_error()
     {
         using var engine = new TorrentEngine(new TorrentEngineOptions(Path.Combine(_dir, "cache"), EnableDht: false));

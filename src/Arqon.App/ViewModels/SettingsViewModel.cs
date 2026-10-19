@@ -11,6 +11,8 @@ namespace Arqon.App.ViewModels;
 
 public sealed record LanguageOption(string Label, string Code);
 
+public sealed record RatioOption(string Label, double Value);
+
 public sealed record SpeedUnitOption(string Label, bool InBytes);
 
 public sealed class SettingsViewModel : ViewModelBase
@@ -102,6 +104,31 @@ public sealed class SettingsViewModel : ViewModelBase
         {
             if (value < 1 || value == _services.Settings.MaxConcurrentDownloads) return;
             _services.SaveSettings(_services.Settings with { MaxConcurrentDownloads = value });
+            Raise();
+        }
+    }
+
+    /// <summary>Keep sharing a finished torrent (off by default: it uses the upload speed and sends data to strangers).</summary>
+    public bool SeedTorrents
+    {
+        get => _services.Settings.SeedTorrents;
+        set
+        {
+            if (value == _services.Settings.SeedTorrents) return;
+            _services.SaveSettings(_services.Settings with { SeedTorrents = value });
+            Raise();
+        }
+    }
+
+    public IReadOnlyList<RatioOption> SeedRatios { get; } = [new("1×", 1.0), new("2×", 2.0), new("3×", 3.0), new("∞", 0.0)];
+
+    public RatioOption SelectedSeedRatio
+    {
+        get => SeedRatios.FirstOrDefault(r => r.Value == _services.Settings.SeedRatio) ?? SeedRatios[0];
+        set
+        {
+            if (value is null || value.Value == _services.Settings.SeedRatio) return;
+            _services.SaveSettings(_services.Settings with { SeedRatio = value.Value });
             Raise();
         }
     }

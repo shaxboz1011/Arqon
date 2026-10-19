@@ -112,6 +112,27 @@
             </Border>
 
             <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource RowTitle}" Text="{DynamicResource S.Set.Seed}" />
+                            <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Text="{DynamicResource S.Set.SeedBody}" />
+                        </StackPanel>
+                        <ToggleButton Grid.Column="1" Style="{StaticResource Switch}" IsChecked="{Binding SeedTorrents, Mode=TwoWay}" Margin="16,0,0,0" VerticalAlignment="Top" />
+                    </Grid>
+                    <Grid Margin="0,14,0,0" Visibility="{Binding SeedTorrents, Converter={StaticResource B2V}}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource RowTitle}" Text="{DynamicResource S.Set.SeedRatio}" />
+                            <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Text="{DynamicResource S.Set.SeedRatioBody}" />
+                        </StackPanel>
+                        <ComboBox Grid.Column="1" Margin="16,0,0,0" MinWidth="90" ItemsSource="{Binding SeedRatios}" SelectedItem="{Binding SelectedSeedRatio, Mode=TwoWay}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,10">
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                     <StackPanel>

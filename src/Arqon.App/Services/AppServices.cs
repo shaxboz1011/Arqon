@@ -266,7 +266,7 @@ public sealed class AppServices : IDisposable
 
     /// <summary>
     /// A torrent opens many connections at once and can fill a link on its own. While the game protection holds a link back
-    /// for a game, the torrents are held to that same speed in total, so they cannot undo the protection.
+    /// for a game, the torrents are held to that same speed in total (downloading and seeding), so they cannot undo the protection.
     /// </summary>
     private void LimitTorrentsForGames()
     {
@@ -275,7 +275,9 @@ public sealed class AppServices : IDisposable
         if (engine is null) return;
 
         var caps = (_linkCache.Get() ?? []).Select(l => Throttle.Get(l.Id)).Where(c => c is not null).Select(c => c!.Value).ToList();
-        _ = engine.SetDownloadLimitAsync(caps.Count == 0 ? null : caps.Min());
+        var cap = caps.Count == 0 ? (long?)null : caps.Min();
+        _ = engine.SetDownloadLimitAsync(cap);
+        _ = engine.SetUploadLimitAsync(cap);   // seeding must not undo the protection either
     }
 
     private void OnGamesChanged()

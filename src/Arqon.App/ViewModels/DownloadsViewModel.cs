@@ -32,6 +32,9 @@ public sealed class DownloadItemViewModel : ViewModelBase
     private TorrentPhase _phase = TorrentPhase.Stopped;
     private bool _spaceChecked;
     private bool _selectionApplied;
+    private bool _seeding;
+    private long _uploaded;
+    private CancellationTokenSource? _seedCts;
     private int _fileCount;
     private string? _spaceProblem;
 
@@ -54,6 +57,7 @@ public sealed class DownloadItemViewModel : ViewModelBase
         CancelCommand = new RelayCommand(Cancel);
         OpenFolderCommand = new RelayCommand(OpenFolder);
         ChooseFilesCommand = new RelayCommand(() => _ = ChooseFilesAsync());
+        StopSeedCommand = new RelayCommand(StopSeeding);
     }
 
     /// <summary>Fixed-value item for the demo data set.</summary>
@@ -89,6 +93,7 @@ public sealed class DownloadItemViewModel : ViewModelBase
     public RelayCommand CancelCommand { get; }
     public RelayCommand OpenFolderCommand { get; }
     public RelayCommand ChooseFilesCommand { get; }
+    public RelayCommand StopSeedCommand { get; }
 
     public string Name => Record.Name;
     public DownloadState State => _state;
@@ -100,6 +105,8 @@ public sealed class DownloadItemViewModel : ViewModelBase
     public bool CanPause => IsDownloading || IsQueued;
     public bool CanResume => IsPaused || IsFailed;
     public bool CanStartNow => IsQueued;
+    /// <summary>A finished torrent that is still being shared with other people.</summary>
+    public bool IsSeeding => IsDone && _seeding;
     public bool CanChooseFiles => IsTorrent && !IsDone && _fileCount > 1;
     public double Percent => _total > 0 ? Math.Min(100, _done * 100.0 / _total) : 0;
     public double Done => _done;
@@ -117,6 +124,7 @@ public sealed class DownloadItemViewModel : ViewModelBase
         DownloadState.Downloading => Loc.Get("S.Dl.State.Downloading"),
         DownloadState.Queued => Loc.Format("S.Dl.State.Queued", Math.Max(1, _owner.QueuePosition(this))),
         DownloadState.Paused => Loc.Get("S.Dl.State.Paused"),
+        DownloadState.Done when IsSeeding => Loc.Format("S.Dl.State.Seeding", (_total > 0 ? (double)_uploaded / _total : 0).ToString("0.00")),
         DownloadState.Done => Loc.Get("S.Dl.State.Done"),
         _ => Loc.Get("S.Dl.State.Failed"),
     };
@@ -125,7 +133,8 @@ public sealed class DownloadItemViewModel : ViewModelBase
         ? $"{Units.Size(_done)} / {Units.Size(_total)}  ({Percent:0}%)"
         : IsTorrent && _done == 0 ? "" : Units.Size(_done);
 
-    public string SpeedText => !IsDownloading ? ""
+    public string SpeedText => IsSeeding ? $"↑ {Units.Speed(_upSpeed)} {Units.SpeedLabel}"
+        : !IsDownloading ? ""
         : IsTorrent ? $"{Units.Speed(_speed)} {Units.SpeedLabel}   ↑ {Units.Speed(_upSpeed)}"
         : $"{Units.Speed(_speed)} {Units.SpeedLabel}";
 
@@ -181,6 +190,7 @@ public sealed class DownloadItemViewModel : ViewModelBase
         _error = "";
         _phase = TorrentPhase.Metadata;
         _selectionApplied = false;
+        _seeding = false;
         _cts = new CancellationTokenSource();
         var token = _cts.Token;
         try
@@ -201,8 +211,13 @@ public sealed class DownloadItemViewModel : ViewModelBase
                 await Task.Delay(500, token);
             }
 
-            await _torrent.StopAsync();   // finished: Arqon does not stay on to seed
-            _speed = _upSpeed = 0;
+            _speed = 0;
+            if (_owner.SeedTorrents) _seeding = true;   // stays running: SeedAsync shares it and stops it later
+            else
+            {
+                await _torrent.StopAsync();
+                _upSpeed = 0;
+            }
             SetState(DownloadState.Done);
             _owner.OnCompleted(this);
         }
@@ -232,8 +247,44 @@ public sealed class DownloadItemViewModel : ViewModelBase
             _running = false;
         }
         _owner.Persist();
-        _owner.OnEnded(this);
+        _owner.OnEnded(this);   // seeding does not hold a place in the queue
+        if (_seeding) _ = SeedAsync();
     }
+
+    /// <summary>
+    /// Shares a finished torrent until it has uploaded the chosen ratio, the setting is switched off, or the user stops it.
+    /// Only for torrents finished in this session: after a restart a finished torrent is not started again on its own.
+    /// </summary>
+    private async Task SeedAsync()
+    {
+        _seedCts = new CancellationTokenSource();
+        var token = _seedCts.Token;
+        try
+        {
+            while (true)
+            {
+                await Task.Delay(1000, token);
+                var torrent = _torrent;
+                if (torrent is null || !_owner.SeedTorrents) break;   // removed from the list, or seeding was switched off
+                var snapshot = torrent.Snapshot();
+                _uploaded = snapshot.Uploaded;
+                _upSpeed = snapshot.UpBps;
+                Raise(string.Empty);
+                if (SeedPolicy.ReachedTarget(snapshot.Uploaded, _total, _owner.SeedRatio)) break;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // stopped by hand
+        }
+        await StopTorrentQuietly();
+        _seeding = false;
+        _upSpeed = 0;
+        _seedCts = null;
+        Raise(string.Empty);
+    }
+
+    private void StopSeeding() => _seedCts?.Cancel();
 
     /// <summary>
     /// The files are known once the metadata is there (at once for a .torrent file, later for a magnet link). The choice made
@@ -392,6 +443,7 @@ public sealed class DownloadItemViewModel : ViewModelBase
     private void Cancel()
     {
         _discard = true;
+        _seedCts?.Cancel();
         if (_state == DownloadState.Downloading)
         {
             _cts?.Cancel();
@@ -626,6 +678,10 @@ public sealed class DownloadsViewModel : ViewModelBase
     // ---- torrents ---------------------------------------------------------------------------------------------
 
     public bool IsDemo => _services.Demo;
+
+    public bool SeedTorrents => _services.Settings.SeedTorrents;
+
+    public double SeedRatio => _services.Settings.SeedRatio;
 
     public TorrentEngine TorrentEngine() => _services.Torrents;
 
