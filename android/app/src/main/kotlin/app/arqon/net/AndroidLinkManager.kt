@@ -271,7 +271,8 @@ class AndroidLinkManager(
                 else -> LinkState.WAITING
             }
             // a slot nobody answered and that is only a duplicate request for the same thing is not worth listing
-            if (state != LinkState.ACTIVE && slot.id == "mobile" && slots.values.any { it.subId != null }) continue
+            // the plain mobile-data row is hidden only while one of the SIM rows works; when nothing answers it must be visible, so the user sees that mobile data was refused
+            if (state != LinkState.ACTIVE && slot.id == "mobile" && slots.values.any { it.subId != null && it.network != null }) continue
             if (state == LinkState.UNAVAILABLE && slot.kind == LinkKind.ETHERNET) continue   // most phones have no cable: do not show an empty row
             result += LinkInfo(slot.id, slot.label, slot.kind, state, slot.metered, pings[slot.id], enabledByUser, link)
         }
