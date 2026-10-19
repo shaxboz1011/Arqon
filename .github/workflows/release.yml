@@ -28,4 +28,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "${{ github.ref_name }}" out/Arqon.exe out/Arqon.exe.sha256 `
-            --title "Arqon ${{ github.ref_name }}" --generate-notes --prerelease
+            --title "Arqon ${{ github.ref_name }}" --generate-notes
