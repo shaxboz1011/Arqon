@@ -180,6 +180,7 @@
     <sys:String x:Key="S.Set.ClipboardBody">Скопируйте ссылку на файл где угодно, и «Загрузки» предложат скачать её одним нажатием.</sys:String>
     <sys:String x:Key="S.Set.Meter">Измеритель скорости на панели задач</sys:String>
     <sys:String x:Key="S.Set.MeterBody">Скорость загрузки и отдачи всегда рядом с треем; наведите курсор, чтобы увидеть трафик за сегодня и за месяц. Скрывается, пока игра работает в полноэкранном режиме.</sys:String>
+    <sys:String x:Key="S.Meter.Reset">Вернуть на место</sys:String>
     <sys:String x:Key="S.Meter.Layout">Скопировать раскладку панели задач</sys:String>
     <sys:String x:Key="S.Meter.Hide">Скрыть</sys:String>
     <sys:String x:Key="S.Usage.Sub">Сколько трафика прошло через каждое подключение.</sys:String>

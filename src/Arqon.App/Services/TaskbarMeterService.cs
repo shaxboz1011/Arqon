@@ -25,7 +25,9 @@ public sealed class TaskbarMeterService : IDisposable
         if (wanted && _window is null)
         {
             _window = new TaskbarMeterWindow(new TaskbarMeterViewModel(_services), _open,
-                hide: () => _services.SaveSettings(_services.Settings with { TaskbarMeter = false }));
+                hide: () => _services.SaveSettings(_services.Settings with { TaskbarMeter = false }),
+                getOffset: () => _services.Settings.MeterOffsetDip,
+                setOffset: dip => _services.SaveSettings(_services.Settings with { MeterOffsetDip = dip }));
             _window.Show();
         }
         else if (!wanted && _window is not null)

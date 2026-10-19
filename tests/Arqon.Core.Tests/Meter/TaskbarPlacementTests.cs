@@ -179,4 +179,37 @@ public class TaskbarPlacementTests
 
         Assert.Equal(820 - 8, r!.Value.Bottom);
     }
+
+    // Dragging the meter along the bar (the user's way to fix any layout the automatic placement gets wrong).
+
+    [Fact]
+    public void A_drag_moves_the_meter_along_the_bar()
+    {
+        var spot = new PixelRect(1372, 1044, 1492, 1076);
+
+        Assert.Equal(new PixelRect(1272, 1044, 1392, 1076), TaskbarPlacement.Nudge(spot, Bar, Tray, -100, 8));
+        Assert.Equal(spot, TaskbarPlacement.Nudge(spot, Bar, Tray, 0, 8));
+    }
+
+    [Fact]
+    public void A_drag_cannot_push_the_meter_into_the_notification_area_or_off_the_taskbar()
+    {
+        var spot = new PixelRect(1372, 1044, 1492, 1076);
+
+        Assert.Equal(1500 - 8 - 120, TaskbarPlacement.Nudge(spot, Bar, Tray, 400, 8).Left);   // stops at the notification area
+        Assert.Equal(0, TaskbarPlacement.Nudge(spot, Bar, Tray, -5000, 8).Left);                // stops at the left end of the bar
+    }
+
+    [Fact]
+    public void A_drag_on_a_vertical_taskbar_moves_the_meter_up_and_down()
+    {
+        var taskbar = new PixelRect(1840, 0, 1920, 1080);
+        var tray = new PixelRect(1840, 900, 1920, 1080);
+        var spot = new PixelRect(1845, 860, 1915, 892);
+
+        var moved = TaskbarPlacement.Nudge(spot, taskbar, tray, -200, 8);
+
+        Assert.Equal(new PixelRect(1845, 660, 1915, 692), moved);
+        Assert.Equal(900 - 8 - 32, TaskbarPlacement.Nudge(spot, taskbar, tray, 300, 8).Top);
+    }
 }

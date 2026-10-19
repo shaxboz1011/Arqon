@@ -1,6 +1,8 @@
 package app.arqon.gamemode
 
+import android.app.PendingIntent
 import android.net.VpnService
+import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import android.content.Intent
@@ -23,8 +25,13 @@ class GameTileService : TileService() {
         } else if (app.settings.gamePackages.value.isEmpty() || VpnService.prepare(this) != null) {
             // nothing chosen yet, or Android's VPN question was never answered: that needs the app
             val open = Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            @Suppress("StartActivityAndCollapseDeprecated")
-            startActivityAndCollapse(open)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                // Android 14 refuses the Intent form for apps like this one
+                startActivityAndCollapse(PendingIntent.getActivity(this, 0, open, PendingIntent.FLAG_IMMUTABLE))
+            } else {
+                @Suppress("DEPRECATION")
+                startActivityAndCollapse(open)
+            }
         } else {
             app.gameMode.start()
         }

@@ -19,7 +19,8 @@ public sealed record ArqonSettings(
     double SeedRatio = 1.0,
     bool CheckUpdates = true,
     int DailyLimitMb = 0,
-    string? LastNoticedUpdate = null)
+    string? LastNoticedUpdate = null,
+    int MeterOffsetDip = 0)
 {
     public static ArqonSettings Default() => new([], GameProtection: true, SystemMode: false, Language: "uz");
 }

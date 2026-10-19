@@ -27,10 +27,19 @@ public partial class TaskbarMeterWindow : Window
     private int _scanning;
     private string _layout = "";
 
-    public TaskbarMeterWindow(TaskbarMeterViewModel vm, Action open, Action hide)
+    private readonly Func<int> _getOffset;
+    private readonly Action<int> _setOffset;
+    private double _offsetDip;
+    private bool _pressed, _dragging;
+    private double _pressAt, _offsetAtPress;
+
+    public TaskbarMeterWindow(TaskbarMeterViewModel vm, Action open, Action hide, Func<int> getOffset, Action<int> setOffset)
     {
         InitializeComponent();
         DataContext = _vm = vm;
+        _getOffset = getOffset;
+        _setOffset = setOffset;
+        _offsetDip = getOffset();
 
         SourceInitialized += (_, _) =>
         {
@@ -43,12 +52,48 @@ public partial class TaskbarMeterWindow : Window
 
         Root.MouseEnter += (_, _) => { _vm.RefreshDetails(); Details.IsOpen = true; };
         Root.MouseLeave += (_, _) => Details.IsOpen = false;
-        Root.MouseLeftButtonUp += (_, _) => open();
+        // A click opens Arqon; pressing and dragging along the bar moves the meter, and the place is remembered.
+        Root.MouseLeftButtonDown += (_, e) =>
+        {
+            _pressed = true;
+            _dragging = false;
+            _pressAt = Along(e);
+            _offsetAtPress = _offsetDip;
+            Root.CaptureMouse();
+        };
+        Root.MouseMove += (_, e) =>
+        {
+            if (!_pressed) return;
+            var scale = VisualTreeHelper.GetDpi(this).DpiScaleX;
+            var moved = Along(e) - _pressAt;
+            if (!_dragging && Math.Abs(moved) < 4 * scale) return;
+            _dragging = true;
+            Details.IsOpen = false;
+            _offsetDip = _offsetAtPress + moved / scale;
+            Reposition();
+        };
+        Root.MouseLeftButtonUp += (_, _) =>
+        {
+            if (!_pressed) return;
+            _pressed = false;
+            Root.ReleaseMouseCapture();
+            if (_dragging) _setOffset((int)Math.Round(_offsetDip));
+            else open();
+            _dragging = false;
+        };
+        ResetItem.Click += (_, _) => { _offsetDip = 0; _setOffset(0); Reposition(); };
         OpenItem.Click += (_, _) => open();
         HideItem.Click += (_, _) => hide();
         LayoutItem.Click += (_, _) => CopyLayout();
         Root.ContextMenuOpening += (_, _) => Details.IsOpen = false;
         Closed += (_, _) => _timer.Stop();
+    }
+
+    /// <summary>Where the pointer is along the taskbar, in screen pixels (left to right, or top to bottom on a side taskbar).</summary>
+    private double Along(MouseEventArgs e)
+    {
+        var screen = PointToScreen(e.GetPosition(this));
+        return TaskbarNative.TryGetTaskbar(out var bar, out _) && bar.Width < bar.Height ? screen.Y : screen.X;
     }
 
     private void Tick()
@@ -107,6 +152,7 @@ public partial class TaskbarMeterWindow : Window
             return;
         }
         if (!IsVisible) Show();
+        rect = TaskbarPlacement.Nudge(rect, bar, tray, (int)Math.Round(_offsetDip * scale), (int)Math.Round(GapDip * scale));
         TaskbarNative.Place(_handle, rect);   // every tick: it also lifts us back above the taskbar if that took the top spot
     }
 

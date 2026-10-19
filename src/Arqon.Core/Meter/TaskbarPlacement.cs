@@ -48,6 +48,22 @@ public static class TaskbarPlacement
     }
 
     /// <summary>
+    /// Moves a placed meter along the bar by what the user dragged (<paramref name="offset"/> pixels: positive is right or down), never
+    /// out of the taskbar and never into the notification area.
+    /// </summary>
+    public static PixelRect Nudge(PixelRect spot, PixelRect taskbar, PixelRect tray, int offset, int gap)
+    {
+        if (offset == 0) return spot;
+        if (taskbar.Width >= taskbar.Height)
+        {
+            var left = Math.Clamp(spot.Left + offset, taskbar.Left, Math.Max(taskbar.Left, tray.Left - gap - spot.Width));
+            return spot with { Left = left, Right = left + spot.Width };
+        }
+        var top = Math.Clamp(spot.Top + offset, taskbar.Top, Math.Max(taskbar.Top, tray.Top - gap - spot.Height));
+        return spot with { Top = top, Bottom = top + spot.Height };
+    }
+
+    /// <summary>
     /// One-dimensional core: the free space runs from <paramref name="low"/> to <paramref name="high"/> (the notification area's edge),
     /// with <paramref name="blocked"/> spans inside it. Walks the free stretches from the high end down and takes the first one that
     /// has room for at least <paramref name="smallest"/>, keeping <paramref name="gap"/> away from whatever bounds it.
