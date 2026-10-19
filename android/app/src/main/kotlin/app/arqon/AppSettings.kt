@@ -40,6 +40,24 @@ class AppSettings(context: Context) {
     /** Save mobile data: use the SIMs only while no Wi-Fi is available. */
     val cellularOnlyWithoutWifi: StateFlow<Boolean> = _cellularOnlyWhenWifiIsAbsent
 
+    private val _gameMode = MutableStateFlow(prefs.getBoolean("gameMode", false))
+
+    /** The user wants the game mode on: it is started again whenever Arqon opens. */
+    val gameMode: StateFlow<Boolean> = _gameMode
+
+    private val _gamePackages = MutableStateFlow(prefs.getStringSet("gamePackages", emptySet()).orEmpty().toSet())
+
+    /** Package names of the apps whose traffic goes through the game mode. */
+    val gamePackages: StateFlow<Set<String>> = _gamePackages
+
+    fun setGameMode(value: Boolean) { prefs.edit().putBoolean("gameMode", value).apply(); _gameMode.value = value }
+
+    fun setGamePackage(name: String, selected: Boolean) {
+        val next = if (selected) _gamePackages.value + name else _gamePackages.value - name
+        prefs.edit().putStringSet("gamePackages", next).apply()
+        _gamePackages.value = next
+    }
+
     fun setDesktopMode(value: Boolean) { prefs.edit().putBoolean("desktopMode", value).apply(); _desktopMode.value = value }
 
     fun setKeepStatus(value: Boolean) { prefs.edit().putBoolean("keepStatus", value).apply(); _keepStatus.value = value }

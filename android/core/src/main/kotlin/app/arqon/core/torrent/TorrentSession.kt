@@ -287,9 +287,20 @@ class TorrentSession(
                 val now = receivedBytes.get()
                 val speed = now - last
                 last = now
+                dropPeersOfLostLinks()
                 publish()
                 _status.value = _status.value.copy(downloadBytesPerSecond = speed)
             }
+        }
+    }
+
+    /** A link that was switched off or is kept free for a game gets no more traffic: its peer connections are closed (others stay). */
+    private fun dropPeersOfLostLinks() {
+        val allowed = links().map { it.id }.toSet()
+        if (allowed.isEmpty()) return
+        for (peer in peers.toList()) {
+            val link = peer.link ?: continue
+            if (link.id !in allowed) runCatching { peer.socket?.close() }
         }
     }
 

@@ -261,7 +261,22 @@ class AndroidLinkManager(
      * SIM requests may be answered with the very same network, which must be counted once). With "save mobile data" on, the SIMs
      * are left out while Wi-Fi works.
      */
-    fun activeLinks(): List<Link> = _all.value.filter { it.state == LinkState.ACTIVE && it.enabled && it.link != null }.map { it.link!! }
+    fun activeLinks(): List<Link> {
+        val usable = _all.value.filter { it.state == LinkState.ACTIVE && it.enabled && it.link != null }.map { it.link!! }
+        // while a game uses a link, downloads keep to the others; with only that one link they have to share it
+        val kept = reservedForGame
+        return if (kept != null && usable.any { it.id != kept }) usable.filter { it.id != kept } else usable
+    }
+
+    /** The id of the link a game is playing on right now: downloads keep away from it as long as another link can carry them. */
+    @Volatile var reservedForGame: String? = null
+
+    /** The links a game could use, with their answer times, for the game mode's choice. */
+    fun gameCandidates(): List<app.arqon.core.vpn.LinkCandidate> =
+        _all.value.filter { it.state == LinkState.ACTIVE && it.enabled && it.link != null }
+            .map { app.arqon.core.vpn.LinkCandidate(it.id, it.kind, it.metered, it.pingMillis) }
+
+    fun linkById(id: String?): Link? = _all.value.firstOrNull { it.id == id }?.link
 
     @Synchronized
     private fun publish() {

@@ -20,10 +20,14 @@ class ArqonApp : Application() {
     lateinit var speedTester: app.arqon.net.SpeedTester
         private set
 
+    lateinit var gameMode: app.arqon.gamemode.GameMode
+        private set
+
     override fun onCreate() {
         super.onCreate()
         settings = AppSettings(this)
         links = AndroidLinkManager(this, settings, scope)
+        gameMode = app.arqon.gamemode.GameMode(this, settings, links, scope)
         downloads = DownloadCenter(this, links, settings, scope) { summary -> if (summary.running > 0) DownloadService.ensureRunning(this) }
         speedTester = app.arqon.net.SpeedTester(links, scope)
         links.start()

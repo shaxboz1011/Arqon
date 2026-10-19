@@ -20,8 +20,15 @@
     <!-- Optional "all files access": lets downloads go to the public Downloads folder. Without it they go to the app's own folder. -->
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
 
-    <uses-feature android:name="android.hardware.telephony" android:required="false" />
-    <uses-feature android:name="android.hardware.wifi" android:required="false" />
+    <!-- To list the apps that can be chosen for the game mode. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
+    <uses-feature android:name="android.hardware.telephony" android:required="false" />    <uses-feature android:name="android.hardware.wifi" android:required="false" />
 
     <application
         android:name=".ArqonApp"
@@ -69,6 +76,16 @@
                 <data android:pathPattern=".*\\.torrent" />
             </intent-filter>
         </activity>
+
+        <!-- The game mode: receives the chosen apps' packets (see GameVpnService). Android asks the user once. -->
+        <service
+            android:name=".gamemode.GameVpnService"
+            android:exported="false"
+            android:permission="android.permission.BIND_VPN_SERVICE">
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+        </service>
 
         <service
             android:name=".DownloadService"

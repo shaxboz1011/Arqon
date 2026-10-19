@@ -6,6 +6,23 @@
     <string name="nav_browser">Browser</string>
     <string name="nav_downloads">Downloads</string>
     <string name="nav_settings">Settings</string>
+    <string name="nav_game">Game</string>
+
+    <string name="game_title">Game mode</string>
+    <string name="game_intro">Keeps a game\'s ping steady while Arqon downloads. The game goes over the best connection; downloads and torrents use the others.</string>
+    <string name="game_switch">Protect the chosen games</string>
+    <string name="game_switch_body">Android asks once to allow a VPN connection. It is only used to see the chosen games\' traffic; nothing goes to a server of ours.</string>
+    <string name="game_pick_first">Choose at least one game below first.</string>
+    <string name="game_error">Could not start: %1$s</string>
+    <string name="game_link">Game connection: %1$s</string>
+    <string name="game_live">A game is playing now. Downloads keep off this connection while another one is available.</string>
+    <string name="game_waiting">Waiting for a game to start.</string>
+    <string name="game_flows">Open connections: %1$d TCP, %2$d UDP</string>
+    <string name="game_apps">Apps to protect</string>
+    <string name="game_apps_body">Only the apps you tick go through the game mode. Everything else on the phone is untouched.</string>
+    <string name="game_search">Search apps</string>
+    <string name="game_tag">game</string>
+    <string name="status_game">Game: %1$s</string>
 
     <string name="panel_title">Connections</string>
     <string name="panel_none">No connection found. Turn on Wi-Fi or mobile data.</string>

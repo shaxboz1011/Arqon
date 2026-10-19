@@ -21,10 +21,15 @@ Install `app-debug.apk` (build it with `./gradlew :app:assembleDebug`, or take t
 - The torrent engine was tested with local seeders and against a real swarm (a Debian torrent over Wi-Fi on a computer).
   Dual-SIM, the browser, the screens and the background service have **not yet been tested on a phone**.
 - Speed test on the Panel: every connection alone, all together, and the measured gain.
-- A notification (and an optional label over other apps, games included) says which connections are combined. It does not
-  change a game's own traffic: that still uses one connection until the game mode below exists.
-- Not done yet: game mode (steering game traffic over the best link needs a VpnService), DHT, incoming connections, a language
-  picker inside the app (it follows the phone's language: English, Uzbek, Russian).
+- A notification (and an optional label over other apps, games included) says which connections are combined.
+- **Game mode** (the *Game* tab): the apps you tick go through a VPN tunnel on the phone (Android has no other way to see a game's
+  traffic). `core/vpn` re-creates every TCP connection and UDP conversation as an ordinary socket on the best link (shortest answer
+  time, mobile data only when it is clearly better), and Arqon's own downloads keep to the other links while a game sends data. This
+  keeps a download from filling the connection a game plays on. It does **not** add speed to a game and there is no server of ours in
+  the path. With only one link, downloads share it. The packet code is tested against real sockets; on a phone it has not been
+  tried with real games yet. IPv4 only; pings (ICMP) are not carried.
+- Not done yet: DHT, incoming connections, a language picker inside the app (it follows the phone's language: English, Uzbek,
+  Russian).
 
 ## Build
 

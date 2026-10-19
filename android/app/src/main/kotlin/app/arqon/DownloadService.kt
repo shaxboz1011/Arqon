@@ -50,7 +50,7 @@ class DownloadService : Service() {
                 val manager = getSystemService(NotificationManager::class.java)
                 while (isActive) {
                     val running = app.downloads.summary.value.running
-                    if (!app.settings.keepStatus.value && running == 0) {
+                    if (!app.settings.keepStatus.value && running == 0 && !app.gameMode.state.value.running) {
                         stopSelf()
                         break
                     }
@@ -136,6 +136,8 @@ internal fun ArqonApp.statusDetail(): String {
     val parts = ArrayList<String>()
     parts += if (speed > 0) "↓ " + Format.speed(speed) else getString(R.string.status_idle)
     if (running > 0) parts += getString(R.string.status_downloads, running)
+    val game = gameMode.state.value
+    if (game.running) parts += getString(R.string.status_game, (game.linkName ?: "–") + (game.pingMillis?.let { " $it ms" } ?: ""))
     return parts.joinToString(" · ")
 }
 

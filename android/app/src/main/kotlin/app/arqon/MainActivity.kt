@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.Icon
@@ -41,6 +42,7 @@ import app.arqon.ui.ArqonTheme
 import app.arqon.ui.Bg
 import app.arqon.ui.BrowserScreen
 import app.arqon.ui.DownloadsScreen
+import app.arqon.ui.GameScreen
 import app.arqon.ui.Muted
 import app.arqon.ui.Panel
 import app.arqon.ui.PanelScreen
@@ -72,6 +74,10 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         if (app.settings.keepStatus.value) DownloadService.ensureRunning(this)
+        // the game mode was on when Arqon was closed: bring it back (Android already has the user's consent for the VPN)
+        if (app.settings.gameMode.value && !app.gameMode.state.value.running && android.net.VpnService.prepare(this) == null) {
+            app.gameMode.start()
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -123,6 +129,7 @@ class MainActivity : ComponentActivity() {
                     NavigationBarItem(tab == 0, { tab = 0 }, { Icon(Icons.Filled.Wifi, null) }, label = { Text(stringResource(R.string.nav_panel)) }, colors = colors)
                     NavigationBarItem(tab == 1, { tab = 1 }, { Icon(Icons.Filled.Language, null) }, label = { Text(stringResource(R.string.nav_browser)) }, colors = colors)
                     NavigationBarItem(tab == 2, { tab = 2 }, { Icon(Icons.Filled.Download, null) }, label = { Text(stringResource(R.string.nav_downloads)) }, colors = colors)
+                    NavigationBarItem(tab == 4, { tab = 4 }, { Icon(Icons.Filled.SportsEsports, null) }, label = { Text(stringResource(R.string.nav_game)) }, colors = colors)
                     NavigationBarItem(tab == 3, { tab = 3 }, { Icon(Icons.Filled.Settings, null) }, label = { Text(stringResource(R.string.nav_settings)) }, colors = colors)
                 }
             },
@@ -132,6 +139,7 @@ class MainActivity : ComponentActivity() {
                     0 -> PanelScreen(app)
                     1 -> BrowserScreen(app, controller, active = true)
                     2 -> DownloadsScreen(app) { text -> say(text) }
+                    4 -> GameScreen(app)
                     else -> SettingsScreen(app)
                 }
             }
