@@ -52,6 +52,37 @@ internal static class TaskbarNative
         return true;
     }
 
+    /// <summary>
+    /// What else sits on the taskbar (buttons, and on Windows 11 the weather widget next to the notification area), found through
+    /// UI Automation. It talks to Explorer, so it is slow compared with the rest: call it from a background thread, not every
+    /// second. Returns nothing when Windows does not answer; the meter is then placed as if the taskbar had no other content.
+    /// </summary>
+    public static IReadOnlyList<PixelRect> TaskbarItems(PixelRect taskbar)
+    {
+        try
+        {
+            var bar = FindWindow("Shell_TrayWnd", null);
+            if (bar == IntPtr.Zero) return [];
+            var root = System.Windows.Automation.AutomationElement.FromHandle(bar);
+            var all = root.FindAll(System.Windows.Automation.TreeScope.Descendants, System.Windows.Automation.Condition.TrueCondition);
+            var items = new List<PixelRect>();
+            foreach (System.Windows.Automation.AutomationElement element in all)
+            {
+                var r = element.Current.BoundingRectangle;
+                if (r.IsEmpty || double.IsInfinity(r.Width) || r.Width < 4 || r.Height < 4) continue;
+                if (r.Width >= taskbar.Width / 2.0 && taskbar.Width >= taskbar.Height) continue;   // containers that span the bar are not "things"
+                if (r.Height >= taskbar.Height / 2.0 && taskbar.Width < taskbar.Height) continue;
+                items.Add(new PixelRect((int)Math.Round(r.Left), (int)Math.Round(r.Top), (int)Math.Round(r.Right), (int)Math.Round(r.Bottom)));
+            }
+            return items;
+        }
+        catch (Exception ex) when (ex is System.Windows.Automation.ElementNotAvailableException or InvalidOperationException
+            or System.ComponentModel.Win32Exception or COMException or System.Runtime.InteropServices.InvalidComObjectException)
+        {
+            return [];
+        }
+    }
+
     public static bool FullscreenAppActive() =>
         SHQueryUserNotificationState(out var state) == 0 && FullscreenState.ShouldHideWidget(state);
 

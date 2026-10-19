@@ -17,11 +17,14 @@ public partial class TaskbarMeterWindow : Window
 {
     private const double WidthDip = 104, HeightDip = 32, GapDip = 6;
     private const int ThemeCheckEveryTicks = 5;
+    private const int ScanEveryTicks = 3;
 
     private readonly TaskbarMeterViewModel _vm;
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(1) };
     private IntPtr _handle;
     private int _ticks;
+    private volatile IReadOnlyList<PixelRect> _taskbarItems = [];
+    private int _scanning;
 
     public TaskbarMeterWindow(TaskbarMeterViewModel vm, Action open, Action hide)
     {
@@ -61,6 +64,20 @@ public partial class TaskbarMeterWindow : Window
             new SolidColorBrush(light ? Color.FromRgb(0x1B, 0x1F, 0x2A) : Color.FromRgb(0xF2, 0xF4, 0xFA)));
     }
 
+    /// <summary>
+    /// Looks at what else is on the taskbar every few seconds, in the background (asking Explorer is slow). The meter steps aside
+    /// for whatever sits next to the notification area, such as the weather widget of Windows 11.
+    /// </summary>
+    private void ScanTaskbarItems(PixelRect bar)
+    {
+        if (_ticks % ScanEveryTicks != 0 || Interlocked.Exchange(ref _scanning, 1) == 1) return;
+        Task.Run(() =>
+        {
+            try { _taskbarItems = TaskbarNative.TaskbarItems(bar); }
+            finally { Interlocked.Exchange(ref _scanning, 0); }
+        });
+    }
+
     /// <summary>Follows the taskbar (Explorer restarts, resolution or DPI changes) and steps aside for full-screen apps.</summary>
     private void Reposition()
     {
@@ -75,9 +92,10 @@ public partial class TaskbarMeterWindow : Window
             return;
         }
 
+        ScanTaskbarItems(bar);
         var scale = VisualTreeHelper.GetDpi(this).DpiScaleX;
         var rect = TaskbarPlacement.For(bar, tray, (int)Math.Round(WidthDip * scale), (int)Math.Round(HeightDip * scale),
-            (int)Math.Round(GapDip * scale));
+            (int)Math.Round(GapDip * scale), _taskbarItems);
         if (!IsVisible) Show();
         TaskbarNative.Place(_handle, rect);   // every tick: it also lifts us back above the taskbar if that took the top spot
     }

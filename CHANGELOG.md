@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Taskbar meter no longer covers the weather widget (or other things) that Windows 11 keeps next to the notification area: it steps to the left of them.
 - Seeding continues after a restart: finished torrents are shared again when their files are still on disk (never starts a download).
 
 ## 0.1.2
