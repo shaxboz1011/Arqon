@@ -1,10 +1,12 @@
 package app.arqon.ui
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.os.PowerManager
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -22,8 +24,12 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -31,6 +37,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import app.arqon.ArqonApp
 import app.arqon.BuildConfig
 import app.arqon.R
@@ -45,6 +54,15 @@ fun SettingsScreen(app: ArqonApp) {
     val overlay by app.settings.overlay.collectAsState()
     val context = LocalContext.current
     val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
+    // The choice is made in Android's own screen, so look again each time the user comes back.
+    var unrestricted by remember { mutableStateOf(isUnrestricted(context)) }
+    DisposableEffect(context) {
+        val owner = context as? LifecycleOwner
+        val observer = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_RESUME) unrestricted = isUnrestricted(context) }
+        owner?.lifecycle?.addObserver(observer)
+        onDispose { owner?.lifecycle?.removeObserver(observer) }
+    }
 
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Spacer(Modifier.size(6.dp))
@@ -91,6 +109,21 @@ fun SettingsScreen(app: ArqonApp) {
             }
         }
 
+        InfoCard {
+            Text(stringResource(R.string.settings_battery), fontWeight = FontWeight.Medium)
+            if (unrestricted) {
+                Text(stringResource(R.string.settings_battery_ok), color = Muted, fontSize = 13.sp)
+            } else {
+                Text(stringResource(R.string.settings_battery_body), color = Muted, fontSize = 13.sp)
+                if (Build.MANUFACTURER.equals("samsung", ignoreCase = true)) {
+                    Spacer(Modifier.size(6.dp))
+                    Text(stringResource(R.string.settings_battery_samsung), color = Muted, fontSize = 13.sp)
+                }
+                Spacer(Modifier.size(8.dp))
+                Button(onClick = { askBatteryExemption(context) }) { Text(stringResource(R.string.settings_battery_button)) }
+            }
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             InfoCard {
                 Text(stringResource(R.string.settings_notifications), fontWeight = FontWeight.Medium)
@@ -100,6 +133,18 @@ fun SettingsScreen(app: ArqonApp) {
             }
         }
         Text(stringResource(R.string.settings_about, BuildConfig.VERSION_NAME), color = Muted, fontSize = 12.sp, modifier = Modifier.padding(vertical = 12.dp))
+    }
+}
+
+private fun isUnrestricted(context: Context): Boolean =
+    (context.getSystemService(Context.POWER_SERVICE) as PowerManager).isIgnoringBatteryOptimizations(context.packageName)
+
+private fun askBatteryExemption(context: Context) {
+    val direct = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:${context.packageName}"))
+    try {
+        context.startActivity(direct)
+    } catch (_: Exception) {
+        context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
     }
 }
 

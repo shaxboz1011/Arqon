@@ -86,6 +86,11 @@
     <string name="settings_all_files_body">Позволяет Arqon сохранять в общую папку «Загрузки», где её видит ваш файловый менеджер. Без этого файлы попадают в собственную папку приложения.</string>
     <string name="settings_notifications">Разрешить уведомления</string>
     <string name="settings_notifications_body">Нужно, чтобы загрузка продолжалась в фоне.</string>
+    <string name="settings_battery">Работа без ограничений батареи</string>
+    <string name="settings_battery_body">Samsung и некоторые другие телефоны усыпляют фоновые приложения, из-за чего загрузка останавливается при выключенном экране или игре на переднем плане. Поставьте для Arqon режим «Без ограничений».</string>
+    <string name="settings_battery_ok">Батарея: без ограничений. Загрузка продолжается в фоне.</string>
+    <string name="settings_battery_button">Разрешить</string>
+    <string name="settings_battery_samsung">Samsung: Настройки, Батарея, Ограничения в фоновом режиме, Приложения, которые никогда не спят, затем добавьте Arqon.</string>
     <string name="settings_about">Arqon %1$s · бесплатно, с открытым кодом</string>
 
     <string name="notification_channel">Загрузки</string>

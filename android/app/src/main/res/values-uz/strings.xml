@@ -86,6 +86,11 @@
     <string name="settings_all_files_body">Arqon ochiq Yuklashlar papkasiga saqlay oladi va fayl menejeringiz uni ko\'rsatadi. Ruxsatsiz fayllar ilovaning o\'z papkasiga tushadi.</string>
     <string name="settings_notifications">Bildirishnomalarga ruxsat</string>
     <string name="settings_notifications_body">Fonda yuklashni davom ettirish uchun kerak.</string>
+    <string name="settings_battery">Batareya cheklovisiz ishlash</string>
+    <string name="settings_battery_body">Samsung va ba\'zi telefonlar fondagi ilovalarni uxlatadi, shu sabab ekran o\'chganda yoki o\'yin oldinda bo\'lganda yuklash to\'xtaydi. Arqon\'ni \"Cheklanmagan\" qilib qo\'ying.</string>
+    <string name="settings_battery_ok">Batareya: cheklanmagan. Yuklash fonda davom etadi.</string>
+    <string name="settings_battery_button">Ruxsat berish</string>
+    <string name="settings_battery_samsung">Samsung: Sozlamalar, Batareya, Fondagi cheklovlar, Hech qachon uxlamaydigan ilovalar, so\'ng Arqon\'ni qo\'shing.</string>
     <string name="settings_about">Arqon %1$s · bepul va ochiq kodli</string>
 
     <string name="notification_channel">Yuklashlar</string>

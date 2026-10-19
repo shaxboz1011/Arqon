@@ -86,6 +86,11 @@
     <string name="settings_all_files_body">Lets Arqon save into the public Downloads folder, where your file manager shows it. Without it, files go to the app\'s own folder.</string>
     <string name="settings_notifications">Allow notifications</string>
     <string name="settings_notifications_body">Needed to keep downloading in the background.</string>
+    <string name="settings_battery">Run without battery limits</string>
+    <string name="settings_battery_body">Samsung and some other phones put background apps to sleep, which stops downloads when the screen is off or a game is in front. Set Arqon to Unrestricted.</string>
+    <string name="settings_battery_ok">Battery: unrestricted. Downloads keep running in the background.</string>
+    <string name="settings_battery_button">Allow</string>
+    <string name="settings_battery_samsung">Samsung: Settings, Battery, Background usage limits, Never sleeping apps, then add Arqon.</string>
     <string name="settings_about">Arqon %1$s · free and open source</string>
 
     <string name="notification_channel">Downloads</string>
