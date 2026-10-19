@@ -19,9 +19,22 @@ android {
         buildConfigField("String", "STATS_URL", "\"${project.findProperty("statsUrl") ?: ""}\"")
     }
 
+    // The release key comes from the environment (the android-release workflow sets it); a local release build without it is unsigned.
+    signingConfigs {
+        create("release") {
+            System.getenv("ARQON_KEYSTORE")?.let { path ->
+                storeFile = file(path)
+                storePassword = System.getenv("ARQON_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ARQON_KEY_ALIAS")
+                keyPassword = System.getenv("ARQON_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            if (System.getenv("ARQON_KEYSTORE") != null) signingConfig = signingConfigs.getByName("release")
         }
     }
 

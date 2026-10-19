@@ -49,3 +49,18 @@ Install `app-debug.apk` (build it with `./gradlew :app:assembleDebug`, or take t
 ## Build
 
 JDK 21 and the Android SDK (platform 35). `./gradlew :core:test` runs the tests, `./gradlew :app:assembleDebug` builds the APK.
+
+## Releasing
+
+A release APK must always be signed with the same key, or phones refuse to update it. Make the key once and keep it safe (lose it and
+nobody can update):
+
+```
+keytool -genkeypair -v -keystore arqon.jks -alias arqon -keyalg RSA -keysize 4096 -validity 10000
+base64 -w0 arqon.jks            # the text to store as ARQON_KEYSTORE_BASE64
+```
+
+In the repository settings (Secrets and variables, Actions) add `ARQON_KEYSTORE_BASE64`, `ARQON_KEYSTORE_PASSWORD`, `ARQON_KEY_ALIAS`
+and `ARQON_KEY_PASSWORD`. Then push a tag such as `android-v0.2.0`: the `android-release` workflow runs the tests, builds the signed
+`Arqon.apk` and publishes it with its SHA-256 as a pre-release. A local `./gradlew :app:assembleRelease` without these variables gives an
+unsigned APK.
