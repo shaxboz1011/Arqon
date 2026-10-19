@@ -39,6 +39,8 @@
                                 Visibility="{Binding CanStartNow, Converter={StaticResource B2V}}" />
                         <Button Style="{StaticResource IconButton}" Content="&#xE768;" Command="{Binding ResumeCommand}" ToolTip="{DynamicResource S.Dl.Resume}"
                                 Visibility="{Binding CanResume, Converter={StaticResource B2V}}" />
+                        <Button Style="{StaticResource IconButton}" Content="&#xE8FD;" Command="{Binding ChooseFilesCommand}" ToolTip="{DynamicResource S.Dl.Files}"
+                                Visibility="{Binding CanChooseFiles, Converter={StaticResource B2V}}" />
                         <Button Style="{StaticResource IconButton}" Content="&#xE8B7;" Command="{Binding OpenFolderCommand}" ToolTip="{DynamicResource S.Dl.OpenFolder}" />
                         <Button Style="{StaticResource IconButton}" Content="&#xE711;" Command="{Binding CancelCommand}" ToolTip="{DynamicResource S.Dl.Remove}" />
                     </StackPanel>

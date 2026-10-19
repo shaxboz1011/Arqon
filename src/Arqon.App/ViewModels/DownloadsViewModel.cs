@@ -31,6 +31,8 @@ public sealed class DownloadItemViewModel : ViewModelBase
     private TorrentHandle? _torrent;
     private TorrentPhase _phase = TorrentPhase.Stopped;
     private bool _spaceChecked;
+    private bool _selectionApplied;
+    private int _fileCount;
     private string? _spaceProblem;
 
     public DownloadItemViewModel(DownloadsViewModel owner, DownloadRecord record)
@@ -51,6 +53,7 @@ public sealed class DownloadItemViewModel : ViewModelBase
         StartNowCommand = new RelayCommand(() => _owner.StartNow(this), () => _state == DownloadState.Queued);
         CancelCommand = new RelayCommand(Cancel);
         OpenFolderCommand = new RelayCommand(OpenFolder);
+        ChooseFilesCommand = new RelayCommand(() => _ = ChooseFilesAsync());
     }
 
     /// <summary>Fixed-value item for the demo data set.</summary>
@@ -80,6 +83,7 @@ public sealed class DownloadItemViewModel : ViewModelBase
     public RelayCommand StartNowCommand { get; }
     public RelayCommand CancelCommand { get; }
     public RelayCommand OpenFolderCommand { get; }
+    public RelayCommand ChooseFilesCommand { get; }
 
     public string Name => Record.Name;
     public DownloadState State => _state;
@@ -91,6 +95,7 @@ public sealed class DownloadItemViewModel : ViewModelBase
     public bool CanPause => IsDownloading || IsQueued;
     public bool CanResume => IsPaused || IsFailed;
     public bool CanStartNow => IsQueued;
+    public bool CanChooseFiles => IsTorrent && !IsDone && _fileCount > 1;
     public double Percent => _total > 0 ? Math.Min(100, _done * 100.0 / _total) : 0;
     public double Done => _done;
     public IReadOnlyList<BarPart> Parts => _parts;
@@ -170,6 +175,7 @@ public sealed class DownloadItemViewModel : ViewModelBase
         SetState(DownloadState.Downloading);
         _error = "";
         _phase = TorrentPhase.Metadata;
+        _selectionApplied = false;
         _cts = new CancellationTokenSource();
         var token = _cts.Token;
         try
@@ -182,6 +188,7 @@ public sealed class DownloadItemViewModel : ViewModelBase
 
             while (true)
             {
+                await ApplySavedSelectionAsync();
                 var snapshot = _torrent.Snapshot();
                 ApplyTorrent(snapshot);
                 if (snapshot.Phase == TorrentPhase.Complete) break;
@@ -221,6 +228,43 @@ public sealed class DownloadItemViewModel : ViewModelBase
         }
         _owner.Persist();
         _owner.OnEnded(this);
+    }
+
+    /// <summary>
+    /// The files are known once the metadata is there (at once for a .torrent file, later for a magnet link). The choice made
+    /// earlier is applied then, before any data of an unwanted file is requested for long.
+    /// </summary>
+    private async Task ApplySavedSelectionAsync()
+    {
+        if (_torrent is null || _selectionApplied) return;
+        var files = _torrent.Files;
+        if (files.Count == 0) return;
+        _selectionApplied = true;
+        if (Record.Files is { } chosen) await _torrent.SelectFilesAsync(chosen.ToHashSet());
+        if (_fileCount != files.Count)
+        {
+            _fileCount = files.Count;
+            Raise(nameof(CanChooseFiles));
+        }
+    }
+
+    private async Task ChooseFilesAsync()
+    {
+        if (_torrent is null) return;
+        var files = _torrent.Files;
+        if (files.Count < 2) return;
+        var window = new Views.TorrentFilesWindow(Record.Name, files, Record.Files?.ToHashSet())
+        {
+            Owner = Application.Current.MainWindow,
+        };
+        if (window.ShowDialog() != true) return;
+
+        var chosen = window.Selected;
+        // Everything chosen is stored as "all" so a later change of the file list cannot leave anything out.
+        Record = Record with { Files = chosen.Count == files.Count ? null : chosen.Order().ToList() };
+        _owner.Persist();
+        try { await _torrent.SelectFilesAsync(chosen); }
+        catch (Exception ex) when (ex is not OutOfMemoryException) { _error = ex.Message; Raise(nameof(Error)); Raise(nameof(HasError)); }
     }
 
     private async Task StopTorrentQuietly()

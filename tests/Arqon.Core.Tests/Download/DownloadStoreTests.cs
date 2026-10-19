@@ -46,6 +46,19 @@ public sealed class DownloadStoreTests : IDisposable
     }
 
     [Fact]
+    public void The_files_chosen_in_a_torrent_survive_a_restart_and_an_old_list_without_them_still_loads()
+    {
+        var path = Path.Combine(_dir, "d.json");
+        var store = new DownloadStore(path);
+        store.Save([new DownloadRecord("magnet:?xt=urn:btih:AAAA", @"C:\Down", "Pack", false, DownloadKind.Torrent, [0, 2, 5])]);
+
+        Assert.Equal([0, 2, 5], store.Load()[0].Files);
+
+        File.WriteAllText(path, """[{"Url":"magnet:?xt=urn:btih:BBBB","Path":"C:/Down","Name":"Old","Completed":false,"Kind":1}]""");
+        Assert.Null(store.Load()[0].Files);   // null means "all files"
+    }
+
+    [Fact]
     public void Torrent_records_round_trip_and_are_keyed_by_their_source_not_their_folder()
     {
         var store = new DownloadStore(Path.Combine(_dir, "d.json"));

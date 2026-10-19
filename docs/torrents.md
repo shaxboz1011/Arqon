@@ -39,7 +39,7 @@ Incoming connections cannot be steered: they arrive on whichever adapter the pee
 
 - Torrents take part in the download queue ("downloads at the same time" in Settings).
 - Before a download starts, the free space of the drive is checked against what is still to download (plus a 512 MB reserve for Windows); if it does not fit the download stops with a message instead of failing half way. This applies to plain downloads too. A finished download or torrent raises a tray notification.
-- You cannot choose single files inside a multi-file torrent yet: the whole torrent is downloaded.
+- **Choosing files**: a torrent with several files has a file-list button (while it is in the engine, i.e. started in this session) that opens a window with a check box per file. Only the checked files are downloaded, counted in the size and progress, and the torrent is finished when they are there. The choice is saved with the download and applied again after a restart; if everything is checked it is stored as "all". The torrent starts with all files and the choice takes effect when you confirm it, so a few pieces of an unwanted file may already have been fetched; files already on disk are not deleted. At least one file must stay checked.
 - A finished torrent is stopped: Arqon does not stay on to seed. Uploading still happens while it downloads (that is how the protocol works).
 - While the game protection holds a link back for a running game, all torrents together are held to that same speed, so a torrent cannot undo the protection.
 - The engine is created when the first torrent is added, not at start-up. It opens a listening port, so Windows may show a **firewall question the first time**.
@@ -53,4 +53,5 @@ Incoming connections cannot be steered: they arrive on whichever adapter the pee
 - Unit tests: input detection, identity by info hash, folder choice, link rotation, the socket connector (each connection really leaves from the next link's address).
 - Integration test: a seeder and a downloader engine on loopback; the file arrives intact and the downloader's connection went through a link chosen by Arqon.
 - Real run (2026-10-18, Wi-Fi + USB phone, official Debian netinst torrent, speed capped at 1.5 MB/s): 40 peers, 35 seeds; both adapters carried the data (Wi-Fi 24 MB, phone 35 MB in 45 s).
-- Not tested: a full multi-gigabyte download, DHT-only magnet links, the screen driven with real clicks.
+- Integration test: a three-file torrent from a local seeder with one file unchecked: the other two arrive intact, the size counts only them, the third is not downloaded.
+- Not tested: a full multi-gigabyte download, DHT-only magnet links, the screen driven with real clicks (this includes the file-choice window: it compiles and its logic is covered through the engine, but it was not opened by hand).

@@ -108,6 +108,54 @@ public sealed class TorrentEngineTests : IDisposable
     }
 
     [Fact]
+    public async Task Only_the_chosen_files_of_a_multi_file_torrent_are_downloaded_and_counted()
+    {
+        var seedRoot = Path.Combine(_dir, "seed-multi");
+        var pack = Path.Combine(seedRoot, "pack");
+        Directory.CreateDirectory(pack);
+        var sizes = new Dictionary<string, int> { ["a.bin"] = 700_000, ["b.bin"] = 900_000, ["c.bin"] = 500_000 };
+        var contents = new Dictionary<string, byte[]>();
+        var seed = 11;
+        foreach (var (name, size) in sizes)
+        {
+            contents[name] = new byte[size];
+            new Random(seed++).NextBytes(contents[name]);
+            await File.WriteAllBytesAsync(Path.Combine(pack, name), contents[name]);
+        }
+        var torrentPath = Path.Combine(_dir, "pack.torrent");
+        await File.WriteAllBytesAsync(torrentPath, (await new TorrentCreator().CreateAsync(new TorrentFileSource(pack))).Encode());
+
+        var seederPort = FreePort();
+        using var seeder = new TorrentEngine(new TorrentEngineOptions(Path.Combine(_dir, "cache-seed-m"), ListenPort: seederPort, EnableDht: false,
+            AllowLocalPeerDiscovery: false));
+        var seeding = await seeder.AddFileAsync(torrentPath, seedRoot);
+        await seeding.StartAsync();
+        await Until(seeding.Snapshot, s => s.Phase == TorrentPhase.Complete, TimeSpan.FromSeconds(30));
+
+        var saveDir = Path.Combine(_dir, "downloaded-m");
+        using var leecher = new TorrentEngine(new TorrentEngineOptions(Path.Combine(_dir, "cache-leech-m"), EnableDht: false,
+            AllowLocalPeerDiscovery: false));
+        var handle = await leecher.AddFileAsync(torrentPath, saveDir);
+        Assert.Equal(["a.bin", "b.bin", "c.bin"], handle.Files.Select(f => Path.GetFileName(f.Path)).Order());
+        var wanted = handle.Files.Where(f => Path.GetFileName(f.Path) != "b.bin").Select(f => f.Index).ToHashSet();
+        await handle.SelectFilesAsync(wanted);
+        await handle.StartAsync();
+        await handle.AddPeerAsync(new IPEndPoint(IPAddress.Loopback, seederPort));
+
+        var state = await Until(handle.Snapshot, s => s.Phase == TorrentPhase.Complete, TimeSpan.FromSeconds(60));
+
+        Assert.Equal(TorrentPhase.Complete, state.Phase);
+        Assert.Equal(sizes["a.bin"] + sizes["c.bin"], state.Size);
+        Assert.Equal(state.Size, state.Done);
+        await handle.StopAsync();
+        Assert.Equal(contents["a.bin"], await File.ReadAllBytesAsync(Path.Combine(saveDir, "pack", "a.bin")));
+        Assert.Equal(contents["c.bin"], await File.ReadAllBytesAsync(Path.Combine(saveDir, "pack", "c.bin")));
+        var skipped = Path.Combine(saveDir, "pack", "b.bin");
+        Assert.True(!File.Exists(skipped) || !(await File.ReadAllBytesAsync(skipped)).AsSpan().SequenceEqual(contents["b.bin"]),
+            "the file that was not chosen must not have been downloaded");
+    }
+
+    [Fact]
     public async Task A_magnet_link_that_is_not_valid_is_refused_with_a_clear_error()
     {
         using var engine = new TorrentEngine(new TorrentEngineOptions(Path.Combine(_dir, "cache"), EnableDht: false));

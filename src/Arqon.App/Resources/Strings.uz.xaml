@@ -86,6 +86,13 @@
     <sys:String x:Key="S.Dl.FolderReset">Avtomatik papkaga qaytarish (Windows Yuklashlar)</sys:String>
     <sys:String x:Key="S.Dl.BadMagnet">Bu magnet link noto'g'ri.</sys:String>
     <sys:String x:Key="S.Dl.BadTorrent">Bu .torrent fayl emas yoki buzilgan.</sys:String>
+    <sys:String x:Key="S.Dl.Files">Fayllar</sys:String>
+    <sys:String x:Key="S.Dl.Files.Title">Fayllarni tanlash</sys:String>
+    <sys:String x:Key="S.Dl.Files.All">Hammasini tanlash</sys:String>
+    <sys:String x:Key="S.Dl.Files.None">Hech birini</sys:String>
+    <sys:String x:Key="S.Dl.Files.Cancel">Bekor qilish</sys:String>
+    <sys:String x:Key="S.Dl.Files.Ok">Shularni yuklash</sys:String>
+    <sys:String x:Key="S.Dl.Files.Summary">{1} ta fayldan {0} tasi · {2}</sys:String>
     <sys:String x:Key="S.Dl.AlreadyAdded">Bu torrent ro'yxatda allaqachon bor.</sys:String>
     <sys:String x:Key="S.Dl.TorrentDownloadFailed">.torrent faylni yuklab bo'lmadi: {0}</sys:String>
     <sys:String x:Key="S.Dl.State.Metadata">Torrent ma'lumoti olinmoqda</sys:String>

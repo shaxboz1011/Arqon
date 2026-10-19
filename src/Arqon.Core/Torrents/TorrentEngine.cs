@@ -19,6 +19,9 @@ public sealed record TorrentEngineOptions(
     bool AllowLocalPeerDiscovery = true,
     IPAddress? ListenAddress = null);
 
+/// <summary>One file inside a torrent; <see cref="Index"/> is its position in the torrent's file list.</summary>
+public sealed record TorrentFileInfo(int Index, string Path, long Size);
+
 public enum TorrentPhase { Metadata, Checking, Downloading, Complete, Stopped, Error }
 
 public sealed record TorrentSnapshot(
@@ -197,6 +200,21 @@ public sealed class TorrentHandle
 
     public Task StartAsync() => _manager.StartAsync();
 
+    /// <summary>The files of the torrent; empty while the metadata of a magnet link has not arrived.</summary>
+    public IReadOnlyList<TorrentFileInfo> Files =>
+        _manager.HasMetadata ? _manager.Files.Select((f, i) => new TorrentFileInfo(i, f.Path, f.Length)).ToList() : [];
+
+    /// <summary>Downloads only the files with these indexes (null: all of them). The other files are left alone.</summary>
+    public async Task SelectFilesAsync(IReadOnlySet<int>? selected)
+    {
+        if (!_manager.HasMetadata) return;
+        for (var i = 0; i < _manager.Files.Count; i++)
+        {
+            var wanted = selected is null || selected.Contains(i);
+            await _manager.SetFilePriorityAsync(_manager.Files[i], wanted ? Priority.Normal : Priority.DoNotDownload).ConfigureAwait(false);
+        }
+    }
+
     /// <summary>Stops transferring and writes the resume data, so the torrent continues where it stopped.</summary>
     public Task StopAsync() => _manager.StopAsync();
 
@@ -209,16 +227,20 @@ public sealed class TorrentHandle
     public TorrentSnapshot Snapshot()
     {
         var m = _manager;
-        var size = m.Torrent?.Size ?? m.MagnetLink?.Size ?? 0;
         var name = m.Torrent?.Name ?? m.MagnetLink?.Name ?? "";
-        var done = (long)(size * Math.Clamp(m.Progress, 0, 100) / 100.0);
+        // Only the chosen files count: their size is the total, and the torrent is finished when they are all there.
+        var size = m.HasMetadata
+            ? m.Files.Where(f => f.Priority != Priority.DoNotDownload).Sum(f => f.Length)
+            : m.MagnetLink?.Size ?? 0;
+        var wantedDone = m.HasMetadata && m.HashChecked && size > 0 && m.PartialProgress >= 100;
+        var done = (long)(size * Math.Clamp(m.PartialProgress, 0, 100) / 100.0);
 
         var phase = m.State switch
         {
             TorrentState.Error => TorrentPhase.Error,
             TorrentState.Metadata or TorrentState.FetchingHashes => TorrentPhase.Metadata,
             TorrentState.Hashing or TorrentState.HashingPaused => TorrentPhase.Checking,
-            _ when m.HasMetadata && m.Complete && m.HashChecked => TorrentPhase.Complete,
+            _ when wantedDone => TorrentPhase.Complete,
             TorrentState.Seeding => TorrentPhase.Complete,
             TorrentState.Starting or TorrentState.Downloading => TorrentPhase.Downloading,
             _ => TorrentPhase.Stopped,
