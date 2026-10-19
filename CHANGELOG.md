@@ -4,12 +4,12 @@
 
 **Windows**
 
-- The taskbar meter no longer lands on the weather widget or on taskbar buttons: it takes the free space nearest the notification area that is big enough (shrinking a little if needed), and hides instead of covering anything. Right-click → *Copy taskbar layout* puts what it sees on the clipboard for bug reports.
+- The taskbar meter no longer lands on the weather widget or on taskbar buttons: it takes the free space nearest the notification area that is big enough (shrinking a little if needed), and hides instead of covering anything. You can also drag it along the bar (the place is remembered; right-click → *Reset position*), and right-click → *Copy taskbar layout* puts what it sees on the clipboard for bug reports.
 - Speed test on the dashboard: each connection alone, all together, and the measured gain.
 - Update check (GitHub, twice a day, can be switched off) with a notice and a download button in Settings.
 - Daily data limit: a notice at 80% and when it is reached.
 - *Usage → Export CSV*.
-- The sidebar and Settings show the real version.
+- The sidebar and Settings show the real version; the tray icon's tip shows the live speed.
 
 **Android (preview, in `android/`)**
 
