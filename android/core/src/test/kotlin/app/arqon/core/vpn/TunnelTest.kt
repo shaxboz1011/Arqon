@@ -218,6 +218,50 @@ class TunnelTest {
     }
 
     @Test
+    fun `an answer from another port than the one written to still reaches the game`() {
+        val server = DatagramSocket(0, InetAddress.getByName("127.0.0.1"))
+        val other = DatagramSocket(0, InetAddress.getByName("127.0.0.1"))   // the game server answers from a different port
+        thread(isDaemon = true) {
+            val packet = DatagramPacket(ByteArray(100), 100)
+            server.receive(packet)
+            val answer = "hi".toByteArray()
+            other.send(DatagramPacket(answer, answer.size, packet.socketAddress))
+        }
+        val ping = "ping".toByteArray()
+        send(PacketBuilder.udp(client, 50001, loopback, server.localPort, ping, 0, ping.size))
+        val packet = next()
+        val udp = UdpDatagram(Ipv4(packet, packet.size))
+        assertEquals(other.localPort, udp.srcPort)
+        assertEquals(50001, udp.dstPort)
+        assertEquals("hi", String(packet, udp.payloadOffset, udp.payloadLength))
+        server.close(); other.close()
+    }
+
+    @Test
+    fun `a port that is reused for a new connection starts a new connection`() {
+        val server = ServerSocket(0, 5, InetAddress.getByName("127.0.0.1"))
+        val accepted = java.util.concurrent.atomic.AtomicInteger()
+        thread(isDaemon = true) {
+            while (!server.isClosed) {
+                try {
+                    val s = server.accept()
+                    accepted.incrementAndGet()
+                    thread(isDaemon = true) { try { while (s.getInputStream().read() >= 0) { } } catch (_: Exception) { } }
+                } catch (_: Exception) { }
+            }
+        }
+        val port = server.localPort
+        send(PacketBuilder.tcp(client, 45000, loopback, port, 100, 0, SYN, 65535))
+        assertEquals(SYN or ACK, nextTcp().flags)
+        send(PacketBuilder.tcp(client, 45000, loopback, port, 9000, 0, SYN, 65535))   // the same port, a different connection
+        var seen: TcpSegment
+        do { seen = nextTcp() } while (seen.flags and SYN == 0)   // skip the reset of the old one
+        assertEquals(9001L, seen.ack)
+        assertEquals(2, accepted.get())
+        server.close()
+    }
+
+    @Test
     fun `without a link nothing is carried`() {
         val none = PacketPipe()
         val back = PacketPipe()

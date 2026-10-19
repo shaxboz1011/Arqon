@@ -55,7 +55,7 @@ Arqon puts **all of them to work together**:
 | 🎮 | **Games stay smooth.** Arqon notices a running game, watches its ping, and slows downloads *only on the game's link*, *only as much as needed*, then gives the speed back. | Game guard with automatic recovery |
 | 🌍 | **Every app can benefit.** *System mode* spreads the connections of Telegram, Chrome, Steam and others over your links. | 40 parallel downloads in **5.3 s** instead of 11.3 s |
 | 🧲 | **Torrents too.** Peer connections are spread over every link. Paste a magnet link or open a `.torrent`, and pick which files you want. | Real Debian torrent: both adapters carried data |
-| 🔒 | **Nothing hidden.** No account, no ads, no telemetry. | MIT licence, read the code |
+| 🔒 | **Nothing hidden.** No account, no ads, no tracking. | MIT licence, read the code |
 
 > [!IMPORTANT]
 > Arqon adds bandwidth only when each link has its **own** way to the internet, for example Wi-Fi from one router plus a phone's mobile data. Two adapters behind the *same* router share one line and give no gain.
@@ -158,6 +158,17 @@ Everything is in the window, but these options exist:
 
 In Settings, **Open torrents and magnet links with Arqon** registers it for `.torrent` files and `magnet:` links (current user only, no administrator rights, and it never takes over another program's default).
 
+## 📱 Android (preview)
+
+The [`android/`](android/README.md) folder holds an Android app, written in Kotlin, that does for a phone what Arqon does on Windows: it asks Android for Wi-Fi and for each SIM card at the same time and spreads downloads, torrents and browser downloads over all of them. It also has:
+
+- a **browser that shows websites as a computer does** (some sites hide download links from phones),
+- a **game mode**: the games you choose go over the best connection while Arqon's downloads keep off it,
+- a **speed test**: each connection alone, all together, and the measured gain,
+- **data usage** (today, this month, per app), a **speed meter** in the notification, a daily limit, and shortcuts to the phone's 5G / 4G network-mode screen.
+
+It is a preview and there is no release yet. Whether the second SIM can carry data next to the first depends on the phone (many phones allow only one SIM for data at a time); the app shows exactly what Android gives it.
+
 ## ❓ FAQ
 
 <details>
@@ -212,7 +223,7 @@ cd Arqon
 
 dotnet run --project src/Arqon.App            # run with your real adapters
 dotnet run --project src/Arqon.App -- --demo  # run with two pretend connections
-dotnet test                                    # 402 tests
+dotnet test                                    # 458 tests
 
 # one self-contained Arqon.exe (about 75 MB) in publish\win-x64
 powershell -ExecutionPolicy Bypass -File tools\build.ps1
@@ -233,6 +244,9 @@ powershell -ExecutionPolicy Bypass -File tools\build.ps1
 | Taskbar speed meter with hover totals | ✅ Done (tested on Windows 10, bottom taskbar) |
 | Safe game mode (system mode off and driver unloaded while a game runs) | ✅ Done (tested with a fake game, not a real anti-cheat) |
 | Speed unit switch (Mbit/s or MB/s) | ✅ Done |
+| Speed test: each connection alone, all together, and the measured gain | ✅ Done |
+| Update check (GitHub, can be switched off), daily data limit warning, usage export to CSV | ✅ Done |
+| **Android app** (Wi-Fi + SIM cards where the phone allows it, torrents, desktop-mode browser, game mode, data usage and speed meter) | 🧪 Preview in [`android/`](android/README.md): tested on two phones, no release yet |
 | Interface in Uzbek, English and Russian | ✅ Done (more languages welcome) |
 | Torrents and magnet links over every link; choose folder; choose files; optional seeding with a share ratio, also after a restart; open from Windows | ✅ Done (real Debian torrent over Wi-Fi + phone) |
 | **System mode** (speed up Telegram, Chrome, every app) | 🧪 Works in a first real test (Wi-Fi + USB phone). Not yet tested with a game or over a long session |
@@ -243,7 +257,7 @@ powershell -ExecutionPolicy Bypass -File tools\build.ps1
 
 ## 🔒 Security
 
-- **No telemetry, no account, no update pings.** Arqon connects only to what you ask for, plus: the link monitor opens a connection to `1.1.1.1` / `8.8.8.8` (port 443) to measure ping, and torrents contact public trackers and the DHT, as every torrent client does.
+- **No telemetry, no account.** Arqon connects only to what you ask for, plus: the link monitor opens a connection to `1.1.1.1` / `8.8.8.8` (port 443) to measure ping, torrents contact public trackers and the DHT, as every torrent client does, and twice a day it asks GitHub whether a newer version exists (switch it off in Settings). The Android app can send one small anonymous usage report a day, but only if you allow it, and the open-source build has no server to send it to. Details: [docs/privacy.md](docs/privacy.md).
 - Changes to Windows (registry, driver) are explained first and reversible. System mode is off by default and fails open.
 - `Arqon.exe` is **not code-signed yet**, so SmartScreen warns. Verify the SHA-256 or build it yourself from this source. Free code signing for open-source projects is planned.
 - Found a vulnerability? Please read [SECURITY.md](SECURITY.md).

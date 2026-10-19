@@ -34,7 +34,11 @@ class ArqonApp : Application() {
         settings = AppSettings(this)
         links = AndroidLinkManager(this, settings, scope)
         gameMode = app.arqon.gamemode.GameMode(this, settings, links, scope)
-        downloads = DownloadCenter(this, links, settings, scope) { summary -> if (summary.running > 0) DownloadService.ensureRunning(this) }
+        downloads = DownloadCenter(
+            this, links, settings, scope,
+            onActivity = { summary -> if (summary.running > 0) DownloadService.ensureRunning(this) },
+            onFinished = { item -> app.arqon.download.DoneNotification.show(this, item.title) },
+        )
         speedTester = app.arqon.net.SpeedTester(links, scope)
         usage = app.arqon.meter.UsageMonitor(this, settings, scope)
         usage.start()

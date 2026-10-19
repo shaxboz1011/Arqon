@@ -49,6 +49,7 @@ internal class TcpFlow(
 
     private var state = State.CONNECTING
     private var isn = 0L
+    private var clientIsn = 0L
     private var rcvNext = 0L
     private var sndNext = 0L
     private var sndUna = 0L
@@ -80,6 +81,7 @@ internal class TcpFlow(
     /** The app's SYN: remember its numbers, open the real connection, and answer with SYN+ACK once that worked. */
     fun start(syn: TcpSegment) {
         lock.withLock {
+            clientIsn = syn.seq
             rcvNext = (syn.seq + 1) and MASK
             clientWindow = syn.window
             mss = minOf(OUR_MSS, syn.mssOption() ?: 536)
@@ -121,6 +123,9 @@ internal class TcpFlow(
         synAckAt = clock()
     }
 
+    /** True when [syn] opens a different connection than this one although it uses the same addresses and ports (a port that was reused). */
+    fun isReplacedBy(syn: TcpSegment): Boolean = lock.withLock { syn.seq != clientIsn }
+
     /** A segment of the app for this connection. */
     fun onSegment(t: TcpSegment) {
         lock.withLock {
@@ -159,11 +164,13 @@ internal class TcpFlow(
                     bytesUp += length
                 }
             }
-            if (t.flags and FIN != 0 && !finReceived && ((t.seq + t.payloadLength) and MASK) == rcvNext) {
-                finReceived = true
-                rcvNext = (rcvNext + 1) and MASK
-                outgoing.add(FIN_MARK)
-                needAck = true
+            if (t.flags and FIN != 0) {
+                if (!finReceived && ((t.seq + t.payloadLength) and MASK) == rcvNext) {
+                    finReceived = true
+                    rcvNext = (rcvNext + 1) and MASK
+                    outgoing.add(FIN_MARK)
+                }
+                needAck = true   // also for a repeated FIN: the app asks again when it did not see our answer
             }
             if (needAck) sendAck()
             finishIfDone()

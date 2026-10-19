@@ -13,8 +13,8 @@ android {
         // Android 8.0: the first version with requestNetwork(request, callback, timeout), which is how each network is asked for.
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
         // Where anonymous usage reports go (only if the user agrees). Empty = this build cannot send any: -PstatsUrl=https://...
         buildConfigField("String", "STATS_URL", "\"${project.findProperty("statsUrl") ?: ""}\"")
     }

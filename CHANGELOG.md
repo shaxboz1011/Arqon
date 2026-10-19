@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.2.0
+
+**Windows**
+
+- The taskbar meter no longer lands on the weather widget or on taskbar buttons: it takes the free space nearest the notification area that is big enough (shrinking a little if needed), and hides instead of covering anything. Right-click → *Copy taskbar layout* puts what it sees on the clipboard for bug reports.
+- Speed test on the dashboard: each connection alone, all together, and the measured gain.
+- Update check (GitHub, twice a day, can be switched off) with a notice and a download button in Settings.
+- Daily data limit: a notice at 80% and when it is reached.
+- *Usage → Export CSV*.
+- The sidebar and Settings show the real version.
+
+**Android (preview, in `android/`)**
+
+- Game mode: the chosen games go through a VPN tunnel over the best connection while downloads keep off that connection.
+- Data usage screen (today, this month, last 7 days, per app), speed meter notification with the speed on the status-bar icon, signal and network type, daily mobile data limit, shortcuts to the 5G / 4G network-mode screens.
+- Battery setting that keeps downloads running on Samsung and other phones that put apps to sleep.
+- Anonymous statistics, off unless you agree and not available in the open-source build (see `docs/privacy.md`).
+
 ## 0.1.3
 
 - Taskbar meter no longer covers the weather widget (or other things) that Windows 11 keeps next to the notification area: it steps to the left of them.

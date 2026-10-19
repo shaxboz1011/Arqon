@@ -1,10 +1,13 @@
 package app.arqon.ui
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,6 +22,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -56,6 +60,7 @@ fun UsageScreen(app: ArqonApp) {
     val inBytes by app.settings.speedInBytes.collectAsState()
     val limitMb by app.settings.dailyMobileLimitMb.collectAsState()
     val context = LocalContext.current
+    val askPhone = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { app.links.rebuildSlots() }
 
     // usage access is given in Android's own screen: look again each time the user comes back
     var access by remember { mutableStateOf(app.usage.hasUsageAccess()) }
@@ -139,7 +144,7 @@ fun UsageScreen(app: ArqonApp) {
                 }
             }
         }
-        item { NetworkModeCard(meter.generation, context) }
+        item { NetworkModeCard(meter.generation, context, phoneAllowed = app.links.hasPhonePermission(), onAskPhone = { askPhone.launch(Manifest.permission.READ_PHONE_STATE) }) }
         item {
             InfoCard {
                 Text(stringResource(R.string.usage_limit), fontWeight = FontWeight.Medium)
@@ -224,11 +229,16 @@ private fun WeekChart(days: List<app.arqon.core.usage.DayUsage>) {
 }
 
 @Composable
-private fun NetworkModeCard(generation: Generation, context: Context) {
+private fun NetworkModeCard(generation: Generation, context: Context, phoneAllowed: Boolean, onAskPhone: () -> Unit) {
     InfoCard {
         Text(stringResource(R.string.usage_network), fontWeight = FontWeight.Medium)
         Text(stringResource(R.string.usage_network_now, if (generation == Generation.UNKNOWN) "–" else generation.label), color = Accent, fontSize = 14.sp)
         Text(stringResource(R.string.usage_network_body), color = Muted, fontSize = 13.sp)
+        if (!phoneAllowed) {
+            Spacer(Modifier.size(8.dp))
+            Text(stringResource(R.string.usage_phone_permission), color = Muted, fontSize = 13.sp)
+            TextButton(onClick = onAskPhone) { Text(stringResource(R.string.panel_permission_button)) }
+        }
         Spacer(Modifier.size(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = { openNetworkSettings(context) }) { Text(stringResource(R.string.usage_network_settings), fontSize = 12.sp) }

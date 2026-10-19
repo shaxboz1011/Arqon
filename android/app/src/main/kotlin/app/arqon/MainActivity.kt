@@ -53,6 +53,10 @@ import app.arqon.ui.UsageScreen
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+    private companion object {
+        val LINK = Regex("(magnet:\\?\\S+|https?://\\S+)", RegexOption.IGNORE_CASE)
+    }
+
     private val app get() = application as ArqonApp
     private var browser: BrowserController? = null
     private var tab by mutableIntStateOf(0)
@@ -90,20 +94,25 @@ class MainActivity : ComponentActivity() {
 
     private fun say(text: String) = runOnUiThread { Toast.makeText(this, text, Toast.LENGTH_SHORT).show() }
 
-    /** Magnet links, .torrent files and links opened from other apps. */
+    /** Magnet links, .torrent files and links opened from, or shared by, other apps. */
     private fun handle(intent: Intent?) {
-        val data: Uri = intent?.data ?: return
-        if (intent.action != Intent.ACTION_VIEW) return
+        if (intent == null) return
+        val data: Uri? = if (intent.action == Intent.ACTION_VIEW) intent.data else null
+        // "Share" from a browser or a chat: the text may carry words around the link
+        val shared: String? = if (intent.action == Intent.ACTION_SEND) intent.getStringExtra(Intent.EXTRA_TEXT) else null
+        if (data == null && shared == null) return
         lifecycleScope.launch {
-            val text = data.toString()
             val error = when {
-                data.scheme.equals("magnet", ignoreCase = true) -> app.downloads.addMagnet(text)
-                data.scheme == "content" || data.scheme == "file" -> {
+                data != null && data.scheme.equals("magnet", ignoreCase = true) -> app.downloads.addMagnet(data.toString())
+                data != null && (data.scheme == "content" || data.scheme == "file") -> {
                     val bytes = try { contentResolver.openInputStream(data)?.use { it.readBytes() } } catch (_: Exception) { null }
                     if (bytes == null) "bad torrent" else app.downloads.addTorrentBytes(bytes)
                 }
-                UserInput.classify(text) == InputKind.TORRENT_URL -> app.downloads.addText(text)
-                else -> "not a link"
+                data != null -> if (UserInput.classify(data.toString()) == InputKind.TORRENT_URL) app.downloads.addText(data.toString()) else "not a link"
+                else -> {
+                    val link = LINK.find(shared.orEmpty())?.value
+                    if (link == null) "not a link" else app.downloads.addText(link)
+                }
             }
             say(if (error == null) getString(R.string.added) else describe(error))
             if (error == null) tab = 2
@@ -130,12 +139,12 @@ class MainActivity : ComponentActivity() {
                         selectedIconColor = Color.White, selectedTextColor = Accent, indicatorColor = Accent,
                         unselectedIconColor = Muted, unselectedTextColor = Muted,
                     )
-                    NavigationBarItem(tab == 0, { tab = 0 }, { Icon(Icons.Filled.Wifi, null) }, label = { Text(stringResource(R.string.nav_panel)) }, colors = colors)
-                    NavigationBarItem(tab == 1, { tab = 1 }, { Icon(Icons.Filled.Language, null) }, label = { Text(stringResource(R.string.nav_browser)) }, colors = colors)
-                    NavigationBarItem(tab == 2, { tab = 2 }, { Icon(Icons.Filled.Download, null) }, label = { Text(stringResource(R.string.nav_downloads)) }, colors = colors)
-                    NavigationBarItem(tab == 5, { tab = 5 }, { Icon(Icons.Filled.DataUsage, null) }, label = { Text(stringResource(R.string.nav_usage)) }, colors = colors)
-                    NavigationBarItem(tab == 4, { tab = 4 }, { Icon(Icons.Filled.SportsEsports, null) }, label = { Text(stringResource(R.string.nav_game)) }, colors = colors)
-                    NavigationBarItem(tab == 3, { tab = 3 }, { Icon(Icons.Filled.Settings, null) }, label = { Text(stringResource(R.string.nav_settings)) }, colors = colors)
+                    NavigationBarItem(tab == 0, { tab = 0 }, { Icon(Icons.Filled.Wifi, null) }, label = { Text(stringResource(R.string.nav_panel), maxLines = 1) }, alwaysShowLabel = false, colors = colors)
+                    NavigationBarItem(tab == 1, { tab = 1 }, { Icon(Icons.Filled.Language, null) }, label = { Text(stringResource(R.string.nav_browser), maxLines = 1) }, alwaysShowLabel = false, colors = colors)
+                    NavigationBarItem(tab == 2, { tab = 2 }, { Icon(Icons.Filled.Download, null) }, label = { Text(stringResource(R.string.nav_downloads), maxLines = 1) }, alwaysShowLabel = false, colors = colors)
+                    NavigationBarItem(tab == 5, { tab = 5 }, { Icon(Icons.Filled.DataUsage, null) }, label = { Text(stringResource(R.string.nav_usage), maxLines = 1) }, alwaysShowLabel = false, colors = colors)
+                    NavigationBarItem(tab == 4, { tab = 4 }, { Icon(Icons.Filled.SportsEsports, null) }, label = { Text(stringResource(R.string.nav_game), maxLines = 1) }, alwaysShowLabel = false, colors = colors)
+                    NavigationBarItem(tab == 3, { tab = 3 }, { Icon(Icons.Filled.Settings, null) }, label = { Text(stringResource(R.string.nav_settings), maxLines = 1) }, alwaysShowLabel = false, colors = colors)
                 }
             },
         ) { padding ->

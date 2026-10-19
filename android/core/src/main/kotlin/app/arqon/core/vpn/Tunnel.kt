@@ -107,13 +107,18 @@ class Tunnel(
         val segment = TcpSegment(ip)
         if (!segment.valid) return
         val key = Key(ip.src, segment.srcPort, ip.dst, segment.dstPort)
-        val flow = tcp[key]
+        val opening = segment.flags and SYN != 0 && segment.flags and ACK == 0
+        var flow = tcp[key]
+        if (flow != null && !flow.isClosed && opening && flow.isReplacedBy(segment)) {
+            flow.abort()   // the app reused the port for a new connection: the old one is over
+            flow = null
+        }
         if (flow != null && !flow.isClosed) {
             flow.onSegment(segment)
             if (segment.payloadLength > 0) lastDataAt = clock()
             return
         }
-        if (segment.flags and SYN != 0 && segment.flags and ACK == 0) {
+        if (opening) {
             val link = chooseLink()
             if (link == null || tcp.size >= MAX_FLOWS) {
                 reset(ip, segment)

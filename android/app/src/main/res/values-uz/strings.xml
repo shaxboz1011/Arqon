@@ -66,13 +66,8 @@
     <string name="browser_back">Orqaga</string>
     <string name="browser_forward">Oldinga</string>
     <string name="browser_reload">Yangilash</string>
-    <string name="browser_download_started">Yuklash boshlandi: %1$s</string>
-    <string name="browser_torrent_added">Torrent qo\'shildi</string>
-    <string name="browser_open_downloads">Yuklashlar</string>
 
     <string name="settings_title">Sozlamalar</string>
-    <string name="settings_links">Ishlatiladigan ulanishlar</string>
-    <string name="settings_links_body">Trafigingizni tejash uchun ulanishni o\'chiring. Masalan, tarifi kichik SIM.</string>
     <string name="settings_cellular_wifi">Mobil internetni tejash</string>
     <string name="settings_cellular_wifi_body">SIM kartalar faqat Wi-Fi bo\'lmaganda ishlatiladi.</string>
     <string name="settings_desktop">Standart: kompyuter versiyasi</string>
@@ -110,9 +105,6 @@
     <string name="settings_about">Arqon %1$s · bepul va ochiq kodli</string>
 
     <string name="notification_channel">Yuklashlar</string>
-    <string name="notification_title">Arqon: %1$d ta yuklash</string>
-    <string name="notification_speed">%1$s</string>
-    <string name="notification_waiting">Ma\'lumot kutilmoqda…</string>
     <string name="status_none">Arqon: ulanish yo\'q</string>
     <string name="status_single">Arqon: faqat %1$s</string>
     <string name="status_combined">Arqon birlashtirdi: %1$s</string>
@@ -187,4 +179,7 @@
     <string name="stats_ask_never">Hech qachon yuborilmaydi: havolalar, fayl nomlari, saytlar, joylashuv, telefon raqamlari va yuklab olganlaringiz. Aniq hisobotni ko\'rish va o\'chirish Sozlamalarda.</string>
     <string name="stats_yes">Ruxsat berish</string>
     <string name="stats_no">Yo\'q, rahmat</string>
+    <string name="usage_phone_permission">Arqon tarmoq turini (5G, 4G) va mobil signalni ko\'rsata olishi uchun telefon holatiga ruxsat bering.</string>
+    <string name="done_channel">Tugagan yuklashlar</string>
+    <string name="done_title">Yuklash tugadi</string>
 </resources>

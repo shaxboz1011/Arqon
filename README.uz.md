@@ -55,7 +55,7 @@ Arqon **hammasini birga ishlatadi**:
 | 🎮 | **O'yin qotmaydi.** Arqon ishlayotgan o'yinni ko'radi, pingni kuzatadi va yuklashni *faqat o'yin ulanishida*, *faqat kerakli darajada* sekinlashtiradi. Keyin tezlikni qaytaradi. | O'yin himoyasi, o'zi tiklanadi |
 | 🌍 | **Har qanday ilova foyda ko'radi.** *System mode* Telegram, Chrome, Steam va boshqalarning ulanishlarini barcha ulanishlarga taqsimlaydi. | 40 ta parallel yuklash 11,3 o'rniga **5,3 soniyada** |
 | 🧲 | **Torrent ham.** Peer ulanishlari barcha ulanishlarga taqsimlanadi. Magnet link qo'ying yoki `.torrent` oching, kerakli fayllarni tanlang. | Haqiqiy Debian torrenti: ikkala adapter ham ma'lumot tashidi |
-| 🔒 | **Yashirin narsa yo'q.** Akkaunt yo'q, reklama yo'q, telemetriya yo'q. | MIT litsenziyasi, kodni o'qing |
+| 🔒 | **Yashirin narsa yo'q.** Akkaunt yo'q, reklama yo'q, kuzatuv yo'q. | MIT litsenziyasi, kodni o'qing |
 
 > [!IMPORTANT]
 > Arqon faqat har bir ulanishning **o'z** internet yo'li bo'lganda tezlik qo'shadi: masalan, bitta routerning Wi-Fi'si va telefonning mobil interneti. *Bitta* router ortidagi ikkita adapter bitta chiziqni bo'lishadi va foyda bermaydi.
@@ -158,6 +158,17 @@ Hammasi oynada bor, lekin quyidagi buyruqlar ham mavjud:
 
 Sozlamalardagi **Torrent va magnet linklarni Arqon bilan ochish** tugmasi uni `.torrent` fayllar va `magnet:` linklar uchun ro'yxatdan o'tkazadi (faqat joriy foydalanuvchi uchun, administrator huquqisiz, boshqa dasturning tanlovini hech qachon tortib olmaydi).
 
+## 📱 Android (sinov versiyasi)
+
+[`android/`](android/README.md) papkasida Kotlin'da yozilgan Android ilova bor. U telefon uchun Arqon Windows'da qiladigan ishni qiladi: Android'dan Wi-Fi va har bir SIM kartani bir vaqtda so'raydi va yuklashlarni, torrentlarni hamda brauzer yuklashlarini hammasi bo'ylab taqsimlaydi. Yana:
+
+- **saytlarni kompyuterdagidek ko'rsatadigan brauzer** (ba'zi saytlar yuklash havolalarini telefondan yashiradi),
+- **o'yin rejimi**: siz tanlagan o'yinlar eng yaxshi ulanishdan ketadi, Arqon yuklashlari esa undan chetda turadi,
+- **tezlik sinovi**: har bir ulanish alohida, hammasi birga va o'lchangan foyda,
+- **internet sarfi** (bugun, shu oy, ilovalar bo'yicha), bildirishnomada **tezlik o'lchagich**, kunlik chegara va telefonning 5G / 4G tarmoq rejimi oynasiga yo'l.
+
+Bu sinov versiyasi, reliz hali yo'q. Ikkinchi SIM birinchisi bilan birga internet bera oladimi, bu telefonga bog'liq (ko'p telefonlar bir vaqtda faqat bitta SIM'da internet beradi); ilova Android unga nimani berganini aniq ko'rsatadi.
+
 ## ❓ Savol-javob
 
 <details>
@@ -212,7 +223,7 @@ cd Arqon
 
 dotnet run --project src/Arqon.App            # haqiqiy adapterlar bilan ishga tushirish
 dotnet run --project src/Arqon.App -- --demo  # ikkita soxta ulanish bilan
-dotnet test                                    # 402 ta test
+dotnet test                                    # 458 ta test
 
 # bitta mustaqil Arqon.exe (taxminan 75 MB) publish\win-x64 papkasida
 powershell -ExecutionPolicy Bypass -File tools\build.ps1
@@ -233,6 +244,9 @@ powershell -ExecutionPolicy Bypass -File tools\build.ps1
 | Vazifalar panelida tezlik o'lchagichi | ✅ Tayyor (Windows 10, pastdagi panelda sinalgan) |
 | Xavfsiz o'yin rejimi (o'yin paytida system mode o'chadi, drayver chiqariladi) | ✅ Tayyor (soxta o'yin bilan sinalgan, haqiqiy anti-cheat bilan emas) |
 | Tezlik birligi (Mbit/s yoki MB/s) | ✅ Tayyor |
+| Tezlik sinovi: har bir ulanish alohida, hammasi birga va o'lchangan foyda | ✅ Tayyor |
+| Yangilanishni tekshirish (GitHub, o'chirsa bo'ladi), kunlik internet chegarasi haqida ogohlantirish, statistikani CSV ga saqlash | ✅ Tayyor |
+| **Android ilova** (Wi-Fi + telefon ruxsat bergan SIM kartalar, torrent, kompyuter ko'rinishidagi brauzer, o'yin rejimi, internet sarfi va tezlik o'lchagich) | 🧪 [`android/`](android/README.md) da sinov versiyasi: ikki telefonda sinalgan, reliz hali yo'q |
 | Interfeys o'zbek, ingliz va rus tilida | ✅ Tayyor (boshqa tillar xush kelibsiz) |
 | Torrent va magnet linklar barcha ulanishlar bo'yicha; papka tanlash; fayl tanlash; nisbat bilan ixtiyoriy tarqatish (seeding), qayta ochilgandan keyin ham; Windows'dan ochish | ✅ Tayyor (haqiqiy Debian torrenti Wi-Fi + telefon bilan) |
 | **System mode** (Telegram, Chrome va hamma ilovani tezlatish) | 🧪 Birinchi haqiqiy sinovda ishladi (Wi-Fi + USB telefon). O'yin bilan va uzoq sessiyada hali sinalmagan |
@@ -243,7 +257,7 @@ powershell -ExecutionPolicy Bypass -File tools\build.ps1
 
 ## 🔒 Xavfsizlik
 
-- **Telemetriya yo'q, akkaunt yo'q, yangilanish so'rovlari yo'q.** Arqon faqat siz so'raganga ulanadi. Qo'shimcha: ulanish monitori ping o'lchash uchun `1.1.1.1` / `8.8.8.8` (443-port) ga ulanadi, torrentlar esa har qanday torrent klient kabi ochiq trackerlar va DHT bilan bog'lanadi.
+- **Telemetriya yo'q, akkaunt yo'q.** Arqon faqat siz so'raganga ulanadi. Qo'shimcha: ulanish monitori ping o'lchash uchun `1.1.1.1` / `8.8.8.8` (443-port) ga ulanadi, torrentlar har qanday torrent klient kabi ochiq trackerlar va DHT bilan bog'lanadi, kuniga ikki marta esa GitHub'dan yangi versiya bor-yo'qligini so'raydi (Sozlamalardan o'chiriladi). Android ilova kuniga bitta kichik anonim hisobot yuborishi mumkin, lekin faqat siz ruxsat bersangiz, ochiq kodli versiyada esa yuboradigan server umuman yo'q. Batafsil: [docs/privacy.md](docs/privacy.md).
 - Windows'ga o'zgartirish (registr, drayver) avval tushuntiriladi va qaytariladi. System mode standart holatda o'chiq va xato bo'lsa o'zi o'chadi.
 - `Arqon.exe` hozircha **kod imzosiz**, shuning uchun SmartScreen ogohlantiradi. SHA-256 ni tekshiring yoki shu manba koddan o'zingiz yig'ing. Ochiq kodli loyihalar uchun bepul imzolash rejada.
 - Zaiflik topdingizmi? [SECURITY.md](SECURITY.md) ni o'qing.

@@ -66,13 +66,8 @@
     <string name="browser_back">Назад</string>
     <string name="browser_forward">Вперёд</string>
     <string name="browser_reload">Обновить</string>
-    <string name="browser_download_started">Загрузка началась: %1$s</string>
-    <string name="browser_torrent_added">Торрент добавлен</string>
-    <string name="browser_open_downloads">Загрузки</string>
 
     <string name="settings_title">Настройки</string>
-    <string name="settings_links">Используемые подключения</string>
-    <string name="settings_links_body">Выключите подключение, чтобы сберечь его трафик. Например, SIM с маленьким тарифом.</string>
     <string name="settings_cellular_wifi">Экономить мобильный трафик</string>
     <string name="settings_cellular_wifi_body">Использовать SIM-карты, только когда нет Wi-Fi.</string>
     <string name="settings_desktop">По умолчанию версия для компьютера</string>
@@ -110,9 +105,6 @@
     <string name="settings_about">Arqon %1$s · бесплатно, с открытым кодом</string>
 
     <string name="notification_channel">Загрузки</string>
-    <string name="notification_title">Arqon: загрузок %1$d</string>
-    <string name="notification_speed">%1$s</string>
-    <string name="notification_waiting">Ожидание данных…</string>
     <string name="status_none">Arqon: нет подключения</string>
     <string name="status_single">Arqon: только %1$s</string>
     <string name="status_combined">Arqon объединил: %1$s</string>
@@ -187,4 +179,7 @@
     <string name="stats_ask_never">Никогда не отправляются: ссылки, имена файлов, сайты, местоположение, номера телефонов и то, что вы скачиваете. Точный отчёт можно посмотреть и отключить в настройках.</string>
     <string name="stats_yes">Разрешить</string>
     <string name="stats_no">Нет, спасибо</string>
+    <string name="usage_phone_permission">Разрешите доступ к состоянию телефона, чтобы Arqon показывал тип сети (5G, 4G) и мобильный сигнал.</string>
+    <string name="done_channel">Завершённые загрузки</string>
+    <string name="done_title">Загрузка завершена</string>
 </resources>

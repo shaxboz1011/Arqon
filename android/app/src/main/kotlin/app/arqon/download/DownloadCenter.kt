@@ -73,6 +73,7 @@ class DownloadCenter(
     private val settings: AppSettings,
     private val scope: CoroutineScope,
     private val onActivity: (Summary) -> Unit = {},
+    private val onFinished: (DownloadItem) -> Unit = {},
 ) {
     private val http = OkHttpClient()
     private val file = File(context.filesDir, "downloads.json")
@@ -90,6 +91,7 @@ class DownloadCenter(
     val linkSpeeds: StateFlow<Map<String, Long>> = _linkSpeeds
 
     private val jobs = HashMap<String, Job>()
+    private val announced = HashSet<String>()
     private val sessions = HashMap<String, TorrentSession>()
     private var lastPerLink = HashMap<String, Long>()
     private var lastDone = HashMap<String, Long>()
@@ -247,6 +249,7 @@ class DownloadCenter(
             update(item.id) { it.copy(doneBytes = p.done, totalBytes = p.total, perLink = p.perLink) }
         }
         update(item.id) { it.copy(state = ItemState.DONE, speed = 0) }
+        announceDone(item.id)
     }
 
     private suspend fun runTorrent(item: DownloadItem) {
@@ -272,12 +275,19 @@ class DownloadCenter(
             when (s.phase) {
                 Phase.COMPLETE -> {
                     update(item.id) { it.copy(state = ItemState.DONE, seeding = seed) }
+                    announceDone(item.id)
                     if (!seed) { sessions.remove(item.id); throw CancellationException("finished") }
                 }
                 Phase.ERROR -> throw IllegalStateException(s.error ?: "torrent error")
                 else -> Unit
             }
         }
+    }
+
+    /** Tells the app once that a download finished (a torrent that keeps sharing reports COMPLETE again and again). */
+    private fun announceDone(id: String) {
+        val item = _items.value.firstOrNull { it.id == id } ?: return
+        if (announced.add(id)) onFinished(item)
     }
 
     private fun update(id: String, change: (DownloadItem) -> DownloadItem) {

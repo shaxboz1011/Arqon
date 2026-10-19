@@ -83,13 +83,8 @@
     <string name="browser_back">Back</string>
     <string name="browser_forward">Forward</string>
     <string name="browser_reload">Reload</string>
-    <string name="browser_download_started">Download started: %1$s</string>
-    <string name="browser_torrent_added">Torrent added</string>
-    <string name="browser_open_downloads">Downloads</string>
 
     <string name="settings_title">Settings</string>
-    <string name="settings_links">Connections to use</string>
-    <string name="settings_links_body">Switch off a connection to keep its data. For example a SIM with a small plan.</string>
     <string name="settings_cellular_wifi">Save mobile data</string>
     <string name="settings_cellular_wifi_body">Use the SIM cards only while there is no Wi-Fi.</string>
     <string name="settings_desktop">Desktop site by default</string>
@@ -111,9 +106,6 @@
     <string name="settings_about">Arqon %1$s · free and open source</string>
 
     <string name="notification_channel">Downloads</string>
-    <string name="notification_title">Arqon: %1$d downloads</string>
-    <string name="notification_speed">%1$s</string>
-    <string name="notification_waiting">Waiting for data…</string>
     <string name="status_none">Arqon: no connection</string>
     <string name="status_single">Arqon: %1$s only</string>
     <string name="status_combined">Arqon combined: %1$s</string>
@@ -188,4 +180,7 @@
     <string name="stats_ask_never">Never sent: links, file names, websites, location, phone numbers or anything you download. You can see the exact report and switch it off in Settings.</string>
     <string name="stats_yes">Allow</string>
     <string name="stats_no">No thanks</string>
+    <string name="usage_phone_permission">Allow phone state so Arqon can show the network type (5G, 4G) and the mobile signal.</string>
+    <string name="done_channel">Finished downloads</string>
+    <string name="done_title">Download finished</string>
 </resources>
