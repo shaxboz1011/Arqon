@@ -212,7 +212,7 @@ cd Arqon
 
 dotnet run --project src/Arqon.App            # run with your real adapters
 dotnet run --project src/Arqon.App -- --demo  # run with two pretend connections
-dotnet test                                    # 395 tests
+dotnet test                                    # 402 tests
 
 # one self-contained Arqon.exe (about 75 MB) in publish\win-x64
 powershell -ExecutionPolicy Bypass -File tools\build.ps1

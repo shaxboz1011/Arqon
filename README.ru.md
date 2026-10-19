@@ -212,7 +212,7 @@ cd Arqon
 
 dotnet run --project src/Arqon.App            # запуск с настоящими адаптерами
 dotnet run --project src/Arqon.App -- --demo  # запуск с двумя «ненастоящими» подключениями
-dotnet test                                    # 395 тестов
+dotnet test                                    # 402 теста
 
 # один автономный Arqon.exe (около 75 МБ) в папке publish\win-x64
 powershell -ExecutionPolicy Bypass -File tools\build.ps1

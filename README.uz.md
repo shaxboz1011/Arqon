@@ -212,7 +212,7 @@ cd Arqon
 
 dotnet run --project src/Arqon.App            # haqiqiy adapterlar bilan ishga tushirish
 dotnet run --project src/Arqon.App -- --demo  # ikkita soxta ulanish bilan
-dotnet test                                    # 395 ta test
+dotnet test                                    # 402 ta test
 
 # bitta mustaqil Arqon.exe (taxminan 75 MB) publish\win-x64 papkasida
 powershell -ExecutionPolicy Bypass -File tools\build.ps1
