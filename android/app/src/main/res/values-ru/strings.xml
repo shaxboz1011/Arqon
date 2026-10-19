@@ -182,4 +182,6 @@
     <string name="usage_phone_permission">Разрешите доступ к состоянию телефона, чтобы Arqon показывал тип сети (5G, 4G) и мобильный сигнал.</string>
     <string name="done_channel">Завершённые загрузки</string>
     <string name="done_title">Загрузка завершена</string>
+    <string name="timeout_title">Arqon приостановил фоновую службу</string>
+    <string name="timeout_body">Android ограничивает фоновые службы передачи данных примерно 6 часами. Откройте Arqon, чтобы продолжить.</string>
 </resources>

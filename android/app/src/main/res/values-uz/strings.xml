@@ -182,4 +182,6 @@
     <string name="usage_phone_permission">Arqon tarmoq turini (5G, 4G) va mobil signalni ko\'rsata olishi uchun telefon holatiga ruxsat bering.</string>
     <string name="done_channel">Tugagan yuklashlar</string>
     <string name="done_title">Yuklash tugadi</string>
+    <string name="timeout_title">Arqon fon xizmatini to\'xtatdi</string>
+    <string name="timeout_body">Android fon ma\'lumot xizmatlarini taxminan 6 soat bilan cheklaydi. Davom ettirish uchun Arqon\'ni oching.</string>
 </resources>

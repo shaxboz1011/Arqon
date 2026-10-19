@@ -183,4 +183,6 @@
     <string name="usage_phone_permission">Allow phone state so Arqon can show the network type (5G, 4G) and the mobile signal.</string>
     <string name="done_channel">Finished downloads</string>
     <string name="done_title">Download finished</string>
+    <string name="timeout_title">Arqon paused its background service</string>
+    <string name="timeout_body">Android limits background data services to about 6 hours. Open Arqon to continue.</string>
 </resources>

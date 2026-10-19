@@ -81,6 +81,39 @@ class DownloadService : Service() {
         }
     }
 
+    /**
+     * Android 15 ends a "data sync" service after about six hours and expects it to stop at once. Arqon stops, says so, and a tap on the
+     * notification (or opening the app) starts it again, so a long torrent does not die without a word.
+     */
+    override fun onTimeout(startId: Int, fgsType: Int) {
+        notifyTimeout()
+        stopSelf()
+    }
+
+    override fun onTimeout(startId: Int) {
+        notifyTimeout()
+        stopSelf()
+    }
+
+    private fun notifyTimeout() {
+        try {
+            val manager = getSystemService(NotificationManager::class.java)
+            val open = PendingIntent.getActivity(this, 3, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
+            manager.notify(
+                TIMEOUT_ID,
+                NotificationCompat.Builder(this, CHANNEL)
+                    .setSmallIcon(android.R.drawable.stat_sys_warning)
+                    .setContentTitle(getString(R.string.timeout_title))
+                    .setContentText(getString(R.string.timeout_body))
+                    .setAutoCancel(true)
+                    .setContentIntent(open)
+                    .build(),
+            )
+        } catch (_: SecurityException) {
+            // notifications are not allowed
+        }
+    }
+
     override fun onDestroy() {
         loop?.cancel()
         scope.cancel()
@@ -93,6 +126,7 @@ class DownloadService : Service() {
     companion object {
         private const val CHANNEL = "status"
         private const val NOTIFICATION_ID = 1
+        private const val TIMEOUT_ID = 4
 
         /** Starts the service (from a visible app, or when a download starts); Android may refuse from the background. */
         fun ensureRunning(context: Context) {
