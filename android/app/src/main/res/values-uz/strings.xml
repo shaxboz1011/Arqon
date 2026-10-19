@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Arqon</string>
+
+    <string name="nav_panel">Panel</string>
+    <string name="nav_browser">Brauzer</string>
+    <string name="nav_downloads">Yuklashlar</string>
+    <string name="nav_settings">Sozlamalar</string>
+
+    <string name="panel_title">Ulanishlar</string>
+    <string name="panel_none">Ulanish topilmadi. Wi-Fi yoki mobil internetni yoqing.</string>
+    <string name="panel_one">Hozir faqat bitta ulanish ishlayapti.</string>
+    <string name="panel_many">Birga ishlayotgan ulanishlar: %1$d</string>
+    <string name="panel_speed_total">Hozirgi yuklash tezligi: %1$s</string>
+    <string name="panel_hint_single">Tezlikni oshirish uchun Wi-Fi va mobil internetni birga ishlating yoki ikkala SIM ham internet bera oladigan telefondan foydalaning.</string>
+    <string name="panel_sim_note">Hamma telefon ikkala SIM kartada bir vaqtda internet bera olmaydi. Arqon har bir SIM uchun Androiddan so\'raydi va javob bergan ulanishlarni birga ishlatadi.</string>
+    <string name="panel_permission">SIM kartalarni bir-biridan ajratish va har biridan alohida so\'rash uchun telefon holatiga ruxsat bering.</string>
+    <string name="panel_permission_button">Ruxsat berish</string>
+    <string name="link_active">Ishlayapti</string>
+    <string name="link_waiting">Ulanmoqda…</string>
+    <string name="link_unavailable">Mavjud emas</string>
+    <string name="link_unavailable_body">Android bu tarmoqni bermadi. Ko\'p telefonlarda bir vaqtda faqat bitta SIM internet beradi yoki bu ulanish o\'chiq.</string>
+    <string name="link_metered">Tarifingizdan hisoblanadi</string>
+    <string name="link_free">Hisoblanmaydi</string>
+    <string name="link_off">Siz o\'chirgansiz</string>
+    <string name="link_ping">Ping %1$d ms</string>
+    <string name="link_ping_none">Internetdan javob yo\'q</string>
+
+    <string name="downloads_title">Yuklashlar</string>
+    <string name="downloads_hint">Link, magnet link yoki .torrent link</string>
+    <string name="downloads_add">Yuklash</string>
+    <string name="downloads_paste">Qo\'yish</string>
+    <string name="downloads_torrent_file">Torrent fayl</string>
+    <string name="downloads_empty">Hozircha hech narsa yo\'q. Yuqoriga link qo\'ying yoki Brauzer bo\'limida saytni oching.</string>
+    <string name="downloads_saved_to">Saqlanadigan joy: %1$s</string>
+    <string name="state_queued">Kutmoqda</string>
+    <string name="state_running">Yuklanmoqda</string>
+    <string name="state_checking">Fayllar tekshirilmoqda</string>
+    <string name="state_metadata">Torrent ma\'lumoti olinmoqda</string>
+    <string name="state_paused">To\'xtatilgan</string>
+    <string name="state_done">Tugadi</string>
+    <string name="state_failed">Xato</string>
+    <string name="state_seeding">Tarqatilmoqda · yuborildi %1$s</string>
+    <string name="peers">Peerlar: %1$d</string>
+    <string name="action_pause">To\'xtatish</string>
+    <string name="action_resume">Davom ettirish</string>
+    <string name="action_remove">Ro\'yxatdan olib tashlash</string>
+    <string name="action_remove_files">Fayllari bilan o\'chirish</string>
+    <string name="action_files">Fayllarni tanlash</string>
+    <string name="action_cancel">Bekor qilish</string>
+    <string name="action_ok">OK</string>
+    <string name="files_title">Yuklanadigan fayllar</string>
+    <string name="err_bad_link">Bu Arqon yuklay oladigan link emas.</string>
+    <string name="err_bad_magnet">Bu magnet link noto\'g\'ri.</string>
+    <string name="err_bad_torrent">Bu to\'g\'ri .torrent fayl emas.</string>
+    <string name="err_already">Bu torrent ro\'yxatda allaqachon bor.</string>
+    <string name="added">Yuklashlarga qo\'shildi</string>
+
+    <string name="browser_hint">Qidiring yoki manzil yozing</string>
+    <string name="browser_desktop">Kompyuter versiyasi</string>
+    <string name="browser_back">Orqaga</string>
+    <string name="browser_forward">Oldinga</string>
+    <string name="browser_reload">Yangilash</string>
+    <string name="browser_download_started">Yuklash boshlandi: %1$s</string>
+    <string name="browser_torrent_added">Torrent qo\'shildi</string>
+    <string name="browser_open_downloads">Yuklashlar</string>
+
+    <string name="settings_title">Sozlamalar</string>
+    <string name="settings_links">Ishlatiladigan ulanishlar</string>
+    <string name="settings_links_body">Trafigingizni tejash uchun ulanishni o\'chiring. Masalan, tarifi kichik SIM.</string>
+    <string name="settings_cellular_wifi">Mobil internetni tejash</string>
+    <string name="settings_cellular_wifi_body">SIM kartalar faqat Wi-Fi bo\'lmaganda ishlatiladi.</string>
+    <string name="settings_desktop">Standart: kompyuter versiyasi</string>
+    <string name="settings_desktop_body">Brauzer saytlarni kompyuterdagidek ko\'rsatadi. Ba\'zi saytlar telefondan kirganda yuklash tugmalarini yashiradi.</string>
+    <string name="settings_seed">Tugagan torrentlarni tarqatishda davom etish</string>
+    <string name="settings_seed_body">Upload tezligingiz va mobil trafikdan foydalanadi. Standart holatda o\'chiq.</string>
+    <string name="settings_parallel">Bir vaqtda yuklashlar soni</string>
+    <string name="settings_folder">Yuklash papkasi</string>
+    <string name="settings_folder_body">%1$s</string>
+    <string name="settings_all_files">Hamma fayllarga ruxsat</string>
+    <string name="settings_all_files_body">Arqon ochiq Yuklashlar papkasiga saqlay oladi va fayl menejeringiz uni ko\'rsatadi. Ruxsatsiz fayllar ilovaning o\'z papkasiga tushadi.</string>
+    <string name="settings_notifications">Bildirishnomalarga ruxsat</string>
+    <string name="settings_notifications_body">Fonda yuklashni davom ettirish uchun kerak.</string>
+    <string name="settings_about">Arqon %1$s · bepul va ochiq kodli</string>
+
+    <string name="notification_channel">Yuklashlar</string>
+    <string name="notification_title">Arqon: %1$d ta yuklash</string>
+    <string name="notification_speed">%1$s</string>
+    <string name="notification_waiting">Ma\'lumot kutilmoqda…</string>
+</resources>

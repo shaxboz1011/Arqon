@@ -90,6 +90,9 @@ class TorrentSession(
     private val infoHash: ByteArray = magnet?.infoHash ?: runCatching { MetaInfo.parse((source as TorrentSource.File).bytes).infoHash }.getOrDefault(ByteArray(20))
 
     @Volatile private var meta: MetaInfo? = null
+
+    /** The files have been checked, so what we have is known: only now may a peer be let in to ask for pieces. */
+    @Volatile private var ready = false
     private var storage: PieceStorage? = null
     private var have = BitSet()
     private var wanted = BitSet()
@@ -214,6 +217,7 @@ class TorrentSession(
             have = checked
             doneBytes = (0 until m.pieceCount).filter { wanted[it] && have[it] }.sumOf { m.pieceSize(it).toLong() }
         }
+        ready = true
         peers.forEach { onMetadataReady(it) }
 
         if (isComplete()) {
@@ -484,6 +488,7 @@ class TorrentSession(
                 }
             }
             sendOurBitfield(peer)
+            if (peer.interested) unchokeIfRoom(peer)
             refreshInterest(peer)
             fill(peer)
         } catch (_: IOException) {
@@ -643,6 +648,7 @@ class TorrentSession(
     // ---- giving back --------------------------------------------------------------------------------------------------
 
     private fun unchokeIfRoom(peer: Peer) {
+        if (!ready) return   // asked again from onMetadataReady once the check is done
         val allow = synchronized(lock) {
             if (!peer.amChoking) return
             val open = peers.count { !it.amChoking }

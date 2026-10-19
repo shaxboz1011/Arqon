@@ -1,0 +1,106 @@
+package app.arqon.ui
+
+import android.Manifest
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import app.arqon.ArqonApp
+import app.arqon.BuildConfig
+import app.arqon.R
+
+@Composable
+fun SettingsScreen(app: ArqonApp) {
+    val desktop by app.settings.desktopMode.collectAsState()
+    val seed by app.settings.seedAfterComplete.collectAsState()
+    val parallel by app.settings.maxConcurrent.collectAsState()
+    val cellularOnly by app.settings.cellularOnlyWithoutWifi.collectAsState()
+    val context = LocalContext.current
+    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Spacer(Modifier.size(6.dp))
+        Text(stringResource(R.string.settings_title), fontSize = 26.sp, fontWeight = FontWeight.SemiBold)
+
+        InfoCard {
+            ToggleRow(stringResource(R.string.settings_cellular_wifi), stringResource(R.string.settings_cellular_wifi_body), cellularOnly) { app.settings.setCellularOnlyWithoutWifi(it) }
+        }
+        InfoCard { ToggleRow(stringResource(R.string.settings_desktop), stringResource(R.string.settings_desktop_body), desktop) { app.settings.setDesktopMode(it) } }
+        InfoCard { ToggleRow(stringResource(R.string.settings_seed), stringResource(R.string.settings_seed_body), seed) { app.settings.setSeed(it) } }
+
+        InfoCard {
+            Text(stringResource(R.string.settings_parallel), fontWeight = FontWeight.Medium)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
+                for (n in listOf(1, 2, 3, 4, 6)) FilterChip(selected = parallel == n, onClick = { app.settings.setMaxConcurrent(n) }, label = { Text("$n") })
+            }
+        }
+
+        InfoCard {
+            Text(stringResource(R.string.settings_folder), fontWeight = FontWeight.Medium)
+            Text(stringResource(R.string.settings_folder_body, app.downloads.downloadDirectory().path), color = Muted, fontSize = 13.sp)
+            if (!allFilesGranted()) {
+                Spacer(Modifier.size(8.dp))
+                Text(stringResource(R.string.settings_all_files_body), color = Muted, fontSize = 13.sp)
+                Spacer(Modifier.size(8.dp))
+                Button(onClick = {
+                    val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:${context.packageName}"))
+                    } else {
+                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}"))
+                    }
+                    context.startActivity(intent)
+                }) { Text(stringResource(R.string.settings_all_files)) }
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            InfoCard {
+                Text(stringResource(R.string.settings_notifications), fontWeight = FontWeight.Medium)
+                Text(stringResource(R.string.settings_notifications_body), color = Muted, fontSize = 13.sp)
+                Spacer(Modifier.size(8.dp))
+                Button(onClick = { notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS) }) { Text(stringResource(R.string.panel_permission_button)) }
+            }
+        }
+        Text(stringResource(R.string.settings_about, BuildConfig.VERSION_NAME), color = Muted, fontSize = 12.sp, modifier = Modifier.padding(vertical = 12.dp))
+    }
+}
+
+private fun allFilesGranted(): Boolean =
+    Build.VERSION.SDK_INT < Build.VERSION_CODES.R || Environment.isExternalStorageManager()
+
+@Composable
+private fun ToggleRow(title: String, body: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(title, fontWeight = FontWeight.Medium)
+            Text(body, color = Muted, fontSize = 13.sp)
+        }
+        Switch(checked = checked, onCheckedChange = onChange)
+    }
+}

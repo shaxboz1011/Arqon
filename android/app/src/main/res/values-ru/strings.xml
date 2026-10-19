@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Arqon</string>
+
+    <string name="nav_panel">Панель</string>
+    <string name="nav_browser">Браузер</string>
+    <string name="nav_downloads">Загрузки</string>
+    <string name="nav_settings">Настройки</string>
+
+    <string name="panel_title">Подключения</string>
+    <string name="panel_none">Подключение не найдено. Включите Wi-Fi или мобильный интернет.</string>
+    <string name="panel_one">Сейчас работает только одно подключение.</string>
+    <string name="panel_many">Подключений работает вместе: %1$d</string>
+    <string name="panel_speed_total">Скорость загрузки сейчас: %1$s</string>
+    <string name="panel_hint_single">Чтобы прибавить скорость, используйте Wi-Fi вместе с мобильным интернетом или телефон с двумя SIM-картами, обе из которых могут работать с данными.</string>
+    <string name="panel_sim_note">Не каждый телефон может одновременно использовать обе SIM-карты для интернета. Arqon запрашивает у Android каждую SIM и использует те, что ответили.</string>
+    <string name="panel_permission">Разрешите доступ к состоянию телефона, чтобы Arqon различал SIM-карты и запрашивал каждую отдельно.</string>
+    <string name="panel_permission_button">Разрешить</string>
+    <string name="link_active">Работает</string>
+    <string name="link_waiting">Подключение…</string>
+    <string name="link_unavailable">Недоступно</string>
+    <string name="link_unavailable_body">Android не предоставил эту сеть. На многих телефонах интернет даёт только одна SIM за раз, либо это подключение выключено.</string>
+    <string name="link_metered">Считается по вашему тарифу</string>
+    <string name="link_free">Не считается</string>
+    <string name="link_off">Выключено вами</string>
+    <string name="link_ping">Пинг %1$d мс</string>
+    <string name="link_ping_none">Нет ответа из интернета</string>
+
+    <string name="downloads_title">Загрузки</string>
+    <string name="downloads_hint">Ссылка, magnet-ссылка или ссылка на .torrent</string>
+    <string name="downloads_add">Скачать</string>
+    <string name="downloads_paste">Вставить</string>
+    <string name="downloads_torrent_file">Файл .torrent</string>
+    <string name="downloads_empty">Пока ничего нет. Вставьте ссылку выше или откройте сайт во вкладке «Браузер».</string>
+    <string name="downloads_saved_to">Сохраняется в: %1$s</string>
+    <string name="state_queued">Ожидает</string>
+    <string name="state_running">Загружается</string>
+    <string name="state_checking">Проверка файлов</string>
+    <string name="state_metadata">Получение сведений о торренте</string>
+    <string name="state_paused">Приостановлено</string>
+    <string name="state_done">Завершено</string>
+    <string name="state_failed">Ошибка</string>
+    <string name="state_seeding">Раздача · отдано %1$s</string>
+    <string name="peers">Пиров: %1$d</string>
+    <string name="action_pause">Приостановить</string>
+    <string name="action_resume">Продолжить</string>
+    <string name="action_remove">Убрать из списка</string>
+    <string name="action_remove_files">Удалить вместе с файлами</string>
+    <string name="action_files">Выбрать файлы</string>
+    <string name="action_cancel">Отмена</string>
+    <string name="action_ok">OK</string>
+    <string name="files_title">Файлы для загрузки</string>
+    <string name="err_bad_link">Эту ссылку Arqon скачать не может.</string>
+    <string name="err_bad_magnet">Эта magnet-ссылка недействительна.</string>
+    <string name="err_bad_torrent">Это не файл .torrent.</string>
+    <string name="err_already">Этот торрент уже есть в списке.</string>
+    <string name="added">Добавлено в загрузки</string>
+
+    <string name="browser_hint">Поиск или адрес сайта</string>
+    <string name="browser_desktop">Версия для компьютера</string>
+    <string name="browser_back">Назад</string>
+    <string name="browser_forward">Вперёд</string>
+    <string name="browser_reload">Обновить</string>
+    <string name="browser_download_started">Загрузка началась: %1$s</string>
+    <string name="browser_torrent_added">Торрент добавлен</string>
+    <string name="browser_open_downloads">Загрузки</string>
+
+    <string name="settings_title">Настройки</string>
+    <string name="settings_links">Используемые подключения</string>
+    <string name="settings_links_body">Выключите подключение, чтобы сберечь его трафик. Например, SIM с маленьким тарифом.</string>
+    <string name="settings_cellular_wifi">Экономить мобильный трафик</string>
+    <string name="settings_cellular_wifi_body">Использовать SIM-карты, только когда нет Wi-Fi.</string>
+    <string name="settings_desktop">По умолчанию версия для компьютера</string>
+    <string name="settings_desktop_body">Браузер показывает сайты, как на компьютере. Некоторые сайты скрывают ссылки для загрузки от телефонов.</string>
+    <string name="settings_seed">Продолжать раздачу завершённых торрентов</string>
+    <string name="settings_seed_body">Использует исходящую скорость и мобильный трафик. По умолчанию выключено.</string>
+    <string name="settings_parallel">Одновременных загрузок</string>
+    <string name="settings_folder">Папка загрузок</string>
+    <string name="settings_folder_body">%1$s</string>
+    <string name="settings_all_files">Разрешить доступ ко всем файлам</string>
+    <string name="settings_all_files_body">Позволяет Arqon сохранять в общую папку «Загрузки», где её видит ваш файловый менеджер. Без этого файлы попадают в собственную папку приложения.</string>
+    <string name="settings_notifications">Разрешить уведомления</string>
+    <string name="settings_notifications_body">Нужно, чтобы загрузка продолжалась в фоне.</string>
+    <string name="settings_about">Arqon %1$s · бесплатно, с открытым кодом</string>
+
+    <string name="notification_channel">Загрузки</string>
+    <string name="notification_title">Arqon: загрузок %1$d</string>
+    <string name="notification_speed">%1$s</string>
+    <string name="notification_waiting">Ожидание данных…</string>
+</resources>
