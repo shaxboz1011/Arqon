@@ -24,6 +24,9 @@
     <string name="link_free">Hisoblanmaydi</string>
     <string name="link_off">Siz o\'chirgansiz</string>
     <string name="link_ping">Ping %1$d ms</string>
+    <string name="link_test">Shu ulanishni sinash</string>
+    <string name="report_copy">Hisobotni nusxalash</string>
+    <string name="report_copied">Hisobot nusxalandi. Xabarga qo\'ying.</string>
     <string name="link_ping_none">Internetdan javob yo\'q</string>
 
     <string name="downloads_title">Yuklashlar</string>

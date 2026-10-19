@@ -24,6 +24,9 @@
     <string name="link_free">Не считается</string>
     <string name="link_off">Выключено вами</string>
     <string name="link_ping">Пинг %1$d мс</string>
+    <string name="link_test">Проверить это подключение</string>
+    <string name="report_copy">Скопировать отчёт</string>
+    <string name="report_copied">Отчёт скопирован. Вставьте его в сообщение.</string>
     <string name="link_ping_none">Нет ответа из интернета</string>
 
     <string name="downloads_title">Загрузки</string>

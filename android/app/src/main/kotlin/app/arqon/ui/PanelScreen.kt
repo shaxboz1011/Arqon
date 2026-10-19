@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +47,9 @@ fun PanelScreen(app: ArqonApp) {
     val links by app.links.all.collectAsState()
     val speeds by app.downloads.linkSpeeds.collectAsState()
     val active = links.filter { it.state == LinkState.ACTIVE && it.enabled }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val tests = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateMapOf<String, String>() }
+    val context = androidx.compose.ui.platform.LocalContext.current
     val askPhone = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
         app.links.rebuildSlots()
     }
@@ -60,10 +64,20 @@ fun PanelScreen(app: ArqonApp) {
                 else -> stringResource(R.string.panel_many, active.size)
             }
             Text(summary, color = Muted)
-            Spacer(Modifier.size(4.dp))
+            androidx.compose.material3.TextButton(onClick = {
+                val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Arqon", app.links.report()))
+                android.widget.Toast.makeText(context, context.getString(R.string.report_copied), android.widget.Toast.LENGTH_SHORT).show()
+            }) { Text(stringResource(R.string.report_copy)) }
         }
         item { TotalCard(speeds.values.sum(), links, speeds) }
-        items(links, key = { it.id }) { info -> LinkCard(info, speeds[info.id] ?: 0, onToggle = { app.settings.setLinkEnabled(info.id, it) }) }
+        items(links, key = { it.id }) { info ->
+            LinkCard(
+                info, speeds[info.id] ?: 0, tests[info.id],
+                onToggle = { app.settings.setLinkEnabled(info.id, it) },
+                onTest = { scope.launch { tests[info.id] = "…"; tests[info.id] = app.links.test(info) } },
+            )
+        }
         if (!app.links.hasPhonePermission()) {
             item {
                 InfoCard {
@@ -104,7 +118,7 @@ private fun TotalCard(total: Long, links: List<LinkInfo>, speeds: Map<String, Lo
 }
 
 @Composable
-private fun LinkCard(info: LinkInfo, speed: Long, onToggle: (Boolean) -> Unit) {
+private fun LinkCard(info: LinkInfo, speed: Long, testResult: String?, onToggle: (Boolean) -> Unit, onTest: () -> Unit) {
     InfoCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(12.dp).clip(CircleShape).background(if (info.state == LinkState.ACTIVE && info.enabled) linkColor(info) else Muted))
@@ -128,6 +142,8 @@ private fun LinkCard(info: LinkInfo, speed: Long, onToggle: (Boolean) -> Unit) {
                 Text(Format.speed(speed), fontSize = 13.sp, color = linkColor(info))
                 Text(if (info.metered) stringResource(R.string.link_metered) else stringResource(R.string.link_free), fontSize = 13.sp, color = Muted)
             }
+            androidx.compose.material3.TextButton(onClick = onTest) { Text(stringResource(R.string.link_test)) }
+            if (testResult != null) Text(testResult, fontSize = 12.sp, color = if (testResult.startsWith("OK")) WifiColor else Muted)
         } else if (info.state == LinkState.UNAVAILABLE) {
             Spacer(Modifier.size(6.dp))
             Text(stringResource(R.string.link_unavailable_body), color = Muted, fontSize = 13.sp)

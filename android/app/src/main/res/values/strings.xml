@@ -24,6 +24,9 @@
     <string name="link_free">Not counted</string>
     <string name="link_off">Switched off by you</string>
     <string name="link_ping">Ping %1$d ms</string>
+    <string name="link_test">Test this connection</string>
+    <string name="report_copy">Copy report</string>
+    <string name="report_copied">Report copied. Paste it into a message.</string>
     <string name="link_ping_none">No internet answer</string>
 
     <string name="downloads_title">Downloads</string>

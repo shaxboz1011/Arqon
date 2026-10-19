@@ -66,6 +66,44 @@ class AndroidLinkManager(
 
     private val _all = MutableStateFlow<List<LinkInfo>>(emptyList())
 
+    private val log = java.util.ArrayDeque<String>()
+    private val clock = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US)
+
+    /** What Android told us, in order. It is what makes a failure on one phone understandable. */
+    @Synchronized
+    fun note(text: String) {
+        log.addLast(clock.format(java.util.Date()) + "  " + text)
+        while (log.size > 120) log.removeFirst()
+    }
+
+    private fun describe(caps: NetworkCapabilities?): String {
+        if (caps == null) return "?"
+        val parts = ArrayList<String>()
+        for ((t, name) in listOf(
+            NetworkCapabilities.TRANSPORT_WIFI to "WIFI", NetworkCapabilities.TRANSPORT_CELLULAR to "CELLULAR",
+            NetworkCapabilities.TRANSPORT_ETHERNET to "ETHERNET", NetworkCapabilities.TRANSPORT_VPN to "VPN",
+        )) if (caps.hasTransport(t)) parts += name
+        for ((c, name) in listOf(
+            NetworkCapabilities.NET_CAPABILITY_INTERNET to "INTERNET", NetworkCapabilities.NET_CAPABILITY_VALIDATED to "VALIDATED",
+            NetworkCapabilities.NET_CAPABILITY_NOT_METERED to "NOT_METERED", NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED to "NOT_RESTRICTED",
+        )) if (caps.hasCapability(c)) parts += name
+        return parts.joinToString("+")
+    }
+
+    /** A text a user can copy and send: phone, Android version, permissions, every request and what came of it. */
+    @Synchronized
+    fun report(): String = buildString {
+        appendLine("Arqon ${app.arqon.BuildConfig.VERSION_NAME} · ${Build.MANUFACTURER} ${Build.MODEL} · Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
+        appendLine("phone permission: ${hasPhonePermission()}")
+        appendLine("active network: " + cm.activeNetwork?.let { describe(cm.getNetworkCapabilities(it)) })
+        appendLine("--- links")
+        for (info in _all.value) appendLine("${info.id} \"${info.name}\" ${info.state} enabled=${info.enabled} metered=${info.metered} ping=${info.pingMillis}")
+        appendLine("--- requests")
+        for (slot in slots.values) appendLine("${slot.id}: network=${slot.network} unavailableSince=${slot.unavailableSince}")
+        appendLine("--- events")
+        log.forEach { appendLine(it) }
+    }
+
     /** Every link Android knows about, with its state (also the ones that are switched off or not available). */
     val all: StateFlow<List<LinkInfo>> = _all
 
@@ -77,6 +115,7 @@ class AndroidLinkManager(
     fun start() {
         if (started) return
         started = true
+        note("start; phone permission=${hasPhonePermission()}")
         rebuildSlots()
         scope.launch {
             // networks come and go (a SIM was switched, Wi-Fi was lost): requests that were never answered are repeated
@@ -147,17 +186,20 @@ class AndroidLinkManager(
     private fun ask(slot: Slot) {
         val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
+                note("${slot.id}: available $network on ${cm.getLinkProperties(network)?.interfaceName}")
                 slot.network = network
                 slot.unavailableSince = 0
                 publish()
             }
 
             override fun onLost(network: Network) {
+                note("${slot.id}: lost $network")
                 if (slot.network == network) slot.network = null
                 publish()
             }
 
             override fun onUnavailable() {
+                note("${slot.id}: Android did not give this network (unavailable)")
                 slot.network = null
                 slot.unavailableSince = System.currentTimeMillis()
                 publish()
@@ -165,15 +207,18 @@ class AndroidLinkManager(
 
             override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) {
                 slot.metered = !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
+                note("${slot.id}: capabilities ${describe(caps)}")
                 publish()
             }
         }
         slot.callback = callback
         try {
             cm.requestNetwork(slot.request, callback, 15_000)
-        } catch (_: SecurityException) {
+        } catch (e: SecurityException) {
+            note("${slot.id}: request refused (${e.message})")
             slot.unavailableSince = System.currentTimeMillis()
-        } catch (_: RuntimeException) {
+        } catch (e: RuntimeException) {
+            note("${slot.id}: request failed (${e.javaClass.simpleName}: ${e.message})")
             slot.unavailableSince = System.currentTimeMillis()
         }
     }
@@ -242,6 +287,30 @@ class AndroidLinkManager(
         )
     }
 
+    /** Downloads a few megabytes through one link only and says what happened: the plainest way to see whether the link really carries data. */
+    suspend fun test(info: LinkInfo): String = withContext(Dispatchers.IO) {
+        val link = info.link ?: return@withContext "no network"
+        try {
+            val client = link.httpClient(okhttp3.OkHttpClient.Builder().callTimeout(20, java.util.concurrent.TimeUnit.SECONDS).build())
+            val started = System.nanoTime()
+            var bytes = 0L
+            client.newCall(okhttp3.Request.Builder().url("https://speed.cloudflare.com/__down?bytes=4000000").build()).execute().use { response ->
+                if (!response.isSuccessful) return@withContext "HTTP ${response.code}"
+                val source = response.body!!.source()
+                val buffer = ByteArray(64 * 1024)
+                while (true) { val n = source.read(buffer); if (n < 0) break; bytes += n }
+            }
+            val seconds = (System.nanoTime() - started) / 1e9
+            val text = "OK " + String.format(java.util.Locale.US, "%.1f Mbit/s (%d KB in %.1f s)", bytes * 8 / seconds / 1e6, bytes / 1024, seconds)
+            note("${info.id}: test $text")
+            text
+        } catch (e: Exception) {
+            val text = "${e.javaClass.simpleName}: ${e.message}"
+            note("${info.id}: test failed $text")
+            text
+        }
+    }
+
     /** A tiny connection test through each link: it shows which networks really reach the internet, and how fast. */
     private suspend fun probeAll() {
         for (info in _all.value) {
@@ -253,7 +322,8 @@ class AndroidLinkManager(
                         socket.connect(InetSocketAddress("1.1.1.1", 443), 2500)
                     }
                     ((System.nanoTime() - started) / 1_000_000).toInt()
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    note("${info.id}: connection test failed (${e.javaClass.simpleName}: ${e.message})")
                     null
                 }
             }
