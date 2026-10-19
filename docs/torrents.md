@@ -45,7 +45,7 @@ Incoming connections cannot be steered: they arrive on whichever adapter the pee
 - The engine is created when the first torrent is added, not at start-up. It opens a listening port, so Windows may show a **firewall question the first time**.
 - UPnP / NAT-PMP port mapping is **off**: it changes the router's configuration. Incoming connections therefore work only where the network allows them.
 - Resume data and the metadata of magnet links live in `%APPDATA%\Arqon\torrent-cache`.
-- Removing an unfinished torrent deletes its downloaded files, but only for a torrent started in the current session (the engine then knows exactly which files are its own). After a restart, the files of an unfinished torrent that you remove stay on disk.
+- Removing an unfinished torrent deletes its downloaded files, also after a restart: the torrent is added to the engine once more and removed again, so only files that belong to it go and the rest of the folder is left alone. (A magnet link whose metadata was never saved has no known files, so nothing is deleted for it.)
 - `wss://` (WebTorrent) trackers are not supported by MonoTorrent; a torrent that has only those finds no peers unless DHT helps.
 
 ## Tested

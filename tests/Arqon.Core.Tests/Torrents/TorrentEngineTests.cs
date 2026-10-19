@@ -118,6 +118,25 @@ public sealed class TorrentEngineTests : IDisposable
     }
 
     [Fact]
+    public async Task Discarding_a_torrent_from_an_earlier_session_deletes_its_files_and_nothing_else()
+    {
+        var saveDir = Path.Combine(_dir, "downloads");
+        Directory.CreateDirectory(saveDir);
+        var partial = Path.Combine(saveDir, "movie.bin");
+        var bystander = Path.Combine(saveDir, "keep-me.txt");
+        await File.WriteAllBytesAsync(partial, new byte[300_000]);
+        await File.WriteAllTextAsync(bystander, "not part of the torrent");
+        var torrentPath = Path.Combine(_dir, "movie.torrent");
+        await File.WriteAllBytesAsync(torrentPath, (await new TorrentCreator().CreateAsync(new TorrentFileSource(partial))).Encode());
+        using var restarted = new TorrentEngine(new TorrentEngineOptions(Path.Combine(_dir, "cache"), EnableDht: false));   // nothing is known to it yet
+
+        await restarted.DiscardAsync(torrentPath, saveDir);
+
+        Assert.False(File.Exists(partial));
+        Assert.True(File.Exists(bystander));
+    }
+
+    [Fact]
     public async Task Adding_the_same_torrent_twice_gives_the_same_handle_state_instead_of_an_error()
     {
         var dataPath = Path.Combine(_dir, "a.bin");

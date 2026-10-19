@@ -145,6 +145,19 @@ public sealed class TorrentEngine : IDisposable
         return new TorrentHandle(_engine, await _engine.AddAsync(torrent, saveFolder).ConfigureAwait(false));
     }
 
+    /// <summary>
+    /// Removes a torrent that this engine has not seen yet (one from an earlier session) together with its downloaded files.
+    /// The torrent is added first so MonoTorrent knows exactly which files are its own and leaves everything else in the
+    /// folder alone. A magnet link whose metadata was never cached has no known files, so only its cache entry goes.
+    /// </summary>
+    public async Task DiscardAsync(string source, string saveFolder)
+    {
+        var handle = source.StartsWith("magnet:", StringComparison.OrdinalIgnoreCase)
+            ? await AddMagnetAsync(source, saveFolder).ConfigureAwait(false)
+            : await AddFileAsync(source, saveFolder).ConfigureAwait(false);
+        await handle.RemoveAsync(deleteData: true).ConfigureAwait(false);
+    }
+
     /// <summary>How the DHT (the trackerless peer search that magnet links without trackers depend on) is doing.</summary>
     public string DhtStatus => _engine.Dht.State.ToString();
 

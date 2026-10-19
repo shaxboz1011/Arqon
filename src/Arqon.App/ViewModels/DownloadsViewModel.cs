@@ -229,11 +229,17 @@ public sealed class DownloadItemViewModel : ViewModelBase
         catch (Exception ex) when (ex is not OutOfMemoryException) { /* it is being stopped anyway */ }
     }
 
-    /// <summary>Takes the torrent out of the engine. Only a torrent that was started in this session is known to the engine.</summary>
+    /// <summary>
+    /// Takes the torrent out of the engine. A torrent that was not started in this session is not known to the engine yet;
+    /// to delete its files it is added once more and removed again, so only its own files go.
+    /// </summary>
     public async Task DropTorrentAsync(bool deleteData)
     {
-        if (_torrent is null) return;
-        try { await _torrent.RemoveAsync(deleteData); }
+        try
+        {
+            if (_torrent is not null) await _torrent.RemoveAsync(deleteData);
+            else if (deleteData && !_owner.IsDemo) await _owner.TorrentEngine().DiscardAsync(Record.Url, Record.Path);
+        }
         catch (Exception ex) when (ex is not OutOfMemoryException) { /* nothing more to clean up */ }
         _torrent = null;
     }
@@ -565,6 +571,8 @@ public sealed class DownloadsViewModel : ViewModelBase
     }
 
     // ---- torrents ---------------------------------------------------------------------------------------------
+
+    public bool IsDemo => _services.Demo;
 
     public TorrentEngine TorrentEngine() => _services.Torrents;
 
