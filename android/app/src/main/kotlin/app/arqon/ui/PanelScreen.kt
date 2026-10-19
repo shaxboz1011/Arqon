@@ -72,6 +72,7 @@ fun PanelScreen(app: ArqonApp) {
             }) { Text(stringResource(R.string.report_copy)) }
         }
         item { TotalCard(speeds.values.sum(), links, speeds) }
+        item { SpeedTestCard(app, activeCount = active.size) }
         items(links, key = { it.id }) { info ->
             LinkCard(
                 info, speeds[info.id] ?: 0, tests[info.id],
@@ -172,5 +173,38 @@ fun InfoCard(content: @Composable () -> Unit) {
         border = BorderStroke(1.dp, Line),
     ) {
         Column(Modifier.padding(14.dp)) { content() }
+    }
+}
+
+/** Tests every connection alone and then all together, so the gain from combining is a measured number, not a promise. */
+@Composable
+private fun SpeedTestCard(app: ArqonApp, activeCount: Int) {
+    val state by app.speedTester.state.collectAsState()
+    InfoCard {
+        Text(stringResource(R.string.test_title), fontSize = 18.sp, fontWeight = FontWeight.Medium)
+        Text(stringResource(R.string.test_note), color = Muted, fontSize = 12.sp)
+        Spacer(Modifier.size(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = { app.speedTester.runSeparately() }, enabled = !state.running && activeCount >= 1) { Text(stringResource(R.string.test_separate), fontSize = 12.sp) }
+            Button(onClick = { app.speedTester.runCombined() }, enabled = !state.running && activeCount >= 2) { Text(stringResource(R.string.test_combined), fontSize = 12.sp) }
+            Button(onClick = { app.speedTester.runBoth() }, enabled = !state.running && activeCount >= 2) { Text(stringResource(R.string.test_both), fontSize = 12.sp) }
+        }
+        if (state.running) {
+            Spacer(Modifier.size(8.dp))
+            Text(if (state.step != null) stringResource(R.string.test_running, state.step!!) else stringResource(R.string.test_running_all), color = Accent, fontSize = 13.sp)
+        }
+        for ((id, mbit) in state.separate) {
+            Spacer(Modifier.size(4.dp))
+            Text(stringResource(R.string.test_alone, state.names[id] ?: id, String.format(java.util.Locale.US, "%.1f", mbit)), color = linkColor(id), fontSize = 14.sp)
+        }
+        state.combined?.let { total ->
+            Spacer(Modifier.size(6.dp))
+            Text(stringResource(R.string.test_together, String.format(java.util.Locale.US, "%.1f", total)), fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            for ((id, mbit) in state.combinedPerLink) {
+                Text(stringResource(R.string.test_alone, state.names[id] ?: id, String.format(java.util.Locale.US, "%.1f", mbit)), color = linkColor(id), fontSize = 12.sp)
+            }
+            state.gain?.let { Text(stringResource(R.string.test_gain, String.format(java.util.Locale.US, "%.2f", it)), color = WifiColor, fontSize = 14.sp) }
+        }
+        for ((id, error) in state.errors) Text(stringResource(R.string.test_error, state.names[id] ?: id, error), color = Bad, fontSize = 12.sp)
     }
 }

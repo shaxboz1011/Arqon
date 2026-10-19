@@ -17,12 +17,15 @@ class ArqonApp : Application() {
         private set
     lateinit var downloads: DownloadCenter
         private set
+    lateinit var speedTester: app.arqon.net.SpeedTester
+        private set
 
     override fun onCreate() {
         super.onCreate()
         settings = AppSettings(this)
         links = AndroidLinkManager(this, settings, scope)
-        downloads = DownloadCenter(this, links, settings, scope) { summary -> DownloadService.update(this, summary) }
+        downloads = DownloadCenter(this, links, settings, scope) { summary -> if (summary.running > 0) DownloadService.ensureRunning(this) }
+        speedTester = app.arqon.net.SpeedTester(links, scope)
         links.start()
         downloads.start()
     }

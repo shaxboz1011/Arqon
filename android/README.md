@@ -20,6 +20,9 @@ Install `app-debug.apk` (build it with `./gradlew :app:assembleDebug`, or take t
   The Panel shows which ones answered and never pretends.
 - The torrent engine was tested with local seeders and against a real swarm (a Debian torrent over Wi-Fi on a computer).
   Dual-SIM, the browser, the screens and the background service have **not yet been tested on a phone**.
+- Speed test on the Panel: every connection alone, all together, and the measured gain.
+- A notification (and an optional label over other apps, games included) says which connections are combined. It does not
+  change a game's own traffic: that still uses one connection until the game mode below exists.
 - Not done yet: game mode (steering game traffic over the best link needs a VpnService), DHT, incoming connections, a language
   picker inside the app (it follows the phone's language: English, Uzbek, Russian).
 

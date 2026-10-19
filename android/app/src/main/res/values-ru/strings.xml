@@ -92,4 +92,25 @@
     <string name="notification_title">Arqon: загрузок %1$d</string>
     <string name="notification_speed">%1$s</string>
     <string name="notification_waiting">Ожидание данных…</string>
+    <string name="status_none">Arqon: нет подключения</string>
+    <string name="status_single">Arqon: только %1$s</string>
+    <string name="status_combined">Arqon объединил: %1$s</string>
+    <string name="status_idle">Готов</string>
+    <string name="status_downloads">Загрузок: %1$d</string>
+    <string name="settings_status">Показывать состояние в уведомлении</string>
+    <string name="settings_status_body">Держит Arqon работающим в фоне и показывает, какие подключения объединены: в том числе на экране блокировки и во время игры.</string>
+    <string name="settings_overlay">Небольшой индикатор поверх других приложений</string>
+    <string name="settings_overlay_body">Надпись в углу экрана, в том числе поверх игр: какие подключения объединены и скорость. Игре не мешает. Важно: собственный трафик игры пока идёт по одному подключению; Arqon ускоряет свои загрузки, торренты и загрузки из браузера.</string>
+    <string name="settings_overlay_grant">Разрешить показ поверх других приложений</string>
+    <string name="test_title">Тест скорости</string>
+    <string name="test_note">Каждый шаг скачивает тестовый файл 6 секунд и тратит трафик проверяемого подключения.</string>
+    <string name="test_separate">Каждое отдельно</string>
+    <string name="test_combined">Все вместе</string>
+    <string name="test_both">Сравнить</string>
+    <string name="test_running">Проверка: %1$s…</string>
+    <string name="test_running_all">Проверка всех подключений вместе…</string>
+    <string name="test_alone">%1$s отдельно: %2$s Мбит/с</string>
+    <string name="test_together">Все вместе: %1$s Мбит/с</string>
+    <string name="test_gain">Это в %1$s раза быстрее самого быстрого одного подключения.</string>
+    <string name="test_error">%1$s: %2$s</string>
 </resources>

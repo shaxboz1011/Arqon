@@ -92,4 +92,25 @@
     <string name="notification_title">Arqon: %1$d ta yuklash</string>
     <string name="notification_speed">%1$s</string>
     <string name="notification_waiting">Ma\'lumot kutilmoqda…</string>
+    <string name="status_none">Arqon: ulanish yo\'q</string>
+    <string name="status_single">Arqon: faqat %1$s</string>
+    <string name="status_combined">Arqon birlashtirdi: %1$s</string>
+    <string name="status_idle">Tayyor</string>
+    <string name="status_downloads">%1$d ta yuklash</string>
+    <string name="settings_status">Holatni bildirishnomada ko\'rsatish</string>
+    <string name="settings_status_body">Arqon\'ni fonda ishlab turishga majburlaydi va qaysi ulanishlar birlashganini ko\'rsatadi: qulflangan ekranda va o\'yin paytida ham.</string>
+    <string name="settings_overlay">Boshqa ilovalar ustida kichik indikator</string>
+    <string name="settings_overlay_body">Ekran burchagidagi yozuv (o\'yinlar ustida ham): qaysi ulanishlar birlashgani va tezlikni ko\'rsatadi. O\'yinga tegmaydi. Eslatma: o\'yinning o\'z trafigi hozircha bitta ulanishdan o\'tadi; Arqon o\'zining yuklashlari, torrentlari va brauzerdagi yuklashlarini tezlashtiradi.</string>
+    <string name="settings_overlay_grant">Boshqa ilovalar ustida ko\'rsatishga ruxsat</string>
+    <string name="test_title">Tezlik sinovi</string>
+    <string name="test_note">Har bir bosqich sinov faylini 6 soniya yuklaydi va sinalayotgan ulanish trafigini sarflaydi.</string>
+    <string name="test_separate">Har biri alohida</string>
+    <string name="test_combined">Hammasi birga</string>
+    <string name="test_both">Solishtirish</string>
+    <string name="test_running">Sinalmoqda: %1$s…</string>
+    <string name="test_running_all">Hamma ulanish birga sinalmoqda…</string>
+    <string name="test_alone">%1$s alohida: %2$s Mbit/s</string>
+    <string name="test_together">Hammasi birga: %1$s Mbit/s</string>
+    <string name="test_gain">Bu eng tez yagona ulanishdan %1$s marta tez.</string>
+    <string name="test_error">%1$s: %2$s</string>
 </resources>

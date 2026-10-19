@@ -92,4 +92,25 @@
     <string name="notification_title">Arqon: %1$d downloads</string>
     <string name="notification_speed">%1$s</string>
     <string name="notification_waiting">Waiting for data…</string>
+    <string name="status_none">Arqon: no connection</string>
+    <string name="status_single">Arqon: %1$s only</string>
+    <string name="status_combined">Arqon combined: %1$s</string>
+    <string name="status_idle">Ready</string>
+    <string name="status_downloads">%1$d downloads</string>
+    <string name="settings_status">Show status in the notification</string>
+    <string name="settings_status_body">Keeps Arqon running in the background and shows which connections are combined, also on the lock screen and while a game is on.</string>
+    <string name="settings_overlay">Small indicator over other apps</string>
+    <string name="settings_overlay_body">A label in the corner of the screen, also over games, that shows which connections are combined and the speed. It does not touch the game. Note: a game\'s own traffic still uses one connection; Arqon speeds up its own downloads, torrents and browser downloads.</string>
+    <string name="settings_overlay_grant">Allow display over other apps</string>
+    <string name="test_title">Speed test</string>
+    <string name="test_note">Each step downloads a test file for 6 seconds and uses the data of the connection being tested.</string>
+    <string name="test_separate">Each alone</string>
+    <string name="test_combined">All together</string>
+    <string name="test_both">Compare</string>
+    <string name="test_running">Testing: %1$s…</string>
+    <string name="test_running_all">Testing all connections together…</string>
+    <string name="test_alone">%1$s alone: %2$s Mbit/s</string>
+    <string name="test_together">All together: %1$s Mbit/s</string>
+    <string name="test_gain">That is %1$s× the fastest single connection.</string>
+    <string name="test_error">%1$s: %2$s</string>
 </resources>

@@ -41,6 +41,8 @@ fun SettingsScreen(app: ArqonApp) {
     val seed by app.settings.seedAfterComplete.collectAsState()
     val parallel by app.settings.maxConcurrent.collectAsState()
     val cellularOnly by app.settings.cellularOnlyWithoutWifi.collectAsState()
+    val keepStatus by app.settings.keepStatus.collectAsState()
+    val overlay by app.settings.overlay.collectAsState()
     val context = LocalContext.current
     val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
@@ -50,6 +52,16 @@ fun SettingsScreen(app: ArqonApp) {
 
         InfoCard {
             ToggleRow(stringResource(R.string.settings_cellular_wifi), stringResource(R.string.settings_cellular_wifi_body), cellularOnly) { app.settings.setCellularOnlyWithoutWifi(it) }
+        }
+        InfoCard { ToggleRow(stringResource(R.string.settings_status), stringResource(R.string.settings_status_body), keepStatus) { app.settings.setKeepStatus(it) } }
+        InfoCard {
+            ToggleRow(stringResource(R.string.settings_overlay), stringResource(R.string.settings_overlay_body), overlay) { app.settings.setOverlay(it) }
+            if (overlay && !android.provider.Settings.canDrawOverlays(context)) {
+                Spacer(Modifier.size(8.dp))
+                Button(onClick = {
+                    context.startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}")))
+                }) { Text(stringResource(R.string.settings_overlay_grant)) }
+            }
         }
         InfoCard { ToggleRow(stringResource(R.string.settings_desktop), stringResource(R.string.settings_desktop_body), desktop) { app.settings.setDesktopMode(it) } }
         InfoCard { ToggleRow(stringResource(R.string.settings_seed), stringResource(R.string.settings_seed_body), seed) { app.settings.setSeed(it) } }

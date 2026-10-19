@@ -14,6 +14,16 @@ class AppSettings(context: Context) {
     private val _seed = MutableStateFlow(prefs.getBoolean("seed", false))
     val seedAfterComplete: StateFlow<Boolean> = _seed
 
+    private val _keepStatus = MutableStateFlow(prefs.getBoolean("keepStatus", true))
+
+    /** Keep the notification (and Arqon running in the background) that says which connections are combined. */
+    val keepStatus: StateFlow<Boolean> = _keepStatus
+
+    private val _overlay = MutableStateFlow(prefs.getBoolean("overlay", false))
+
+    /** Show a small label over other apps, games included. */
+    val overlay: StateFlow<Boolean> = _overlay
+
     private val _maxConcurrent = MutableStateFlow(prefs.getInt("maxConcurrent", 3))
     val maxConcurrent: StateFlow<Int> = _maxConcurrent
 
@@ -31,6 +41,10 @@ class AppSettings(context: Context) {
     val cellularOnlyWithoutWifi: StateFlow<Boolean> = _cellularOnlyWhenWifiIsAbsent
 
     fun setDesktopMode(value: Boolean) { prefs.edit().putBoolean("desktopMode", value).apply(); _desktopMode.value = value }
+
+    fun setKeepStatus(value: Boolean) { prefs.edit().putBoolean("keepStatus", value).apply(); _keepStatus.value = value }
+
+    fun setOverlay(value: Boolean) { prefs.edit().putBoolean("overlay", value).apply(); _overlay.value = value }
 
     fun setSeed(value: Boolean) { prefs.edit().putBoolean("seed", value).apply(); _seed.value = value }
 
