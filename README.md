@@ -1,92 +1,156 @@
 ﻿<div align="center">
 
+<img src="docs/img/logo.png" alt="Arqon logo" width="96">
+
 # Arqon
 
-**Use Wi-Fi, Ethernet and your phone's internet at the same time on Windows.**
-Faster downloads. Smooth games while you download. Free and open source.
+### Wi-Fi + Ethernet + your phone's internet, all at once, on Windows.
 
-[**English**](README.md) · [**O'zbekcha**](README.uz.md) · [**Русский**](README.ru.md)
+**⚡ Faster downloads &nbsp;·&nbsp; 🎮 Smooth games while you download &nbsp;·&nbsp; 🆓 Free &nbsp;·&nbsp; 🔓 Open source**
 
-[![Build](https://github.com/OWNER/Arqon/actions/workflows/build.yml/badge.svg)](https://github.com/OWNER/Arqon/actions/workflows/build.yml)
-[![Release](https://img.shields.io/github/v/release/OWNER/Arqon?include_prereleases)](https://github.com/OWNER/Arqon/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/OWNER/Arqon/total)](https://github.com/OWNER/Arqon/releases)
+[![Download](https://img.shields.io/badge/⬇_Download-Arqon.exe-6C8CFF?style=for-the-badge)](https://github.com/shaxboz1011/Arqon/releases/latest)
+
+[![Build](https://github.com/shaxboz1011/Arqon/actions/workflows/build.yml/badge.svg)](https://github.com/shaxboz1011/Arqon/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/shaxboz1011/Arqon?include_prereleases&label=release)](https://github.com/shaxboz1011/Arqon/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/shaxboz1011/Arqon/total?label=downloads)](https://github.com/shaxboz1011/Arqon/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 ![Windows 10/11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4)
 ![.NET 10](https://img.shields.io/badge/.NET-10-512BD4)
 
-<img src="docs/img/en-panel.png" alt="Arqon dashboard: Wi-Fi and a USB phone combined into one connection" width="820">
+**🌐 Language:** **English** · [O'zbekcha](README.uz.md) · [Русский](README.ru.md)
+
+<br>
+
+<img src="docs/img/en-panel.png" alt="Arqon dashboard: Wi-Fi and a USB phone combined into one connection" width="860">
 
 </div>
 
+<br>
+
 > *Arqon* means "rope" in Uzbek: several thin strands, one strong line.
 
-## Why Arqon
+**On this page:**
+[Why](#-why-arqon) ·
+[How it works](#-how-it-works) ·
+[Install](#-install-in-1-minute) ·
+[Tour](#-quick-tour) ·
+[System mode](#-system-mode-every-app) ·
+[Command line](#-command-line) ·
+[FAQ](#-faq) ·
+[Build](#-build-from-source) ·
+[Status](#-features-and-status) ·
+[Contribute](#-contributing)
 
-Most people have more than one way online: home Wi-Fi, a cable, a phone with a data plan. Windows uses only one at a time. So a big download crawls, and while it runs your game lags.
+---
 
-Arqon uses **all of them together**:
+## 🎯 Why Arqon
 
-- **Faster downloads.** A file is split into pieces and every piece is fetched over a different connection at once. In a real test, 140 MB over Wi-Fi plus a USB phone took about 10 seconds.
-- **Games stay smooth.** Arqon sees a running game, watches its ping, and slows downloads only on the game's link, only as much as needed, then gives the speed back.
-- **Every app can benefit.** *System mode* spreads the connections of Telegram, Chrome, Steam and others over your links. In a first real test, 40 parallel downloads finished in 5.3 s instead of 11.3 s.
-- **Torrents too.** Peer connections are spread over every link. Paste a magnet link or open a `.torrent` file, and choose which files to download.
-- **Nothing hidden.** No account, no ads, no telemetry. MIT licence.
+Most people have more than one way online: home Wi-Fi, a cable, a phone with a data plan. **Windows uses only one at a time.** So a big download crawls, and while it runs your game lags.
 
-> Arqon only adds bandwidth when each link has its **own** way to the internet (for example Wi-Fi from one router plus a phone's mobile data). Two adapters behind the same router share one line and give no gain.
+Arqon puts **all of them to work together**:
 
-## Screenshots
+| | What you get | Proof |
+|---|---|---|
+| ⚡ | **Faster downloads.** A file is cut into pieces and every piece travels over a different connection at the same time. | 140 MB over Wi-Fi + a USB phone in about **10 s** |
+| 🎮 | **Games stay smooth.** Arqon notices a running game, watches its ping, and slows downloads *only on the game's link*, *only as much as needed*, then gives the speed back. | Game guard with automatic recovery |
+| 🌍 | **Every app can benefit.** *System mode* spreads the connections of Telegram, Chrome, Steam and others over your links. | 40 parallel downloads in **5.3 s** instead of 11.3 s |
+| 🧲 | **Torrents too.** Peer connections are spread over every link. Paste a magnet link or open a `.torrent`, and pick which files you want. | Real Debian torrent: both adapters carried data |
+| 🔒 | **Nothing hidden.** No account, no ads, no telemetry. | MIT licence, read the code |
+
+> [!IMPORTANT]
+> Arqon adds bandwidth only when each link has its **own** way to the internet, for example Wi-Fi from one router plus a phone's mobile data. Two adapters behind the *same* router share one line and give no gain.
+
+## 🧵 How it works
+
+```mermaid
+flowchart LR
+    F["📄 File on a server"] --> I(("🌐 Internet"))
+    I -->|"pieces 1, 3, 5 …"| W["📶 Wi-Fi"]
+    I -->|"pieces 2, 4, 6 …"| P["📱 Phone (USB)"]
+    W --> A["💻 Arqon"]
+    P --> A
+    A --> D["✅ One complete file, faster"]
+```
+
+- **Downloads and torrents:** Arqon opens connections bound to each adapter and shares the pieces between them. A slow or dead link never blocks the others.
+- **Game guard:** it watches ping, jitter and loss of the link a game uses. When they rise, downloads on that link are slowed a little; when they calm down, the speed comes back step by step.
+- **System mode (optional):** a packet driver lets Arqon give each *new* connection of any program to one of your links. A connection never moves once started, so nothing breaks.
+
+## 📸 Screenshots
+
+<div align="center">
 
 | Downloads | Apps | Usage |
-|---|---|---|
-| <img src="docs/img/en-downloads.png" width="270"> | <img src="docs/img/en-apps.png" width="270"> | <img src="docs/img/en-usage.png" width="270"> |
+|:---:|:---:|:---:|
+| <img src="docs/img/en-downloads.png" width="280"> | <img src="docs/img/en-apps.png" width="280"> | <img src="docs/img/en-usage.png" width="280"> |
 
-The interface is in **Uzbek and English** (switch in Settings); this guide is also in Russian. Screenshots are taken in demo mode.
+</div>
 
-## Install
+<sub>The interface is in **Uzbek and English** (switch in Settings). This guide is also in Russian. Screenshots are taken in demo mode.</sub>
 
-1. Download **`Arqon.exe`** from the [latest release](https://github.com/OWNER/Arqon/releases/latest). It is one file: nothing to install, .NET is included.
-2. Double-click it. Windows SmartScreen may warn that the app is unrecognised, because the file is not code-signed yet (see [Security](#security)). Click **More info → Run anyway**.
-3. Connect your second internet, for example a phone with **USB tethering** (Android: Settings → Network → Hotspot & tethering → USB tethering).
-4. Open **Dashboard**: both connections should be listed. If a yellow notice appears, press **Fix** (Windows may otherwise switch off the second network).
+## 🚀 Install in 1 minute
 
-To check the download, compare its SHA-256 with the `Arqon.exe.sha256` file in the release:
+1. **Download `Arqon.exe`** from the [latest release](https://github.com/shaxboz1011/Arqon/releases/latest). It is one file: nothing to install, .NET is included.
+2. **Double-click it.**
+
+   > [!NOTE]
+   > Windows SmartScreen may say the app is unrecognised, because the file is not code-signed yet (see [Security](#-security)). Click **More info → Run anyway**.
+
+3. **Connect your second internet**, for example a phone with **USB tethering**.
+   *Android: Settings → Network → Hotspot & tethering → USB tethering.*
+4. **Open Dashboard.** Both connections should be listed. If a yellow notice appears, press **Fix** (otherwise Windows may switch off the second network).
+
+<details>
+<summary><b>🔐 Verify the download (optional)</b></summary>
+
+Compare the SHA-256 of your file with the `Arqon.exe.sha256` file in the release:
 
 ```powershell
 (Get-FileHash .\Arqon.exe -Algorithm SHA256).Hash
 ```
 
-### Quick tour
+</details>
+
+## 🧭 Quick tour
 
 | Page | What you do there |
 |---|---|
-| **Dashboard** | See every connection live: speed, ping, jitter, loss. One-click fix for Windows switching off the second network. |
-| **Downloads** | Paste a file link or a magnet link, or pick a `.torrent` file. Choose the folder. Pick files inside a multi-file torrent. |
-| **Apps** | Set rules per app: automatic, only Wi-Fi, only phone, both, or a speed cap. Games are detected automatically. |
-| **Usage** | How much data each connection used per day and per month (handy for a phone data plan). |
-| **Settings** | Language, speed unit (Mbit/s or MB/s), game protection, system mode, torrents, start with Windows. |
+| 📊 **Dashboard** | See every connection live: speed, ping, jitter, loss. One-click fix for Windows switching off the second network. |
+| ⬇️ **Downloads** | Paste a file link or a magnet link, or pick a `.torrent`. Choose the folder. Pick files inside a multi-file torrent. |
+| 🧩 **Apps** | Rules per app: automatic, only Wi-Fi, only phone, both, or a speed cap. Games are detected automatically. |
+| 📈 **Usage** | How much data each connection used per day and month (handy for a phone data plan). |
+| ⚙️ **Settings** | Language, speed unit (Mbit/s or MB/s), game protection, system mode, torrents, tray, start with Windows. |
 
-## System mode (every app, not only Arqon)
+## 🔧 System mode (every app)
 
-System mode steers new connections of all programs over your links. It needs the signed [WinDivert](https://reqrypt.org/windivert.html) packet driver and **administrator rights**, so it is off by default.
+System mode steers new connections of **all** programs over your links. It needs the signed [WinDivert](https://reqrypt.org/windivert.html) packet driver and **administrator rights**, so it is **off by default**.
+
+<details>
+<summary><b>Show the setup commands</b></summary>
 
 ```powershell
 # 1. Download the helper script (it checks the driver's signature before installing)
-Invoke-WebRequest https://raw.githubusercontent.com/OWNER/Arqon/main/tools/get-windivert.ps1 -OutFile get-windivert.ps1
+Invoke-WebRequest https://raw.githubusercontent.com/shaxboz1011/Arqon/main/tools/get-windivert.ps1 -OutFile get-windivert.ps1
 
 # 2. Put the driver next to Arqon.exe (change the folder to where your Arqon.exe is)
 powershell -ExecutionPolicy Bypass -File .\get-windivert.ps1 -Destination "C:\Tools\Arqon"
 ```
 
-Then start `Arqon.exe` **as administrator** and switch on *System mode* in Settings. If anything goes wrong, Windows routes normally again at once. While a game from the catalogue is running, Arqon switches system mode off and unloads the driver (anti-cheat safety). Details: [docs/steering.md](docs/steering.md).
+Then start `Arqon.exe` **as administrator** and switch on *System mode* in Settings.
 
-## Command line
+</details>
+
+> [!TIP]
+> It fails open: if anything goes wrong, Windows routes normally again at once. While a game from the catalogue runs, Arqon switches system mode off and unloads the driver (anti-cheat safety). Details: [docs/steering.md](docs/steering.md).
+
+## 🧰 Command line
 
 Everything is in the window, but these options exist:
 
 | Command | What it does |
 |---|---|
 | `Arqon.exe` | Start normally. |
-| `Arqon.exe "C:\path\file.torrent"` | Add a torrent file (this is what a double-click on a `.torrent` does). |
+| `Arqon.exe "C:\path\file.torrent"` | Add a torrent file (what a double-click on a `.torrent` does). |
 | `Arqon.exe "magnet:?xt=urn:btih:..."` | Add a magnet link. A running Arqon receives it and adds it. |
 | `Arqon.exe --tray` | Start hidden in the tray (used by *Start with Windows*). |
 | `Arqon.exe --demo` | Two pretend connections, no phone needed. Good for trying the interface. |
@@ -94,12 +158,56 @@ Everything is in the window, but these options exist:
 
 In Settings, **Open torrents and magnet links with Arqon** registers it for `.torrent` files and `magnet:` links (current user only, no administrator rights, and it never takes over another program's default).
 
-## Build from source
+## ❓ FAQ
+
+<details>
+<summary><b>Do I need a phone?</b></summary>
+
+No. Any two (or more) connections that have their own way to the internet work: Wi-Fi from one router plus a cable from another, plus a phone, and so on. A phone over USB tethering is just the easiest second line.
+
+</details>
+
+<details>
+<summary><b>Will it eat my mobile data?</b></summary>
+
+Yes, whatever goes through the phone is counted by your mobile plan. It is best with an unlimited plan. The **Usage** page shows what each link used, and **Apps** lets you pin an app to Wi-Fi only or set a speed cap.
+
+</details>
+
+<details>
+<summary><b>Is it safe to use with online games?</b></summary>
+
+Game protection only *slows downloads*; it does not touch the game. System mode loads a network driver, which some anti-cheat programs distrust, so **Safe game mode** (on by default) switches system mode off and unloads the driver while a game runs. It was tested with a fake game, **not yet with a real anti-cheat**. For VAC-protected games, keep system mode off if you want to be extra careful.
+
+</details>
+
+<details>
+<summary><b>Why does system mode need administrator rights?</b></summary>
+
+Only system mode does, because it loads a packet driver. Downloads, torrents, the game guard and everything else work without administrator rights.
+
+</details>
+
+<details>
+<summary><b>Does it work on Windows 7, Linux or macOS?</b></summary>
+
+No. Arqon is for Windows 10 and 11 (64-bit).
+
+</details>
+
+<details>
+<summary><b>How do I remove it?</b></summary>
+
+Turn off *Start with Windows* and *Open torrents and magnet links with Arqon* in Settings, close Arqon, and delete `Arqon.exe`. Its data (settings, download list) lives in `%APPDATA%\Arqon`; delete that folder too if you want. If you installed WinDivert for system mode, delete `WinDivert.dll` and `WinDivert64.sys` next to the exe.
+
+</details>
+
+## 📦 Build from source
 
 You need Windows 10/11 and the [.NET 10 SDK](https://dotnet.microsoft.com/download).
 
 ```powershell
-git clone https://github.com/OWNER/Arqon.git
+git clone https://github.com/shaxboz1011/Arqon.git
 cd Arqon
 
 dotnet run --project src/Arqon.App            # run with your real adapters
@@ -110,46 +218,50 @@ dotnet test                                    # 379 tests
 powershell -ExecutionPolicy Bypass -File tools\build.ps1
 ```
 
-## Features and status
+## 📋 Features and status
 
 | Feature | Status |
 |---|---|
-| Link discovery (Wi-Fi / Ethernet / phone) and live monitor: speed, ping, jitter, loss | Done |
-| Multi-link download manager: chunked HTTP ranges over every link, resume, endgame racing, speed limit, respects 429 / Retry-After | Done |
-| Download queue (at most N at once, "Start now" jumps the line) | Done |
-| Game ping guard: caps downloads on the game's link only, then gives bandwidth back gradually | Done |
-| Per-app rules, built-in game catalogue, JSON settings | Done |
-| One-click fix for the Windows policy that switches off the second network | Done |
-| Usage statistics per link, per day and month | Done |
-| Tray icon, notifications, clipboard offer, single instance, start with Windows | Done |
-| Taskbar speed meter with hover totals | Done (tested on Windows 10, bottom taskbar) |
-| Safe game mode (system mode off and driver unloaded while a game runs) | Done (tested with a fake game, not with a real anti-cheat) |
-| Speed unit switch (Mbit/s or MB/s) | Done |
-| Interface in Uzbek and English | Done (more languages welcome) |
-| **Torrents and magnet links** over every link; choose download folder; choose files; open from Windows | Done (real Debian torrent over Wi-Fi + phone: both adapters carried data) |
-| **System mode** (speed up Telegram, Chrome, every app) | Works in a first real test (Wi-Fi + USB phone). Not yet tested with a game or over a long session. Needs WinDivert and administrator rights |
-| Relay server (one connection split across links, duplicated game packets) | Planned |
-| Installer and code signing | Planned |
+| Link discovery (Wi-Fi / Ethernet / phone) and live monitor: speed, ping, jitter, loss | ✅ Done |
+| Multi-link download manager: chunked HTTP ranges over every link, resume, endgame racing, speed limit, respects 429 / Retry-After | ✅ Done |
+| Download queue (at most N at once, "Start now" jumps the line) | ✅ Done |
+| Game ping guard: caps downloads on the game's link only, then gives bandwidth back gradually | ✅ Done |
+| Per-app rules, built-in game catalogue, JSON settings | ✅ Done |
+| One-click fix for the Windows policy that switches off the second network | ✅ Done |
+| Usage statistics per link, per day and month | ✅ Done |
+| Tray icon, notifications, clipboard offer, single instance, start with Windows | ✅ Done |
+| Taskbar speed meter with hover totals | ✅ Done (tested on Windows 10, bottom taskbar) |
+| Safe game mode (system mode off and driver unloaded while a game runs) | ✅ Done (tested with a fake game, not a real anti-cheat) |
+| Speed unit switch (Mbit/s or MB/s) | ✅ Done |
+| Interface in Uzbek and English | ✅ Done (more languages welcome) |
+| Torrents and magnet links over every link; choose folder; choose files; open from Windows | ✅ Done (real Debian torrent over Wi-Fi + phone) |
+| **System mode** (speed up Telegram, Chrome, every app) | 🧪 Works in a first real test (Wi-Fi + USB phone). Not yet tested with a game or over a long session |
+| Relay server (one connection split across links, duplicated game packets) | 🗓 Planned |
+| Installer and code signing | 🗓 Planned |
 
-Honest limits: torrents stop when finished (no seeding yet), UPnP port mapping is off, and system mode was not yet checked with the driver when running from the single-file `Arqon.exe`.
+**Honest limits:** torrents stop when finished (no seeding yet), UPnP port mapping is off, and system mode has not yet been checked with the driver when running from the single-file `Arqon.exe`.
 
-## Security
+## 🔒 Security
 
 - **No telemetry, no account, no update pings.** Arqon connects only to what you ask for, plus: the link monitor opens a connection to `1.1.1.1` / `8.8.8.8` (port 443) to measure ping, and torrents contact public trackers and the DHT, as every torrent client does.
 - Changes to Windows (registry, driver) are explained first and reversible. System mode is off by default and fails open.
-- `Arqon.exe` is **not code-signed yet**, so SmartScreen warns. You can verify the SHA-256 or build it yourself from this source. Free code signing for open-source projects is planned.
+- `Arqon.exe` is **not code-signed yet**, so SmartScreen warns. Verify the SHA-256 or build it yourself from this source. Free code signing for open-source projects is planned.
 - Found a vulnerability? Please read [SECURITY.md](SECURITY.md).
 
-## Compared with similar tools
+## 🆚 Compared with similar tools
 
 [Plexo](https://github.com/anmolkapil/plexo) speeds up its own downloads (and torrents) with ranged requests over several networks. Arqon uses the same idea for its downloader and goes further: protecting game latency, per-app rules, steering the connections of other programs, and handling the Windows pitfalls (the Connection Manager policy) for you.
 
-## Contributing
+## 🤝 Contributing
 
-Bug reports, ideas, translations and pull requests are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md). Good first steps: try Arqon on your own two connections and tell us the result in an [issue](https://github.com/OWNER/Arqon/issues/new/choose), or add a language to the interface (`src/Arqon.App/Resources/Strings.*.xaml`: Russian is the first wanted one).
+Bug reports, ideas, translations and pull requests are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md).
+
+- 🧪 **Try it on your own two connections** and tell us the result: [share a test result](https://github.com/shaxboz1011/Arqon/issues/new/choose).
+- 🌐 **Add a language** to the interface (`src/Arqon.App/Resources/Strings.*.xaml`). Russian is the first one wanted.
+- 🐛 **Report a bug** or suggest an idea in an [issue](https://github.com/shaxboz1011/Arqon/issues/new/choose).
 
 If Arqon is useful to you, a ⭐ on GitHub helps other people find it.
 
-## Licence
+## 📄 Licence
 
 MIT, see [LICENSE](LICENSE). System mode uses [WinDivert](https://github.com/basil00/WinDivert) (LGPLv3), which is downloaded separately and is not part of this repository. Torrents use [MonoTorrent](https://github.com/alanmcgovern/monotorrent) (MIT).
