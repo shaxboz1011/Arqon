@@ -125,8 +125,10 @@ Compare the SHA-256 of your file with the `Arqon.exe.sha256` file in the release
 
 System mode steers new connections of **all** programs over your links. It needs the signed [WinDivert](https://reqrypt.org/windivert.html) packet driver and **administrator rights**, so it is **off by default**.
 
+**The easy way:** *Settings → System mode → Set up system mode*. Windows asks for administrator rights once; then Arqon tells Windows Defender to leave its driver folder alone, downloads the official WinDivert 2.2.2 driver, checks that it is exactly the genuine file with a valid signature, and turns system mode on. (Windows Defender wrongly reports this packet driver as suspicious, e.g. `Misleading:Win32/Malgent`, and removes it. That is the usual reason system mode "does not work" on another computer. If you use another antivirus, allow the folder `%APPDATA%\Arqon\driver` in it.)
+
 <details>
-<summary><b>Show the setup commands</b></summary>
+<summary><b>Or set it up by hand</b></summary>
 
 ```powershell
 # 1. Download the helper script (it checks the driver's signature before installing)
@@ -223,7 +225,7 @@ cd Arqon
 
 dotnet run --project src/Arqon.App            # run with your real adapters
 dotnet run --project src/Arqon.App -- --demo  # run with two pretend connections
-dotnet test                                    # 458 tests
+dotnet test                                    # 491 tests
 
 # one self-contained Arqon.exe (about 75 MB) in publish\win-x64
 powershell -ExecutionPolicy Bypass -File tools\build.ps1

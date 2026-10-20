@@ -3,8 +3,8 @@ using System.Text.Json;
 
 namespace Arqon.Core.Updates;
 
-/// <summary>A published release: its tag (such as "v0.1.4"), the page where it can be downloaded, and its title.</summary>
-public sealed record ReleaseInfo(string Tag, string Url, string Name);
+/// <summary>A published release: its tag (such as "v0.1.4"), the page where it can be downloaded, its title, and the files of the program and its SHA-256 when the release has them.</summary>
+public sealed record ReleaseInfo(string Tag, string Url, string Name, string? ExeUrl = null, string? Sha256Url = null);
 
 /// <summary>
 /// Asks GitHub which release is the newest. It is one small request to the public API, made at most every few hours and only when
@@ -29,12 +29,31 @@ public static class UpdateChecker
             var name = root.TryGetProperty("name", out var n) && n.ValueKind == JsonValueKind.String ? n.GetString()! : tag.GetString()!;
             // only ever link to the project's own releases page
             if (!url.StartsWith("https://github.com/" + Repository + "/", StringComparison.OrdinalIgnoreCase)) return null;
-            return new ReleaseInfo(tag.GetString()!, url, name);
+            var exe = AssetUrl(root, "Arqon.exe");
+            var sha = AssetUrl(root, "Arqon.exe.sha256");
+            return new ReleaseInfo(tag.GetString()!, url, name, exe, sha);
         }
         catch (JsonException)
         {
             return null;
         }
+    }
+
+    private const string DownloadPrefix = "https://github.com/" + Repository + "/releases/download/";
+
+    /// <summary>The download link of the release file called <paramref name="name"/>, only if it is a file of this project's own releases.</summary>
+    private static string? AssetUrl(JsonElement release, string name)
+    {
+        if (!release.TryGetProperty("assets", out var assets) || assets.ValueKind != JsonValueKind.Array) return null;
+        foreach (var asset in assets.EnumerateArray())
+        {
+            if (asset.ValueKind != JsonValueKind.Object) continue;
+            if (!asset.TryGetProperty("name", out var n) || n.ValueKind != JsonValueKind.String || n.GetString() != name) continue;
+            if (!asset.TryGetProperty("browser_download_url", out var u) || u.ValueKind != JsonValueKind.String) continue;
+            var url = u.GetString()!;
+            if (url.StartsWith(DownloadPrefix, StringComparison.OrdinalIgnoreCase)) return url;
+        }
+        return null;
     }
 
     /// <summary>True when <paramref name="tag"/> names a higher version than <paramref name="current"/> ("0.1.3" or "v0.1.3-beta" forms).</summary>

@@ -26,6 +26,7 @@
             <Border Style="{StaticResource Card}" Margin="0,0,0,10">
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                     <StackPanel>
                         <TextBlock Style="{StaticResource RowTitle}" Text="{DynamicResource S.Set.SystemMode}" />
                         <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Text="{DynamicResource S.Set.SystemModeBody}" />
@@ -44,6 +45,16 @@
                     </StackPanel>
                     <ToggleButton Grid.Column="1" Style="{StaticResource Switch}" IsChecked="{Binding SystemMode, Mode=TwoWay}"
                                   IsEnabled="{Binding SystemModeAvailable}" Margin="16,0,0,0" VerticalAlignment="Top" />
+                    <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,10,0,0" Visibility="{Binding ShowSetup, Converter={StaticResource B2V}}">
+                        <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,8" Text="{DynamicResource S.Setup.Body}" />
+                        <Button Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Padding="14,7" Content="{DynamicResource S.Setup.Button}"
+                                Command="{Binding SetUpCommand}" IsEnabled="{Binding SetupIdle}" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="0,8,0,0" Visibility="{Binding HasSetupStatus, Converter={StaticResource B2V}}">
+                        <ProgressBar Height="4" Minimum="0" Maximum="100" Value="{Binding SetupPercent, Mode=OneWay}" Margin="0,0,0,6"
+                                     Visibility="{Binding SettingUp, Converter={StaticResource B2V}}" />
+                        <TextBlock FontSize="12" Foreground="#9FB4FF" TextWrapping="Wrap" Text="{Binding SetupStatus}" />
+                    </StackPanel>
                 </Grid>
             </Border>
 
@@ -168,7 +179,9 @@
                     </TextBlock>
                     <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                         <Button Style="{StaticResource GhostButton}" Padding="12,6" Content="{DynamicResource S.Upd.Check}" Command="{Binding CheckNowCommand}" />
-                        <Button Style="{StaticResource PrimaryButton}" Padding="12,6" Margin="8,0,0,0" Content="{Binding UpdateButton}" Command="{Binding DownloadUpdateCommand}"
+                        <Button Style="{StaticResource PrimaryButton}" Padding="12,6" Margin="8,0,0,0" Content="{Binding UpdateNowText}" Command="{Binding UpdateNowCommand}"
+                                IsEnabled="{Binding UpdateIdle}" Visibility="{Binding HasUpdate, Converter={StaticResource B2V}}" />
+                        <Button Style="{StaticResource GhostButton}" Padding="12,6" Margin="8,0,0,0" Content="{DynamicResource S.Upd.Page}" Command="{Binding DownloadUpdateCommand}"
                                 Visibility="{Binding HasUpdate, Converter={StaticResource B2V}}" />
                     </StackPanel>
                 </StackPanel>

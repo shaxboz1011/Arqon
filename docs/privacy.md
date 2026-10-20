@@ -8,6 +8,7 @@ Arqon is built so that you do not have to trust it: it has no account, no ads an
   - `1.1.1.1` / `8.8.8.8` on port 443, only to measure the ping of each connection;
   - public torrent trackers and the DHT, when you use torrents (as every torrent client does);
   - **GitHub**, twice a day, with one request to `api.github.com/repos/shaxboz1011/Arqon/releases/latest`, to see whether a newer version exists. Only the standard request headers go with it. Switch it off in *Settings → Check for updates*.
+- Two more downloads happen **only when you click the button**: *Update now* downloads `Arqon.exe` and its checksum from this project's GitHub releases, and *Set up system mode* downloads the WinDivert 2.2.2 driver from its official GitHub release (and adds `%APPDATA%\Arqon\driver` to Windows Defender's exclusions). Both are verified by SHA-256 before use.
 - Usage statistics (how much each connection carried) are kept in `%APPDATA%\Arqon\usage.json` on your computer. *Usage → Export CSV* saves them to a file you choose. They are never uploaded.
 
 ## Android

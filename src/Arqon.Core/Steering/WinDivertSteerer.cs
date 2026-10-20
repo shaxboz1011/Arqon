@@ -33,7 +33,7 @@ public sealed class WinDivertSteerer : ISteerer, IDisposable
     private readonly NatSteeringEngine _engine;
     private readonly Func<IReadOnlyList<LinkInfo>> _links;
     private readonly Func<IPAddress?> _defaultAddress;
-    private readonly string _directory;
+    private readonly string? _directory;
     private readonly object _gate = new();
     private readonly WeakHostScope _weakHost = new();
     private Session? _session;
@@ -46,14 +46,17 @@ public sealed class WinDivertSteerer : ISteerer, IDisposable
         _engine = engine;
         _links = links;
         _defaultAddress = defaultAddress;
-        _directory = directory ?? AppContext.BaseDirectory;
+        _directory = directory;
     }
 
     public event Action<string>? Faulted;
 
-    public bool IsAvailable => CheckAvailability(_directory, IsAdministrator()) == SteererAvailability.Ready;
+    /// <summary>Where the driver files are: the folder given to the constructor, or next to the exe, or in the user's driver folder.</summary>
+    private string DriverDirectory => _directory ?? WinDivertLocator.Find(AppContext.BaseDirectory) ?? AppContext.BaseDirectory;
 
-    public string? UnavailableReason => CheckAvailability(_directory, IsAdministrator()) switch
+    public bool IsAvailable => CheckAvailability(DriverDirectory, IsAdministrator()) == SteererAvailability.Ready;
+
+    public string? UnavailableReason => CheckAvailability(DriverDirectory, IsAdministrator()) switch
     {
         SteererAvailability.DriverMissing => "driver-missing",
         SteererAvailability.NotAdmin => "not-admin",

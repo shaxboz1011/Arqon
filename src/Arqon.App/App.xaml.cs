@@ -67,6 +67,8 @@ public partial class App : Application
             return;
         }
 
+        if (!demo && Environment.ProcessPath is { } self) Arqon.Core.Updates.UpdateInstaller.CleanUp(self);   // what an earlier update left behind
+
         _services = AppServices.Create(demo);
         Loc.Apply(_services.Settings.Language);
         _services.Start();
@@ -84,6 +86,13 @@ public partial class App : Application
         }
         if (!(startHidden && _tray is not null && _services.Settings.CloseToTray)) window.Show();
         if (shotDir is null) HandleRequests(requests);
+
+        // started elevated by the settings page's "Set up system mode": do the whole setup now
+        if (!demo && args.Contains("--setup-system-mode") && Arqon.Core.Steering.WinDivertSteerer.IsAdministrator())
+        {
+            _shell.Navigate("settings");
+            _ = _services.SetUpSystemModeAsync(enable: true);
+        }
 
         if (shotDir is not null) _ = TakeScreenshotsAsync(window, shotDir);
     }

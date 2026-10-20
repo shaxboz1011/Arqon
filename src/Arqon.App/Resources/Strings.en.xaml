@@ -226,4 +226,23 @@
     <sys:String x:Key="S.Test.Gain">That is {0}× the fastest single connection.</sys:String>
     <sys:String x:Key="S.Test.Error">{0}: {1}</sys:String>
     <sys:String x:Key="S.Usage.Export">Export CSV</sys:String>
+    <sys:String x:Key="S.Upd.Banner">Update available: {0}</sys:String>
+    <sys:String x:Key="S.Upd.Now">Update now</sys:String>
+    <sys:String x:Key="S.Upd.NowTo">Update to {0}</sys:String>
+    <sys:String x:Key="S.Upd.Working">Updating… {0}%</sys:String>
+    <sys:String x:Key="S.Upd.Page">Release page</sys:String>
+    <sys:String x:Key="S.Upd.Error">The update could not be installed: {0}
+
+Open the release page to download it by hand?</sys:String>
+    <sys:String x:Key="S.Setup.Button">Set up system mode</sys:String>
+    <sys:String x:Key="S.Setup.Body">One click: Arqon gets the packet driver it needs, makes Windows Defender leave it alone, and turns system mode on. Windows asks for administrator rights once.</sys:String>
+    <sys:String x:Key="S.Setup.Working">Setting up… {0}%</sys:String>
+    <sys:String x:Key="S.Setup.NotStarted">The driver is installed, but system mode did not start: {0}</sys:String>
+    <sys:String x:Key="S.Setup.Confirm">Windows will now ask for administrator rights, and Arqon will restart and:
+
+• tell Windows Defender to leave the folder {0} alone (Defender wrongly reports the WinDivert packet driver as suspicious and removes it);
+• download the official WinDivert 2.2.2 driver, check that it is exactly the genuine file and that its signature is valid;
+• turn system mode on.
+
+Nothing else on the computer is changed. Continue?</sys:String>
 </ResourceDictionary>

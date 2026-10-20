@@ -226,4 +226,23 @@
     <sys:String x:Key="S.Test.Gain">Bu eng tez yagona ulanishdan {0} marta tez.</sys:String>
     <sys:String x:Key="S.Test.Error">{0}: {1}</sys:String>
     <sys:String x:Key="S.Usage.Export">CSV ga saqlash</sys:String>
+    <sys:String x:Key="S.Upd.Banner">Yangilanish bor: {0}</sys:String>
+    <sys:String x:Key="S.Upd.Now">Hozir yangilash</sys:String>
+    <sys:String x:Key="S.Upd.NowTo">{0} ga yangilash</sys:String>
+    <sys:String x:Key="S.Upd.Working">Yangilanmoqda… {0}%</sys:String>
+    <sys:String x:Key="S.Upd.Page">Reliz sahifasi</sys:String>
+    <sys:String x:Key="S.Upd.Error">Yangilanishni o'rnatib bo'lmadi: {0}
+
+Qo'lda yuklab olish uchun reliz sahifasini ochaymi?</sys:String>
+    <sys:String x:Key="S.Setup.Button">Tizim rejimini sozlash</sys:String>
+    <sys:String x:Key="S.Setup.Body">Bir bosishda: Arqon kerakli paket drayverini oladi, Windows Defender unga tegmasligini sozlaydi va tizim rejimini yoqadi. Windows administrator huquqini bir marta so'raydi.</sys:String>
+    <sys:String x:Key="S.Setup.Working">Sozlanmoqda… {0}%</sys:String>
+    <sys:String x:Key="S.Setup.NotStarted">Drayver o'rnatildi, lekin tizim rejimi ishga tushmadi: {0}</sys:String>
+    <sys:String x:Key="S.Setup.Confirm">Windows hozir administrator huquqini so'raydi, Arqon qayta ishga tushadi va:
+
+• Windows Defender'ga {0} papkasiga tegmaslikni aytadi (Defender WinDivert paket drayverini xato ravishda shubhali deb belgilab o'chiradi);
+• rasmiy WinDivert 2.2.2 drayverini yuklaydi, aynan asl fayl ekanini va imzosi to'g'ri ekanini tekshiradi;
+• tizim rejimini yoqadi.
+
+Kompyuterdagi boshqa hech narsa o'zgarmaydi. Davom etamizmi?</sys:String>
 </ResourceDictionary>

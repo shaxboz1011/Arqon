@@ -226,4 +226,23 @@
     <sys:String x:Key="S.Test.Gain">Это в {0}× быстрее самого быстрого одиночного соединения.</sys:String>
     <sys:String x:Key="S.Test.Error">{0}: {1}</sys:String>
     <sys:String x:Key="S.Usage.Export">Экспорт в CSV</sys:String>
+    <sys:String x:Key="S.Upd.Banner">Есть обновление: {0}</sys:String>
+    <sys:String x:Key="S.Upd.Now">Обновить сейчас</sys:String>
+    <sys:String x:Key="S.Upd.NowTo">Обновить до {0}</sys:String>
+    <sys:String x:Key="S.Upd.Working">Обновление… {0}%</sys:String>
+    <sys:String x:Key="S.Upd.Page">Страница релиза</sys:String>
+    <sys:String x:Key="S.Upd.Error">Не удалось установить обновление: {0}
+
+Открыть страницу релиза, чтобы скачать вручную?</sys:String>
+    <sys:String x:Key="S.Setup.Button">Настроить системный режим</sys:String>
+    <sys:String x:Key="S.Setup.Body">Одним нажатием: Arqon получит нужный драйвер пакетов, сделает так, чтобы Защитник Windows его не трогал, и включит системный режим. Windows один раз спросит права администратора.</sys:String>
+    <sys:String x:Key="S.Setup.Working">Настройка… {0}%</sys:String>
+    <sys:String x:Key="S.Setup.NotStarted">Драйвер установлен, но системный режим не запустился: {0}</sys:String>
+    <sys:String x:Key="S.Setup.Confirm">Сейчас Windows запросит права администратора, Arqon перезапустится и:
+
+• попросит Защитник Windows не трогать папку {0} (Защитник ошибочно считает драйвер пакетов WinDivert подозрительным и удаляет его);
+• скачает официальный драйвер WinDivert 2.2.2 и проверит, что это именно оригинальный файл с действительной подписью;
+• включит системный режим.
+
+Больше ничего на компьютере не меняется. Продолжить?</sys:String>
 </ResourceDictionary>

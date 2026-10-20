@@ -29,6 +29,9 @@ public sealed class SettingsViewModel : ViewModelBase
         FixCommand = new RelayCommand(ApplyFix);
         RestartAsAdminCommand = new RelayCommand(RestartAsAdmin);
         CheckNowCommand = new RelayCommand(() => _ = CheckNow());
+        UpdateNowCommand = new RelayCommand(() => _ = UpdateFlow.RunAsync(_services));
+        SetUpCommand = new RelayCommand(SetUp);
+        _services.SetupChanged += OnSteeringChanged;
         DownloadUpdateCommand = new RelayCommand(OpenUpdatePage);
         _services.Steering.StateChanged += OnSteeringChanged;
         _services.SafeGame.Changed += OnSteeringChanged;
@@ -43,11 +46,49 @@ public sealed class SettingsViewModel : ViewModelBase
         _services.Steering.StateChanged -= OnSteeringChanged;
         _services.SafeGame.Changed -= OnSteeringChanged;
         _services.UpdateChanged -= OnSteeringChanged;
+        _services.SetupChanged -= OnSteeringChanged;
         base.Dispose();
     }
 
     public RelayCommand FixCommand { get; }
     public RelayCommand CheckNowCommand { get; }
+    public RelayCommand UpdateNowCommand { get; }
+    public RelayCommand SetUpCommand { get; }
+    public bool UpdateIdle => !_services.Updating;
+
+    // ---- one-click setup of system mode (driver, Defender, administrator rights)
+
+    /// <summary>The setup button is shown while system mode cannot run yet: the driver is missing or Arqon is not elevated.</summary>
+    public bool ShowSetup => !_services.Demo && _services.Steering.State != SteeringState.Running && !_services.SafeGame.Paused
+        && _services.Steering.UnavailableReason is "driver-missing" or "not-admin";
+
+    public bool SetupIdle => !_services.SettingUp;
+    public bool SettingUp => _services.SettingUp;
+    public double SetupPercent => _services.SetupProgress * 100;
+    public bool HasSetupStatus => _services.SettingUp || !string.IsNullOrEmpty(_services.SetupMessage);
+    public string SetupStatus => _services.SettingUp ? Loc.Format("S.Setup.Working", (int)(_services.SetupProgress * 100)) : _services.SetupMessage ?? "";
+
+    private void SetUp()
+    {
+        if (!IsAdmin)
+        {
+            var answer = MessageBox.Show(Loc.Format("S.Setup.Confirm", Arqon.Core.Steering.WinDivertLocator.UserDirectory), "Arqon",
+                MessageBoxButton.OKCancel, MessageBoxImage.Question);
+            if (answer != MessageBoxResult.OK) return;
+            try
+            {
+                // one UAC question, then the elevated copy does the whole setup by itself
+                Process.Start(new ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute = true, Verb = "runas", Arguments = "--restarted --setup-system-mode" });
+                ((App)Application.Current).ExitApp();
+            }
+            catch (Win32Exception)
+            {
+                // the user declined the UAC prompt: nothing to do
+            }
+            return;
+        }
+        _ = _services.SetUpSystemModeAsync(enable: true);
+    }
     public RelayCommand DownloadUpdateCommand { get; }
 
     private bool _checking;
@@ -61,6 +102,7 @@ public sealed class SettingsViewModel : ViewModelBase
     public bool HasUpdate => _services.AvailableUpdate is not null;
 
     public string UpdateButton => _services.AvailableUpdate is { } u ? Loc.Format("S.Upd.Download", u.Tag) : "";
+    public string UpdateNowText => _services.Updating ? Loc.Format("S.Upd.Working", (int)(_services.UpdateProgress * 100)) : Loc.Format("S.Upd.NowTo", _services.AvailableUpdate?.Tag ?? "");
 
     public string UpdateStatus
     {

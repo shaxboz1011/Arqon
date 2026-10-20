@@ -96,6 +96,108 @@ public sealed class AppServices : IDisposable
 
     public event Action? UpdateChanged;
 
+    private static readonly HttpClient BigHttp = new() { Timeout = TimeSpan.FromMinutes(30) };
+
+    /// <summary>True while the new version is being downloaded and put in place.</summary>
+    public bool Updating { get; private set; }
+    public double UpdateProgress { get; private set; }
+    public string? UpdateError { get; private set; }
+
+    /// <summary>
+    /// Downloads the newest Arqon.exe, checks it against the checksum published with the release, swaps it for the running copy and
+    /// starts it. Returns true when the new copy was started (the caller then exits); false with <see cref="UpdateError"/> set otherwise.
+    /// </summary>
+    public async Task<bool> InstallUpdateAsync()
+    {
+        if (Updating || AvailableUpdate is not { } release || Environment.ProcessPath is not { } exe) return false;
+        Updating = true;
+        UpdateProgress = 0;
+        UpdateError = null;
+        UpdateChanged?.Invoke();
+        try
+        {
+            var downloaded = await UpdateInstaller.DownloadAsync(BigHttp, release, exe, new Progress<double>(p =>
+            {
+                UpdateProgress = p;
+                UpdateChanged?.Invoke();
+            })).ConfigureAwait(false);
+            UpdateInstaller.Swap(exe, downloaded);
+            Usage.Save();
+            Process.Start(new ProcessStartInfo(exe) { UseShellExecute = true, Arguments = "--restarted" });
+            return true;
+        }
+        catch (UpdateException ex)
+        {
+            UpdateError = ex.Message;
+            return false;
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            UpdateError = ex.Message;   // the swap worked but the new copy would not start: the next manual start runs the new version
+            return false;
+        }
+        finally
+        {
+            Updating = false;
+            UpdateChanged?.Invoke();
+        }
+    }
+
+    // ---- one-click setup of system mode
+
+    public bool SettingUp { get; private set; }
+    public double SetupProgress { get; private set; }
+    public string? SetupMessage { get; private set; }
+    public event Action? SetupChanged;
+
+    /// <summary>
+    /// Makes system mode usable on this computer: tells Defender to leave the driver folder alone, downloads and checks the WinDivert
+    /// driver, and (when <paramref name="enable"/>) switches system mode on. Needs administrator rights for the Defender step and for
+    /// loading the driver. Never throws; the outcome is in <see cref="SetupMessage"/>.
+    /// </summary>
+    public async Task<bool> SetUpSystemModeAsync(bool enable)
+    {
+        if (SettingUp) return false;
+        SettingUp = true;
+        SetupProgress = 0;
+        SetupMessage = null;
+        SetupChanged?.Invoke();
+        try
+        {
+            if (!WinDivertLocator.HasDriver(WinDivertLocator.UserDirectory) && !WinDivertLocator.HasDriver(AppContext.BaseDirectory))
+            {
+                var installer = new WinDivertInstaller(BigHttp, WinDivertLocator.UserDirectory);
+                var setup = new DriverSetup(WinDivertLocator.UserDirectory, DefenderExclusion.TryAdd, installer.InstallAsync, DriverSignature.IsValid);
+                await setup.RunAsync(new Progress<double>(p => { SetupProgress = p; SetupChanged?.Invoke(); })).ConfigureAwait(false);
+            }
+
+            if (!enable) return true;
+            var on = false;
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                on = Steering.Start();
+                SaveSettings(Settings with { SystemMode = on });
+            });
+            if (!on) SetupMessage = Loc.Format("S.Setup.NotStarted", Steering.Reason ?? "");
+            return on;
+        }
+        catch (DriverSetupException ex)
+        {
+            SetupMessage = ex.Message;
+            return false;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or HttpRequestException)
+        {
+            SetupMessage = ex.Message;
+            return false;
+        }
+        finally
+        {
+            SettingUp = false;
+            SetupChanged?.Invoke();
+        }
+    }
+
     public event Action? SettingsChanged;
     public event Action<Notice>? NoticeRaised;
 

@@ -62,6 +62,8 @@ Anti-cheat software (VAC, FACEIT, ESEA, Vanguard) looks at loaded drivers and di
 
 ## Enabling it
 
+The easy way is the button *Settings → System mode → Set up system mode* (see the README). The manual way:
+
 1. Install the driver files next to `Arqon.exe` (they are not in this repository; WinDivert is LGPLv3 and the driver is signed by its author):
 
    ```powershell

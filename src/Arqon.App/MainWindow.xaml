@@ -116,7 +116,20 @@
                                 </StackPanel>
                             </RadioButton>
                         </StackPanel>
-                        <TextBlock VerticalAlignment="Bottom" Style="{StaticResource MutedText}" FontSize="11" Margin="12,0,0,2" Text="{Binding VersionLine}" />
+                        <StackPanel VerticalAlignment="Bottom">
+                            <!-- shown when GitHub has a newer version: one click downloads, checks and installs it -->
+                            <Border Background="#1F2A44" BorderBrush="#6C8CFF" BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="0,0,0,10"
+                                    Visibility="{Binding HasUpdate, Converter={StaticResource B2V}}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding UpdateLabel}" TextWrapping="Wrap" FontWeight="SemiBold" FontSize="12" />
+                                    <ProgressBar Height="4" Margin="0,6,0,0" Minimum="0" Maximum="100" Value="{Binding UpdatePercent, Mode=OneWay}"
+                                                 Visibility="{Binding Updating, Converter={StaticResource B2V}}" />
+                                    <Button Style="{StaticResource PrimaryButton}" Margin="0,8,0,0" Padding="8,5" Content="{DynamicResource S.Upd.Now}"
+                                            Command="{Binding UpdateCommand}" IsEnabled="{Binding UpdateIdle}" />
+                                </StackPanel>
+                            </Border>
+                            <TextBlock Style="{StaticResource MutedText}" FontSize="11" Margin="12,0,0,2" Text="{Binding VersionLine}" />
+                        </StackPanel>
                     </Grid>
                 </Border>
 

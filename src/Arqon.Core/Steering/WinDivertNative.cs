@@ -4,10 +4,13 @@ namespace Arqon.Core.Steering;
 
 /// <summary>
 /// WinDivert 2.2 (https://reqrypt.org/windivert.html, LGPLv3). Its binaries are not part of this repository:
-/// WinDivert.dll and WinDivert64.sys must sit next to Arqon.exe (see tools/get-windivert.ps1).
+/// WinDivert.dll and WinDivert64.sys must sit next to Arqon.exe or in %APPDATA%\Arqon\driver (see <see cref="WinDivertLocator"/>;
+/// the in-app setup installs them).
 /// </summary>
 internal static class WinDivertNative
 {
+    static WinDivertNative() => WinDivertLocator.RegisterResolver();
+
     public const int LayerNetwork = 0;
     public const int ShutdownBoth = 3;
     public static readonly IntPtr InvalidHandle = new(-1);

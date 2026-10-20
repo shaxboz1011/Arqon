@@ -125,6 +125,8 @@ Faylingizning SHA-256 ini relizdagi `Arqon.exe.sha256` bilan solishtiring:
 
 System mode **barcha** dasturlarning yangi ulanishlarini sizning ulanishlaringiz bo'yicha taqsimlaydi. Buning uchun imzolangan [WinDivert](https://reqrypt.org/windivert.html) paket drayveri va **administrator huquqi** kerak, shuning uchun u **standart holatda o'chiq**.
 
+**Oson yo'l:** *Sozlamalar → Tizim rejimi → Tizim rejimini sozlash*. Windows administrator huquqini bir marta so'raydi; keyin Arqon Windows Defender'ga drayver papkasiga tegmaslikni aytadi, rasmiy WinDivert 2.2.2 drayverini yuklaydi, aynan asl fayl ekanini va imzosi to'g'riligini tekshiradi va tizim rejimini yoqadi. (Windows Defender bu paket drayverini xato ravishda shubhali deb (masalan, `Misleading:Win32/Malgent`) belgilab o'chirib yuboradi. Tizim rejimi boshqa kompyuterda "ishlamasligi"ning odatiy sababi shu. Boshqa antivirus ishlatsangiz, undan `%APPDATA%\Arqon\driver` papkasiga ruxsat bering.)
+
 <details>
 <summary><b>O'rnatish buyruqlarini ko'rsatish</b></summary>
 
@@ -223,7 +225,7 @@ cd Arqon
 
 dotnet run --project src/Arqon.App            # haqiqiy adapterlar bilan ishga tushirish
 dotnet run --project src/Arqon.App -- --demo  # ikkita soxta ulanish bilan
-dotnet test                                    # 458 ta test
+dotnet test                                    # 491 ta test
 
 # bitta mustaqil Arqon.exe (taxminan 75 MB) publish\win-x64 papkasida
 powershell -ExecutionPolicy Bypass -File tools\build.ps1

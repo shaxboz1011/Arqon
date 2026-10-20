@@ -11,6 +11,9 @@
 - *Usage → Export CSV*.
 - The sidebar and Settings show the real version; the tray icon's tip shows the live speed.
 
+- **One-click system mode:** *Settings → System mode → Set up system mode* adds the driver folder to Windows Defender's exclusions (Defender wrongly removes the WinDivert driver, the usual reason system mode did not work on other computers), downloads the official WinDivert 2.2.2 driver, checks its SHA-256 and signature, and turns system mode on. The driver now lives in `%APPDATA%\Arqon\driver`; files next to `Arqon.exe` still work.
+- **Update in the app:** when GitHub has a newer version a card "Update available" appears in the sidebar; one click downloads `Arqon.exe`, checks it against the release's SHA-256, replaces the running copy and restarts Arqon.
+
 **Android (preview, in `android/`)**
 
 - Game mode: the chosen games go through a VPN tunnel over the best connection while downloads keep off that connection.
