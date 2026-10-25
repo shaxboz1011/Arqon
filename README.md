@@ -101,6 +101,17 @@ flowchart LR
 4. **Open Dashboard.** Both connections should be listed. If a yellow notice appears, press **Fix** (otherwise Windows may switch off the second network).
 
 <details>
+<summary><b>📦 With winget</b></summary>
+
+```powershell
+winget install shaxboz1011.Arqon
+```
+
+The package is submitted with each release and becomes available once Microsoft accepts it. Details: [docs/winget.md](docs/winget.md).
+
+</details>
+
+<details>
 <summary><b>🔐 Verify the download (optional)</b></summary>
 
 Compare the SHA-256 of your file with the `Arqon.exe.sha256` file in the release:
@@ -225,7 +236,7 @@ cd Arqon
 
 dotnet run --project src/Arqon.App            # run with your real adapters
 dotnet run --project src/Arqon.App -- --demo  # run with two pretend connections
-dotnet test                                    # 491 tests
+dotnet test                                    # 568 tests
 
 # one self-contained Arqon.exe (about 75 MB) in publish\win-x64
 powershell -ExecutionPolicy Bypass -File tools\build.ps1
@@ -252,10 +263,19 @@ powershell -ExecutionPolicy Bypass -File tools\build.ps1
 | Interface in Uzbek, English and Russian | ✅ Done (more languages welcome) |
 | Torrents and magnet links over every link; choose folder; choose files; optional seeding with a share ratio, also after a restart; open from Windows | ✅ Done (real Debian torrent over Wi-Fi + phone) |
 | **System mode** (speed up Telegram, Chrome, every app) | 🧪 Works in a first real test (Wi-Fi + USB phone). Not yet tested with a game or over a long session |
-| Relay server (one connection split across links, duplicated game packets) | 🗓 Planned |
+| Problem report to copy from Settings (crash log, connections, no personal data) | ✅ Done |
+| winget package (manifests with every release) | ✅ Done (accepted into winget once submitted) |
+| Browser extension for Chrome, Edge and Firefox (*Download with Arqon*), `arqon://` links | 🧪 In [`browser-extension/`](browser-extension/README.md), not in the stores yet |
+| Download schedule, "save data" connections, daily-limit phone saver | ✅ Done |
+| Local API for scripts ([docs/api.md](docs/api.md)) | ✅ Done |
+| Relay server (one connection split across links, duplicated game packets) | 🧪 Groundwork: protocol pieces with tests ([docs/relay.md](docs/relay.md)) |
 | Installer and code signing | 🗓 Planned |
 
-**Honest limits:** seeding is optional (off by default) and restarts after a restart only while the files are still on disk, UPnP port mapping is off, and system mode has not yet been checked with the driver when running from the single-file `Arqon.exe`.
+Plans: [ROADMAP.md](ROADMAP.md).
+
+What comes next: [ROADMAP.md](ROADMAP.md).
+
+**Honest limits:** seeding is optional (off by default) and restarts after a restart only while the files are still on disk, UPnP port mapping is off unless switched on in Settings, and system mode has not yet been checked with the driver when running from the single-file `Arqon.exe`.
 
 ## 🔒 Security
 

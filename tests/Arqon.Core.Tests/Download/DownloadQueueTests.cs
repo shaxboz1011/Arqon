@@ -154,4 +154,31 @@ public class DownloadQueueTests
         Assert.Empty(q.Add(@"c:\dl\file.ZIP"));
         Assert.True(q.IsRunning(@"C:\DL\FILE.ZIP"));
     }
+
+    [Fact]
+    public void A_held_line_starts_nothing_by_itself_and_releasing_it_fills_the_room()
+    {
+        var q = new DownloadQueue(2);
+        Assert.Empty(q.SetHeld(true));
+
+        Assert.Empty(q.Add("a"));
+        Assert.Empty(q.Add("b"));
+        Assert.Empty(q.Add("c"));
+        Assert.Equal(["a", "b", "c"], q.Waiting);
+
+        Assert.Equal(["a", "b"], q.SetHeld(false));
+        Assert.Equal(["c"], q.Waiting);
+    }
+
+    [Fact]
+    public void Start_now_still_works_while_the_line_is_held_and_a_finished_one_frees_nothing()
+    {
+        var q = new DownloadQueue(1);
+        q.SetHeld(true);
+        q.Add("a"); q.Add("b");
+
+        Assert.Equal(["b"], q.StartNow("b"));
+        Assert.Empty(q.Finished("b"));
+        Assert.Equal(["a"], q.Waiting);
+    }
 }

@@ -15,6 +15,19 @@ public sealed class DownloadQueue
 
     public int Limit { get; private set; }
 
+    /// <summary>While held (outside the download schedule) nothing starts by itself; "Start now" still works.</summary>
+    public bool Held { get; private set; }
+
+    /// <summary>Holds or releases the line. Releasing returns what to start now.</summary>
+    public IReadOnlyList<string> SetHeld(bool held)
+    {
+        lock (_gate)
+        {
+            Held = held;
+            return Fill();
+        }
+    }
+
     /// <summary>Waiting downloads, next one first.</summary>
     public IReadOnlyList<string> Waiting
     {
@@ -107,7 +120,7 @@ public sealed class DownloadQueue
     private List<string> Fill()
     {
         var started = new List<string>();
-        while (_running.Count < Limit && _waiting.Count > 0)
+        while (!Held && _running.Count < Limit && _waiting.Count > 0)
         {
             var next = _waiting[0];
             _waiting.RemoveAt(0);

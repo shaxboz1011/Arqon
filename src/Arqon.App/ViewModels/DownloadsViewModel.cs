@@ -557,8 +557,10 @@ public sealed class DownloadsViewModel : ViewModelBase
         _ = ResumeSeedingAsync(TimeSpan.FromSeconds(5));
 
         _tick = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        ApplySchedule();
         _tick.Tick += (_, _) =>
         {
+            ApplySchedule();
             Raise(nameof(TotalSpeed));
             Raise(nameof(ActiveCount));
             Raise(nameof(QueuedCount));
@@ -641,6 +643,7 @@ public sealed class DownloadsViewModel : ViewModelBase
         _seedWasOn = seedOn;
         _ = ResumeSeedingAsync(TimeSpan.Zero);
         Launch(_queue.SetLimit(_services.Settings.MaxConcurrentDownloads));
+        ApplySchedule();
         Raise(nameof(Folder));
         Raise(nameof(FolderText));
         Raise(nameof(FolderIsCustom));
@@ -648,6 +651,23 @@ public sealed class DownloadsViewModel : ViewModelBase
     }
 
     public int QueuedCount => Items.Count(i => i.IsQueued);
+
+    // ---- schedule: queued downloads start only inside the chosen hours ----------------------------------------
+
+    private DownloadSchedule Schedule => new(_services.Settings.ScheduleEnabled, _services.Settings.ScheduleStartHour, _services.Settings.ScheduleEndHour);
+
+    private void ApplySchedule()
+    {
+        var held = !Schedule.IsOpen(TimeOnly.FromDateTime(DateTime.Now));
+        if (held == _queue.Held) return;
+        Launch(_queue.SetHeld(held));
+        Raise(nameof(ScheduleNote));
+        Raise(nameof(HasScheduleNote));
+    }
+
+    public bool HasScheduleNote => _queue.Held;
+
+    public string ScheduleNote => _queue.Held ? Loc.Format("S.Dl.Scheduled", Schedule.NextOpen(DateTime.Now).ToString("HH:mm")) : "";
 
 
     private string? _clipboardLink;
@@ -719,7 +739,7 @@ public sealed class DownloadsViewModel : ViewModelBase
 
     public LinkThrottle Throttle => _services.Throttle;
 
-    public IReadOnlyList<Core.Links.LinkInfo> CurrentLinks() => _services.Links.GetLinks();
+    public IReadOnlyList<Core.Links.LinkInfo> CurrentLinks() => _services.DownloadLinks();
 
     public Color ColorFor(string linkId)
     {

@@ -1,0 +1,20 @@
+{
+  "name": {
+    "message": "Arqon"
+  },
+  "description": {
+    "message": "Send links to Arqon, which downloads them over Wi-Fi and your phone's internet at once."
+  },
+  "menuLink": {
+    "message": "Download with Arqon"
+  },
+  "catchAll": {
+    "message": "Send every download to Arqon"
+  },
+  "catchAllHint": {
+    "message": "The browser's own download is cancelled and Arqon takes over. Sites that need you to be logged in may not work this way; use the right-click menu for those."
+  },
+  "setupHint": {
+    "message": "In Arqon, switch on Settings → \"Open torrents and magnet links with Arqon\" once, so the browser can start it."
+  }
+}

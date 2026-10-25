@@ -1,0 +1,20 @@
+{
+  "name": {
+    "message": "Arqon"
+  },
+  "description": {
+    "message": "Linklarni Arqon'ga yuboradi, u ularni Wi-Fi va telefon internetidan birdaniga yuklaydi."
+  },
+  "menuLink": {
+    "message": "Arqon bilan yuklash"
+  },
+  "catchAll": {
+    "message": "Har bir yuklashni Arqon'ga yuborish"
+  },
+  "catchAllHint": {
+    "message": "Brauzerning o'z yuklashi bekor qilinadi va Arqon davom ettiradi. Kirish (login) talab qiladigan saytlar bunday ishlamasligi mumkin; ular uchun o'ng tugma menyusidan foydalaning."
+  },
+  "setupHint": {
+    "message": "Brauzer Arqon'ni ishga tushira olishi uchun Arqon'da bir marta Sozlamalar → \"Torrent va magnet linklarni Arqon bilan ochish\" ni yoqing."
+  }
+}

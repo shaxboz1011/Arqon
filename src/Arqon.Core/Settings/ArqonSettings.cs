@@ -20,7 +20,14 @@ public sealed record ArqonSettings(
     bool CheckUpdates = true,
     int DailyLimitMb = 0,
     string? LastNoticedUpdate = null,
-    int MeterOffsetDip = 0)
+    int MeterOffsetDip = 0,
+    List<string>? SaverLinks = null,
+    bool SaveMobileAtLimit = false,
+    bool ScheduleEnabled = false,
+    int ScheduleStartHour = 1,
+    int ScheduleEndHour = 7,
+    bool TorrentPortForwarding = false,
+    bool LocalApi = false)
 {
     public static ArqonSettings Default() => new([], GameProtection: true, SystemMode: false, Language: "uz");
 }

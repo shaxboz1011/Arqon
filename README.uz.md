@@ -101,6 +101,17 @@ flowchart LR
 4. **Panel** (Dashboard) sahifasini oching. Ikkala ulanish ham ko'rinishi kerak. Sariq ogohlantirish chiqsa, **Fix** tugmasini bosing (aks holda Windows ikkinchi tarmoqni o'chirib qo'yishi mumkin).
 
 <details>
+<summary><b>📦 winget orqali</b></summary>
+
+```powershell
+winget install shaxboz1011.Arqon
+```
+
+Paket har relizda yuboriladi va Microsoft qabul qilgandan keyin ishlaydi. Batafsil: [docs/winget.md](docs/winget.md).
+
+</details>
+
+<details>
 <summary><b>🔐 Yuklab olingan faylni tekshirish (ixtiyoriy)</b></summary>
 
 Faylingizning SHA-256 ini relizdagi `Arqon.exe.sha256` bilan solishtiring:
@@ -225,7 +236,7 @@ cd Arqon
 
 dotnet run --project src/Arqon.App            # haqiqiy adapterlar bilan ishga tushirish
 dotnet run --project src/Arqon.App -- --demo  # ikkita soxta ulanish bilan
-dotnet test                                    # 491 ta test
+dotnet test                                    # 568 ta test
 
 # bitta mustaqil Arqon.exe (taxminan 75 MB) publish\win-x64 papkasida
 powershell -ExecutionPolicy Bypass -File tools\build.ps1
@@ -252,10 +263,17 @@ powershell -ExecutionPolicy Bypass -File tools\build.ps1
 | Interfeys o'zbek, ingliz va rus tilida | ✅ Tayyor (boshqa tillar xush kelibsiz) |
 | Torrent va magnet linklar barcha ulanishlar bo'yicha; papka tanlash; fayl tanlash; nisbat bilan ixtiyoriy tarqatish (seeding), qayta ochilgandan keyin ham; Windows'dan ochish | ✅ Tayyor (haqiqiy Debian torrenti Wi-Fi + telefon bilan) |
 | **System mode** (Telegram, Chrome va hamma ilovani tezlatish) | 🧪 Birinchi haqiqiy sinovda ishladi (Wi-Fi + USB telefon). O'yin bilan va uzoq sessiyada hali sinalmagan |
-| Relay server (bitta ulanishni bo'laklash, o'yin paketlarini nusxalash) | 🗓 Rejada |
+| Sozlamalardan nusxalanadigan muammo hisoboti (crash log, ulanishlar, shaxsiy ma'lumotlarsiz) | ✅ Tayyor |
+| winget paketi (har relizda manifestlar) | ✅ Tayyor (yuborilgandan keyin winget'ga qabul qilinadi) |
+| Chrome, Edge va Firefox uchun brauzer kengaytmasi (*Arqon bilan yuklash*), `arqon://` linklar | 🧪 [`browser-extension/`](browser-extension/README.md) da, do'konlarda hali yo'q |
+| Yuklash jadvali, "tejash" ulanishlari, kunlik chegarada telefonni tejash | ✅ Tayyor |
+| Skriptlar uchun mahalliy API ([docs/api.md](docs/api.md)) | ✅ Tayyor |
+| Relay server (bitta ulanishni bo'laklash, o'yin paketlarini nusxalash) | 🧪 Poydevor: testlari bilan protokol qismlari ([docs/relay.md](docs/relay.md)) |
 | O'rnatuvchi va kod imzosi | 🗓 Rejada |
 
-**Ochiq cheklovlar:** tarqatish (seeding) ixtiyoriy (standart o'chiq) va qayta ochilgandan keyin faqat fayllar diskda turgan bo'lsa davom etadi, UPnP port ochish o'chiq, bitta faylli `Arqon.exe` dan system mode drayver bilan hali tekshirilmagan.
+Keyingi rejalar: [ROADMAP.uz.md](ROADMAP.uz.md).
+
+**Ochiq cheklovlar:** tarqatish (seeding) ixtiyoriy (standart o'chiq) va qayta ochilgandan keyin faqat fayllar diskda turgan bo'lsa davom etadi, UPnP port ochish Sozlamalarda yoqilmasa o'chiq, bitta faylli `Arqon.exe` dan system mode drayver bilan hali tekshirilmagan.
 
 ## 🔒 Xavfsizlik
 

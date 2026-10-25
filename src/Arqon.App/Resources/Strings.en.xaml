@@ -77,7 +77,7 @@
     <sys:String x:Key="S.Dl.Placeholder">https://example.com/file.zip or magnet:?xt=…</sys:String>
     <sys:String x:Key="S.Dl.AddTorrent">Torrent file</sys:String>
     <sys:String x:Key="S.Set.Shell">Open torrents and magnet links with Arqon</sys:String>
-    <sys:String x:Key="S.Set.ShellBody">Magnet links and .torrent files from the browser open in Arqon and start downloading. Windows 10 may ask you to confirm the default app yourself (button below).</sys:String>
+    <sys:String x:Key="S.Set.ShellBody">Magnet links and .torrent files from the browser open in Arqon and start downloading, and so do links sent by the Arqon browser extension. Windows 10 may ask you to confirm the default app yourself (button below).</sys:String>
     <sys:String x:Key="S.Set.DefaultApps">Windows: default apps</sys:String>
     <sys:String x:Key="S.Set.ShellOther">Magnet links are currently opened by "{0}". Arqon is registered; to make it the default, choose Arqon for "magnet" under Windows Default apps (button below).</sys:String>
     <sys:String x:Key="S.Dl.NoSpace">Not enough disk space: {0} needed, {1} free. Free some space and try again.</sys:String>
@@ -245,4 +245,33 @@ Open the release page to download it by hand?</sys:String>
 • turn system mode on.
 
 Nothing else on the computer is changed. Continue?</sys:String>
+
+    <sys:String x:Key="S.Diag.Title">Problem report</sys:String>
+    <sys:String x:Key="S.Diag.Body">Copies what helps fix a bug: version, Windows, connections, system mode and the last crashes. Your user name, full addresses and folders are left out. Paste it into a GitHub issue.</sys:String>
+    <sys:String x:Key="S.Diag.Copy">Copy report</sys:String>
+    <sys:String x:Key="S.Diag.Folder">Open logs folder</sys:String>
+    <sys:String x:Key="S.Diag.Copied">The report is on the clipboard.</sys:String>
+    <sys:String x:Key="S.Diag.Busy">The clipboard is busy. Try again.</sys:String>
+    <sys:String x:Key="S.Diag.NoCrash">No crashes recorded.</sys:String>
+    <sys:String x:Key="S.Diag.LastCrash">Last crash: {0}</sys:String>
+    <sys:String x:Key="S.Diag.CrashHint">Settings → Problem report copies the details for a bug report.</sys:String>
+
+    <sys:String x:Key="S.Set.Upnp">Open the torrent port on the router (UPnP)</sys:String>
+    <sys:String x:Key="S.Set.UpnpBody">Asks the router to let other peers connect to you, which helps rare torrents and seeding. It changes a router setting, so it is off by default.</sys:String>
+    <sys:String x:Key="S.Set.Saver">Save data on these connections</sys:String>
+    <sys:String x:Key="S.Set.SaverBody">Downloads and torrents leave a ticked connection alone while another one is up, and use it only when it is the last one. Handy for a phone on a small plan.</sys:String>
+    <sys:String x:Key="S.Set.SaverNone">No connections right now.</sys:String>
+    <sys:String x:Key="S.Set.SaveMobile">At the daily limit, keep downloads off the phone</sys:String>
+    <sys:String x:Key="S.Set.SaveMobileBody">When today's traffic reaches the daily limit above, phone connections count as "save data" until tomorrow.</sys:String>
+    <sys:String x:Key="S.Set.Schedule">Download schedule</sys:String>
+    <sys:String x:Key="S.Set.ScheduleBody">Downloads in the queue start only in these hours (for example a cheaper night plan). Downloads already running keep going, and "Start now" always works.</sys:String>
+    <sys:String x:Key="S.Set.ScheduleFrom">From</sys:String>
+    <sys:String x:Key="S.Set.ScheduleTo">to</sys:String>
+    <sys:String x:Key="S.Dl.Scheduled">Queued downloads wait for the schedule and start at {0}.</sys:String>
+
+    <sys:String x:Key="S.Api.Title">Local API for scripts</sys:String>
+    <sys:String x:Key="S.Api.Body">Lets scripts and other programs on this computer read the connections and downloads and add a download. Only this computer can reach it, and every request needs the token. Off by default.</sys:String>
+    <sys:String x:Key="S.Api.Address">Listening at {0}. Send the header Authorization: Bearer &lt;token&gt;. Details: docs/api.md.</sys:String>
+    <sys:String x:Key="S.Api.Problem">Could not start: {0}</sys:String>
+    <sys:String x:Key="S.Api.CopyToken">Copy token</sys:String>
 </ResourceDictionary>

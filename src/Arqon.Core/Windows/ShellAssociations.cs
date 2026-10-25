@@ -21,6 +21,9 @@ public sealed class ShellAssociations(
     /// <summary>True when this very copy of Arqon is registered (offered under "Open with" and in Default apps).</summary>
     public bool IsRegistered() => ReadDefault($@"{classesRoot}\{TorrentProgId}\shell\open\command") == Command;
 
+    /// <summary>True when arqon:// links (the browser extension) start this copy of Arqon.</summary>
+    public bool OwnsArqonLinks() => ReadDefault($@"{classesRoot}\arqon\shell\open\command") == Command;
+
     /// <summary>True when magnet links are opened by this copy of Arqon.</summary>
     public bool OwnsMagnet() => ReadDefault($@"{classesRoot}\magnet\shell\open\command") == Command;
 
@@ -49,6 +52,15 @@ public sealed class ShellAssociations(
             SetDefault($@"{classesRoot}\magnet\shell\open\command", Command);
         }
 
+        // arqon:// is Arqon's own scheme (the browser extension uses it), so it always points to this copy.
+        using (var arqon = Registry.CurrentUser.CreateSubKey($@"{classesRoot}\arqon"))
+        {
+            arqon.SetValue(null, "URL:Arqon Link");
+            arqon.SetValue("URL Protocol", "");
+        }
+        SetDefault($@"{classesRoot}\arqon\DefaultIcon", $"\"{exePath}\",0");
+        SetDefault($@"{classesRoot}\arqon\shell\open\command", Command);
+
         // "Open with" lists the program; the default stays whatever the user chose.
         using (var withProgIds = Registry.CurrentUser.CreateSubKey($@"{classesRoot}\.torrent\OpenWithProgids"))
             withProgIds.SetValue(TorrentProgId, Array.Empty<byte>(), RegistryValueKind.None);
@@ -73,6 +85,8 @@ public sealed class ShellAssociations(
         if (ReadDefault($@"{classesRoot}\magnet\shell\open\command") == Command)
             Registry.CurrentUser.DeleteSubKeyTree($@"{classesRoot}\magnet", throwOnMissingSubKey: false);
 
+        if (ReadDefault($@"{classesRoot}\arqon\shell\open\command") == Command)
+            Registry.CurrentUser.DeleteSubKeyTree($@"{classesRoot}\arqon", throwOnMissingSubKey: false);
         Registry.CurrentUser.DeleteSubKeyTree($@"{classesRoot}\{TorrentProgId}", throwOnMissingSubKey: false);
         Registry.CurrentUser.DeleteSubKeyTree($@"{classesRoot}\{MagnetProgId}", throwOnMissingSubKey: false);
         using (var withProgIds = Registry.CurrentUser.OpenSubKey($@"{classesRoot}\.torrent\OpenWithProgids", writable: true))

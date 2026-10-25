@@ -18,6 +18,7 @@ public partial class App : Application
     private ShellViewModel? _shell;
     private TrayService? _tray;
     private TaskbarMeterService? _meter;
+    private LocalApiHost? _api;
     private Mutex? _instance;
     private EventWaitHandle? _showSignal;
     private bool _exiting;
@@ -47,9 +48,19 @@ public partial class App : Application
         base.OnStartup(e);
         DispatcherUnhandledException += (_, args) =>
         {
-            LogCrash(args.Exception);
-            MessageBox.Show(args.Exception.Message, "Arqon", MessageBoxButton.OK, MessageBoxImage.Error);
+            Diagnostics.Crashes.Record(args.Exception, "ui");
+            MessageBox.Show(args.Exception.Message + "\n\n" + Loc.Get("S.Diag.CrashHint"), "Arqon", MessageBoxButton.OK, MessageBoxImage.Error);
             args.Handled = true;
+        };
+        // a crash on another thread ends the program: at least the next bug report can say why
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+        {
+            if (args.ExceptionObject is Exception ex) Diagnostics.Crashes.Record(ex, "fatal");
+        };
+        TaskScheduler.UnobservedTaskException += (_, args) =>
+        {
+            Diagnostics.Crashes.Record(args.Exception, "task");
+            args.SetObserved();
         };
 
         var args = e.Args;
@@ -82,6 +93,7 @@ public partial class App : Application
         {
             _tray = new TrayService(_services, ShowMainWindow, ExitApp);
             _meter = new TaskbarMeterService(_services, ShowMainWindow);
+            _api = new LocalApiHost(_services, Dispatcher, _shell.DownloadSnapshot, _shell.AddDownload);
             ListenForSecondInstance();
         }
         if (!(startHidden && _tray is not null && _services.Settings.CloseToTray)) window.Show();
@@ -99,6 +111,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _api?.Dispose();
         _meter?.Dispose();
         _tray?.Dispose();
         _shell?.Dispose();
@@ -169,17 +182,6 @@ public partial class App : Application
     private void HandleRequests(IReadOnlyList<string> requests)
     {
         foreach (var request in requests) _shell?.AddDownload(request);
-    }
-
-    private static void LogCrash(Exception ex)
-    {
-        try
-        {
-            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Arqon");
-            Directory.CreateDirectory(dir);
-            File.AppendAllText(Path.Combine(dir, "crash.log"), $"{DateTime.Now:O}\n{ex}\n\n");
-        }
-        catch (IOException) { }
     }
 
     /// <summary>Developer aid: renders every page (both languages) to PNG files, then exits.</summary>
