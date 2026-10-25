@@ -315,6 +315,24 @@
 
             <Border Style="{StaticResource Card}" Margin="0,0,0,10">
                 <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource RowTitle}" Text="{DynamicResource S.Api.Title}" />
+                            <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Text="{DynamicResource S.Api.Body}" />
+                        </StackPanel>
+                        <ToggleButton Grid.Column="1" Style="{StaticResource Switch}" IsChecked="{Binding LocalApi, Mode=TwoWay}" Margin="16,0,0,0" VerticalAlignment="Top" />
+                    </Grid>
+                    <StackPanel Margin="0,10,0,0" Visibility="{Binding LocalApi, Converter={StaticResource B2V}}">
+                        <TextBlock Style="{StaticResource MutedText}" FontSize="12" TextWrapping="Wrap" Text="{Binding LocalApiNote, Mode=OneWay}" />
+                        <Button Style="{StaticResource GhostButton}" HorizontalAlignment="Left" Margin="0,8,0,0" Padding="12,6"
+                                Content="{DynamicResource S.Api.CopyToken}" Command="{Binding CopyTokenCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+                <StackPanel>
                     <TextBlock Style="{StaticResource RowTitle}" Text="{DynamicResource S.Diag.Title}" />
                     <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Text="{DynamicResource S.Diag.Body}" />
                     <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="0,6,0,0" Text="{Binding CrashStatus, Mode=OneWay}" />

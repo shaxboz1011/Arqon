@@ -442,6 +442,24 @@ public sealed class SettingsViewModel : ViewModelBase
 
     public bool IsAdmin => WinDivertSteerer.IsAdministrator();
 
+    // ---- local API for scripts
+
+    public bool LocalApi
+    {
+        get => _services.Settings.LocalApi;
+        set { _services.SaveSettings(_services.Settings with { LocalApi = value }); Raise(string.Empty); }
+    }
+
+    public string LocalApiNote => LocalApiHost.Problem is { } problem
+        ? Loc.Format("S.Api.Problem", problem)
+        : Loc.Format("S.Api.Address", $"http://127.0.0.1:{Core.Api.LocalApiServer.DefaultPort}/api/status");
+
+    public RelayCommand CopyTokenCommand => new(() =>
+    {
+        try { Clipboard.SetText(Core.Api.ApiToken.LoadOrCreate(LocalApiHost.TokenDirectory)); }
+        catch (System.Runtime.InteropServices.COMException) { /* the clipboard is busy: press again */ }
+    });
+
     // ---- problem report
 
     private string _reportMessage = "";

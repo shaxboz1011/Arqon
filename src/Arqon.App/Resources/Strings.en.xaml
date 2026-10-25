@@ -268,4 +268,10 @@ Nothing else on the computer is changed. Continue?</sys:String>
     <sys:String x:Key="S.Set.ScheduleFrom">From</sys:String>
     <sys:String x:Key="S.Set.ScheduleTo">to</sys:String>
     <sys:String x:Key="S.Dl.Scheduled">Queued downloads wait for the schedule and start at {0}.</sys:String>
+
+    <sys:String x:Key="S.Api.Title">Local API for scripts</sys:String>
+    <sys:String x:Key="S.Api.Body">Lets scripts and other programs on this computer read the connections and downloads and add a download. Only this computer can reach it, and every request needs the token. Off by default.</sys:String>
+    <sys:String x:Key="S.Api.Address">Listening at {0}. Send the header Authorization: Bearer &lt;token&gt;. Details: docs/api.md.</sys:String>
+    <sys:String x:Key="S.Api.Problem">Could not start: {0}</sys:String>
+    <sys:String x:Key="S.Api.CopyToken">Copy token</sys:String>
 </ResourceDictionary>

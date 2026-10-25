@@ -268,4 +268,10 @@
     <sys:String x:Key="S.Set.ScheduleFrom">С</sys:String>
     <sys:String x:Key="S.Set.ScheduleTo">до</sys:String>
     <sys:String x:Key="S.Dl.Scheduled">Загрузки в очереди ждут расписания и начнутся в {0}.</sys:String>
+
+    <sys:String x:Key="S.Api.Title">Локальный API для скриптов</sys:String>
+    <sys:String x:Key="S.Api.Body">Позволяет скриптам и программам на этом компьютере читать подключения и загрузки и добавлять загрузку. Доступен только с этого компьютера, каждому запросу нужен токен. По умолчанию выключено.</sys:String>
+    <sys:String x:Key="S.Api.Address">Слушает по адресу {0}. Отправляйте заголовок Authorization: Bearer &lt;token&gt;. Подробно: docs/api.md.</sys:String>
+    <sys:String x:Key="S.Api.Problem">Не удалось запустить: {0}</sys:String>
+    <sys:String x:Key="S.Api.CopyToken">Скопировать токен</sys:String>
 </ResourceDictionary>

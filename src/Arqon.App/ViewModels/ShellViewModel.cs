@@ -74,6 +74,11 @@ public sealed class ShellViewModel : ViewModelBase
         (_pages["downloads"] as DownloadsViewModel)?.AddFromText(text);
     }
 
+    /// <summary>What the local API reports about downloads.</summary>
+    public IReadOnlyList<Core.Api.ApiDownload> DownloadSnapshot() =>
+        (_pages["downloads"] as DownloadsViewModel)?.Items
+            .Select(i => new Core.Api.ApiDownload(i.Name, i.State.ToString(), Math.Round(i.Percent, 1), i.SpeedBps)).ToList() ?? [];
+
     /// <summary>The window came to the front: let pages react (the downloads page offers a copied link).</summary>
     public void OnWindowActivated() => (_pages["downloads"] as DownloadsViewModel)?.CheckClipboard();
 

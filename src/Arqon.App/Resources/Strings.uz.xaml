@@ -268,4 +268,10 @@ Kompyuterdagi boshqa hech narsa o'zgarmaydi. Davom etamizmi?</sys:String>
     <sys:String x:Key="S.Set.ScheduleFrom">Boshlanishi</sys:String>
     <sys:String x:Key="S.Set.ScheduleTo">tugashi</sys:String>
     <sys:String x:Key="S.Dl.Scheduled">Navbatdagi yuklashlar jadvalni kutmoqda, {0} da boshlanadi.</sys:String>
+
+    <sys:String x:Key="S.Api.Title">Skriptlar uchun mahalliy API</sys:String>
+    <sys:String x:Key="S.Api.Body">Shu kompyuterdagi skriptlar va dasturlarga ulanishlar va yuklashlarni o'qish hamda yuklash qo'shish imkonini beradi. Unga faqat shu kompyuterdan ulanish mumkin, har bir so'rovga token kerak. Standart holatda o'chiq.</sys:String>
+    <sys:String x:Key="S.Api.Address">{0} manzilida tinglayapti. Authorization: Bearer &lt;token&gt; sarlavhasini yuboring. Batafsil: docs/api.md.</sys:String>
+    <sys:String x:Key="S.Api.Problem">Ishga tushmadi: {0}</sys:String>
+    <sys:String x:Key="S.Api.CopyToken">Tokenni nusxalash</sys:String>
 </ResourceDictionary>

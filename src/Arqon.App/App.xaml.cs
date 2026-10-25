@@ -18,6 +18,7 @@ public partial class App : Application
     private ShellViewModel? _shell;
     private TrayService? _tray;
     private TaskbarMeterService? _meter;
+    private LocalApiHost? _api;
     private Mutex? _instance;
     private EventWaitHandle? _showSignal;
     private bool _exiting;
@@ -92,6 +93,7 @@ public partial class App : Application
         {
             _tray = new TrayService(_services, ShowMainWindow, ExitApp);
             _meter = new TaskbarMeterService(_services, ShowMainWindow);
+            _api = new LocalApiHost(_services, Dispatcher, _shell.DownloadSnapshot, _shell.AddDownload);
             ListenForSecondInstance();
         }
         if (!(startHidden && _tray is not null && _services.Settings.CloseToTray)) window.Show();
@@ -109,6 +111,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _api?.Dispose();
         _meter?.Dispose();
         _tray?.Dispose();
         _shell?.Dispose();

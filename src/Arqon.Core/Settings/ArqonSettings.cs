@@ -26,7 +26,8 @@ public sealed record ArqonSettings(
     bool ScheduleEnabled = false,
     int ScheduleStartHour = 1,
     int ScheduleEndHour = 7,
-    bool TorrentPortForwarding = false)
+    bool TorrentPortForwarding = false,
+    bool LocalApi = false)
 {
     public static ArqonSettings Default() => new([], GameProtection: true, SystemMode: false, Language: "uz");
 }
