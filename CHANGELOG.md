@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.3.0
+
+**Windows**
+
+- **Problem report:** *Settings → Problem report → Copy report* puts the version, Windows, connections, system mode and the last crashes on the clipboard for a bug report. The user name, full addresses and folders are left out. Every unhandled error (also on background threads) is written to `crash.log`, which trims itself.
+- **winget:** every release carries the three winget manifests, and with the `WINGET_TOKEN` secret the release workflow submits them to winget-pkgs (`winget install shaxboz1011.Arqon` once accepted).
+- **Browser extension** (Chrome, Edge, Firefox) in `browser-extension/`: *Download with Arqon* on every link, and optionally every download. It talks to Arqon through `arqon://add?url=…` links, which accept only web and magnet links.
+- **Download schedule:** queued downloads start only in chosen hours. Running downloads keep going, and *Start now* always works.
+- **Save data:** ticked connections are used by downloads and torrents only when no other link is up; optionally all phone links once the daily limit is reached.
+- **Torrents:** UPnP / NAT-PMP port mapping can be switched on (off by default).
+- **Local API** for scripts on 127.0.0.1 with a token (off by default): connections, downloads, add a download. See `docs/api.md`.
+- **Relay groundwork:** signed frames, a reorder buffer and a link scheduler for single-connection bonding, with a design in `docs/relay.md`. No relay server yet.
+- [ROADMAP.md](ROADMAP.md) with the plan up to 1.0.
+
 ## 0.2.0
 
 **Windows**

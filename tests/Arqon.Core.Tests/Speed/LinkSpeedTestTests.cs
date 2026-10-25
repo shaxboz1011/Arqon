@@ -72,7 +72,8 @@ public class LinkSpeedTestTests
         var broken = new HttpClient(new Handler(() => throw new HttpRequestException("no route")));
         var test = new LinkSpeedTest(l => l.Id == "bad" ? broken : Client(0), "http://test/file", connectionsPerLink: 1);
 
-        var result = await test.RunAsync([Link("good"), Link("bad")], TimeSpan.FromMilliseconds(300));
+        // long enough that the good link moves data even when the thread pool is busy with the other tests at start-up
+        var result = await test.RunAsync([Link("good"), Link("bad")], TimeSpan.FromSeconds(1.5));
 
         Assert.True(result.BytesPerSecond["good"] > 0);
         Assert.Equal(0, result.BytesPerSecond["bad"]);
