@@ -221,6 +221,16 @@ public sealed class TorrentEngine : IDisposable
             .ConfigureAwait(false);
     }
 
+    public bool PortForwarding => _engine.Settings.AllowPortForwarding;
+
+    /// <summary>Switches UPnP / NAT-PMP port mapping on or off (it asks the router to open the listening port).</summary>
+    public async Task SetPortForwardingAsync(bool allow)
+    {
+        if (_engine.Settings.AllowPortForwarding == allow) return;
+        await _engine.UpdateSettingsAsync(new EngineSettingsBuilder(_engine.Settings) { AllowPortForwarding = allow }.ToSettings())
+            .ConfigureAwait(false);
+    }
+
     public void Dispose()
     {
         _disposed = true;

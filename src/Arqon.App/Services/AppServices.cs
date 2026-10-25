@@ -67,13 +67,20 @@ public sealed class AppServices : IDisposable
         {
             lock (_torrentGate)
             {
-                _torrentLinks ??= new LinkRoundRobin(() => _linkCache.Get() ?? [], IsLinkAlive);
+                _torrentLinks ??= new LinkRoundRobin(DownloadLinks, IsLinkAlive);
                 return _torrents ??= new TorrentEngine(new TorrentEngineOptions(
                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Arqon", "torrent-cache"),
-                    Links: _torrentLinks));
+                    Links: _torrentLinks, AllowPortForwarding: Settings.TorrentPortForwarding));
             }
         }
     }
+
+    /// <summary>True while today's traffic is at or over the daily limit the user set.</summary>
+    public bool DailyLimitReached { get; private set; }
+
+    /// <summary>The links downloads and torrents may use now: "save data" links (and, at the daily limit, phones) only as the last resort.</summary>
+    public IReadOnlyList<LinkInfo> DownloadLinks() =>
+        DownloadLinkPolicy.Choose(_linkCache.Get() ?? [], Settings.SaverLinks, Settings.SaveMobileAtLimit && DailyLimitReached);
 
     /// <summary>How many peer connections each link got so far (empty until a torrent was used).</summary>
     public IReadOnlyDictionary<string, int> TorrentConnectionsPerLink() => _torrentLinks?.Counts ?? new Dictionary<string, int>();
@@ -346,6 +353,9 @@ public sealed class AppServices : IDisposable
         SafeGame.Enabled = settings.SafeGameMode && !Demo;
         SafeGame.WantsSystemMode = settings.SystemMode;
         SafeGame.Evaluate();
+        TorrentEngine? torrents;
+        lock (_torrentGate) torrents = _torrents;
+        if (torrents is not null) _ = torrents.SetPortForwardingAsync(settings.TorrentPortForwarding);
         SettingsChanged?.Invoke();
     }
 
@@ -444,6 +454,7 @@ public sealed class AppServices : IDisposable
     {
         var today = Usage.Today();
         var limitBytes = (long)Settings.DailyLimitMb * 1024 * 1024;
+        DailyLimitReached = DailyLimit.LevelOf(today.Down + today.Up, limitBytes) == LimitLevel.Reached;
         var level = _dailyLimit.Check(DateOnly.FromDateTime(DateTime.Now), today.Down + today.Up, limitBytes);
         if (level is null) return;
         var key = level == LimitLevel.Reached ? "S.Notice.LimitReached" : "S.Notice.LimitNear";

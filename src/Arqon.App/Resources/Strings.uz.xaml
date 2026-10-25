@@ -77,7 +77,7 @@
     <sys:String x:Key="S.Dl.Placeholder">https://misol.uz/fayl.zip yoki magnet:?xt=…</sys:String>
     <sys:String x:Key="S.Dl.AddTorrent">Torrent fayl</sys:String>
     <sys:String x:Key="S.Set.Shell">Torrent va magnet linklarni Arqon bilan ochish</sys:String>
-    <sys:String x:Key="S.Set.ShellBody">Brauzerdagi magnet linklar va .torrent fayllar Arqon'da ochiladi, yuklash o'zi boshlanadi. Windows 10 standart ilovani o'zingiz tasdiqlashingizni so'rashi mumkin (pastdagi tugma).</sys:String>
+    <sys:String x:Key="S.Set.ShellBody">Brauzerdagi magnet linklar va .torrent fayllar, shuningdek Arqon brauzer kengaytmasi yuborgan linklar Arqon'da ochiladi, yuklash o'zi boshlanadi. Windows 10 standart ilovani o'zingiz tasdiqlashingizni so'rashi mumkin (pastdagi tugma).</sys:String>
     <sys:String x:Key="S.Set.DefaultApps">Windows: standart ilovalar</sys:String>
     <sys:String x:Key="S.Set.ShellOther">Magnet linklarni hozir "{0}" ochadi. Arqon ro'yxatga olindi, uni standart qilish uchun pastdagi tugma orqali Windows'da "magnet" uchun Arqon'ni tanlang.</sys:String>
     <sys:String x:Key="S.Dl.NoSpace">Diskda joy yetmaydi: kerak {0}, bo'sh {1}. Joy bo'shatib, qayta urinib ko'ring.</sys:String>
@@ -255,4 +255,17 @@ Kompyuterdagi boshqa hech narsa o'zgarmaydi. Davom etamizmi?</sys:String>
     <sys:String x:Key="S.Diag.NoCrash">Hech qanday xato qayd etilmagan.</sys:String>
     <sys:String x:Key="S.Diag.LastCrash">Oxirgi xato: {0}</sys:String>
     <sys:String x:Key="S.Diag.CrashHint">Sozlamalar → Muammo hisoboti xato haqida batafsil ma'lumotni nusxalaydi.</sys:String>
+
+    <sys:String x:Key="S.Set.Upnp">Routerda torrent portini ochish (UPnP)</sys:String>
+    <sys:String x:Key="S.Set.UpnpBody">Routerdan boshqa peerlarga sizga ulanishga ruxsat berishni so'raydi, bu kam tarqalgan torrentlar va tarqatish uchun foydali. Router sozlamasini o'zgartiradi, shuning uchun standart holatda o'chiq.</sys:String>
+    <sys:String x:Key="S.Set.Saver">Shu ulanishlarda trafikni tejash</sys:String>
+    <sys:String x:Key="S.Set.SaverBody">Belgilangan ulanishni yuklashlar va torrentlar boshqa ulanish bor paytda ishlatmaydi, faqat u yolg'iz qolganda ishlatadi. Kichik tarifli telefon uchun qulay.</sys:String>
+    <sys:String x:Key="S.Set.SaverNone">Hozir ulanish yo'q.</sys:String>
+    <sys:String x:Key="S.Set.SaveMobile">Kunlik chegaraga yetganda yuklashlarni telefondan olib qo'yish</sys:String>
+    <sys:String x:Key="S.Set.SaveMobileBody">Bugungi trafik yuqoridagi kunlik chegaraga yetganda, telefon ulanishlari ertagacha "tejash" deb hisoblanadi.</sys:String>
+    <sys:String x:Key="S.Set.Schedule">Yuklash jadvali</sys:String>
+    <sys:String x:Key="S.Set.ScheduleBody">Navbatdagi yuklashlar faqat shu soatlarda boshlanadi (masalan arzonroq tungi tarif). Boshlangan yuklashlar davom etadi, "Hozir boshlash" esa doim ishlaydi.</sys:String>
+    <sys:String x:Key="S.Set.ScheduleFrom">Boshlanishi</sys:String>
+    <sys:String x:Key="S.Set.ScheduleTo">tugashi</sys:String>
+    <sys:String x:Key="S.Dl.Scheduled">Navbatdagi yuklashlar jadvalni kutmoqda, {0} da boshlanadi.</sys:String>
 </ResourceDictionary>

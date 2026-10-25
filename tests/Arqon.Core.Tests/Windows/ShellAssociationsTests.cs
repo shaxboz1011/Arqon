@@ -56,6 +56,23 @@ public sealed class ShellAssociationsTests : IDisposable
     }
 
     [Fact]
+    public void Registering_makes_arqon_links_from_the_browser_extension_start_this_copy_and_unregistering_removes_them()
+    {
+        var shell = Make();
+
+        shell.Register();
+
+        Assert.Equal($"\"{Exe}\" \"%1\"", Read(@"Classes\arqon\shell\open\command"));
+        Assert.Equal("", Read(@"Classes\arqon", "URL Protocol"));
+        Assert.True(shell.OwnsArqonLinks());
+
+        shell.Unregister();
+
+        Assert.Null(Read(@"Classes\arqon\shell\open\command"));
+        Assert.False(shell.OwnsArqonLinks());
+    }
+
+    [Fact]
     public void Arqon_owns_the_magnet_handler_when_nobody_else_does()
     {
         var shell = Make();

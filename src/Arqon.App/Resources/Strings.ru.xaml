@@ -77,7 +77,7 @@
     <sys:String x:Key="S.Dl.Placeholder">https://example.com/file.zip или magnet:?xt=…</sys:String>
     <sys:String x:Key="S.Dl.AddTorrent">Файл .torrent</sys:String>
     <sys:String x:Key="S.Set.Shell">Открывать торренты и magnet-ссылки в Arqon</sys:String>
-    <sys:String x:Key="S.Set.ShellBody">Magnet-ссылки и файлы .torrent из браузера открываются в Arqon и сразу начинают загружаться. Windows 10 может попросить вас самим подтвердить программу по умолчанию (кнопка ниже).</sys:String>
+    <sys:String x:Key="S.Set.ShellBody">Magnet-ссылки и файлы .torrent из браузера, а также ссылки из расширения Arqon для браузера открываются в Arqon и сразу начинают загружаться. Windows 10 может попросить вас самим подтвердить программу по умолчанию (кнопка ниже).</sys:String>
     <sys:String x:Key="S.Set.DefaultApps">Windows: программы по умолчанию</sys:String>
     <sys:String x:Key="S.Set.ShellOther">Magnet-ссылки сейчас открывает «{0}». Arqon зарегистрирован; чтобы сделать его основным, выберите Arqon для «magnet» в разделе «Приложения по умолчанию» Windows (кнопка ниже).</sys:String>
     <sys:String x:Key="S.Dl.NoSpace">Недостаточно места на диске: нужно {0}, свободно {1}. Освободите место и попробуйте снова.</sys:String>
@@ -255,4 +255,17 @@
     <sys:String x:Key="S.Diag.NoCrash">Сбоев не зафиксировано.</sys:String>
     <sys:String x:Key="S.Diag.LastCrash">Последний сбой: {0}</sys:String>
     <sys:String x:Key="S.Diag.CrashHint">Настройки → Отчёт о проблеме копирует подробности для отчёта об ошибке.</sys:String>
+
+    <sys:String x:Key="S.Set.Upnp">Открыть порт торрентов на роутере (UPnP)</sys:String>
+    <sys:String x:Key="S.Set.UpnpBody">Просит роутер пускать к вам другие пиры: это помогает редким торрентам и раздаче. Меняет настройку роутера, поэтому по умолчанию выключено.</sys:String>
+    <sys:String x:Key="S.Set.Saver">Экономить трафик на этих подключениях</sys:String>
+    <sys:String x:Key="S.Set.SaverBody">Загрузки и торренты не трогают отмеченное подключение, пока есть другое, и используют его, только когда оно осталось одно. Удобно для телефона с небольшим тарифом.</sys:String>
+    <sys:String x:Key="S.Set.SaverNone">Сейчас подключений нет.</sys:String>
+    <sys:String x:Key="S.Set.SaveMobile">При дневном лимите убрать загрузки с телефона</sys:String>
+    <sys:String x:Key="S.Set.SaveMobileBody">Когда трафик за сегодня достигнет дневного лимита выше, подключения телефона до завтра считаются «экономными».</sys:String>
+    <sys:String x:Key="S.Set.Schedule">Расписание загрузок</sys:String>
+    <sys:String x:Key="S.Set.ScheduleBody">Загрузки из очереди начинаются только в эти часы (например, на более дешёвом ночном тарифе). Уже идущие загрузки продолжаются, а «Начать сейчас» работает всегда.</sys:String>
+    <sys:String x:Key="S.Set.ScheduleFrom">С</sys:String>
+    <sys:String x:Key="S.Set.ScheduleTo">до</sys:String>
+    <sys:String x:Key="S.Dl.Scheduled">Загрузки в очереди ждут расписания и начнутся в {0}.</sys:String>
 </ResourceDictionary>

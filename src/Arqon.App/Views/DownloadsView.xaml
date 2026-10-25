@@ -114,6 +114,8 @@
                 <Button Grid.Column="3" Style="{StaticResource PrimaryButton}" Margin="8,0,0,0" Content="{DynamicResource S.Dl.Download}" Command="{Binding AddCommand}" />
             </Grid>
             <TextBlock Foreground="#F59E0B" FontSize="12" Margin="2,0,0,6" Text="{Binding Message}" Visibility="{Binding HasMessage, Converter={StaticResource B2V}}" />
+            <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="2,0,0,6" TextWrapping="Wrap" Text="{Binding ScheduleNote, Mode=OneWay}"
+                       Visibility="{Binding HasScheduleNote, Converter={StaticResource B2V}}" />
             <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                 <TextBlock Style="{StaticResource MutedText}" FontSize="12" Text="{DynamicResource S.Dl.SaveTo}" />
                 <TextBlock Style="{StaticResource MutedText}" FontSize="12" Text="{Binding FolderText}" Margin="6,0,0,0" Foreground="#E7EAF2" />

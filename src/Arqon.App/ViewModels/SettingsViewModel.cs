@@ -17,6 +17,27 @@ public sealed record SpeedUnitOption(string Label, bool InBytes);
 
 public sealed record LimitOption(string Label, int Megabytes);
 
+public sealed record HourOption(string Label, int Hour);
+
+/// <summary>One link in the "save data" list; ticking it saves the choice at once.</summary>
+public sealed class SaverLinkOption(string id, string label, bool isChecked, Action<string, bool> changed)
+{
+    private bool _checked = isChecked;
+
+    public string Label { get; } = label;
+
+    public bool IsChecked
+    {
+        get => _checked;
+        set
+        {
+            if (value == _checked) return;
+            _checked = value;
+            changed(id, value);
+        }
+    }
+}
+
 public sealed class SettingsViewModel : ViewModelBase
 {
     private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
@@ -151,6 +172,70 @@ public sealed class SettingsViewModel : ViewModelBase
         }
     }
     public RelayCommand RestartAsAdminCommand { get; }
+
+    // ---- saving data on chosen links, and the download schedule
+
+    public IReadOnlyList<SaverLinkOption> SaverLinks
+    {
+        get
+        {
+            var saved = _services.Settings.SaverLinks ?? [];
+            return _services.Links.GetLinks()
+                .Select(l => new SaverLinkOption(l.Id, l.Name, saved.Contains(l.Id, StringComparer.OrdinalIgnoreCase), SetSaver))
+                .ToList();
+        }
+    }
+
+    public bool NoLinks => _services.Links.GetLinks().Count == 0;
+
+    private void SetSaver(string linkId, bool saver)
+    {
+        var list = (_services.Settings.SaverLinks ?? []).Where(id => !string.Equals(id, linkId, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (saver) list.Add(linkId);
+        _services.SaveSettings(_services.Settings with { SaverLinks = list });
+    }
+
+    public bool SaveMobileAtLimit
+    {
+        get => _services.Settings.SaveMobileAtLimit;
+        set { _services.SaveSettings(_services.Settings with { SaveMobileAtLimit = value }); Raise(); }
+    }
+
+    public bool TorrentPortForwarding
+    {
+        get => _services.Settings.TorrentPortForwarding;
+        set { _services.SaveSettings(_services.Settings with { TorrentPortForwarding = value }); Raise(); }
+    }
+
+    public IReadOnlyList<HourOption> Hours { get; } = Enumerable.Range(0, 24).Select(h => new HourOption($"{h:00}:00", h)).ToList();
+
+    public bool ScheduleEnabled
+    {
+        get => _services.Settings.ScheduleEnabled;
+        set { _services.SaveSettings(_services.Settings with { ScheduleEnabled = value }); Raise(); }
+    }
+
+    public HourOption SelectedScheduleStart
+    {
+        get => Hours[Math.Clamp(_services.Settings.ScheduleStartHour, 0, 23)];
+        set
+        {
+            if (value is null || value.Hour == _services.Settings.ScheduleStartHour) return;
+            _services.SaveSettings(_services.Settings with { ScheduleStartHour = value.Hour });
+            Raise();
+        }
+    }
+
+    public HourOption SelectedScheduleEnd
+    {
+        get => Hours[Math.Clamp(_services.Settings.ScheduleEndHour, 0, 23)];
+        set
+        {
+            if (value is null || value.Hour == _services.Settings.ScheduleEndHour) return;
+            _services.SaveSettings(_services.Settings with { ScheduleEndHour = value.Hour });
+            Raise();
+        }
+    }
 
     public IReadOnlyList<LanguageOption> Languages { get; } = [new("O'zbekcha", "uz"), new("English", "en"), new("Русский", "ru")];
 

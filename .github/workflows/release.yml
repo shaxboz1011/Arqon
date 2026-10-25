@@ -26,6 +26,9 @@ jobs:
         run: |
           $version = if ("${{ github.ref }}".StartsWith("refs/tags/v")) { "${{ github.ref_name }}".Substring(1) } else { "" }
           ./tools/winget-manifest.ps1 -Exe out/Arqon.exe -Version $version -Output out/winget
+      - name: Pack the browser extension
+        shell: pwsh
+        run: Compress-Archive -Path browser-extension/* -DestinationPath out/Arqon-browser-extension.zip
       - name: Publish the release
         if: startsWith(github.ref, 'refs/tags/v')
         shell: pwsh
@@ -33,7 +36,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $manifests = (Get-ChildItem out/winget/*.yaml).FullName
-          gh release create "${{ github.ref_name }}" out/Arqon.exe out/Arqon.exe.sha256 @manifests `
+          gh release create "${{ github.ref_name }}" out/Arqon.exe out/Arqon.exe.sha256 out/Arqon-browser-extension.zip @manifests `
             --title "Arqon ${{ github.ref_name }}" --generate-notes
       # Opens a pull request in microsoft/winget-pkgs. Needs a classic GitHub token with the public_repo scope
       # saved as the repository secret WINGET_TOKEN; without it this step only says so. See docs/winget.md.
