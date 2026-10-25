@@ -245,4 +245,14 @@ Open the release page to download it by hand?</sys:String>
 • turn system mode on.
 
 Nothing else on the computer is changed. Continue?</sys:String>
+
+    <sys:String x:Key="S.Diag.Title">Problem report</sys:String>
+    <sys:String x:Key="S.Diag.Body">Copies what helps fix a bug: version, Windows, connections, system mode and the last crashes. Your user name, full addresses and folders are left out. Paste it into a GitHub issue.</sys:String>
+    <sys:String x:Key="S.Diag.Copy">Copy report</sys:String>
+    <sys:String x:Key="S.Diag.Folder">Open logs folder</sys:String>
+    <sys:String x:Key="S.Diag.Copied">The report is on the clipboard.</sys:String>
+    <sys:String x:Key="S.Diag.Busy">The clipboard is busy. Try again.</sys:String>
+    <sys:String x:Key="S.Diag.NoCrash">No crashes recorded.</sys:String>
+    <sys:String x:Key="S.Diag.LastCrash">Last crash: {0}</sys:String>
+    <sys:String x:Key="S.Diag.CrashHint">Settings → Problem report copies the details for a bug report.</sys:String>
 </ResourceDictionary>

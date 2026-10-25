@@ -245,4 +245,14 @@ Qo'lda yuklab olish uchun reliz sahifasini ochaymi?</sys:String>
 • tizim rejimini yoqadi.
 
 Kompyuterdagi boshqa hech narsa o'zgarmaydi. Davom etamizmi?</sys:String>
+
+    <sys:String x:Key="S.Diag.Title">Muammo hisoboti</sys:String>
+    <sys:String x:Key="S.Diag.Body">Xatoni tuzatishga yordam beradigan narsalarni nusxalaydi: versiya, Windows, ulanishlar, tizim rejimi va oxirgi xatolar. Foydalanuvchi nomingiz, to'liq manzillar va papkalar kirmaydi. Uni GitHub issue'ga qo'ying.</sys:String>
+    <sys:String x:Key="S.Diag.Copy">Hisobotni nusxalash</sys:String>
+    <sys:String x:Key="S.Diag.Folder">Loglar papkasini ochish</sys:String>
+    <sys:String x:Key="S.Diag.Copied">Hisobot nusxalandi.</sys:String>
+    <sys:String x:Key="S.Diag.Busy">Bufer band. Qayta urinib ko'ring.</sys:String>
+    <sys:String x:Key="S.Diag.NoCrash">Hech qanday xato qayd etilmagan.</sys:String>
+    <sys:String x:Key="S.Diag.LastCrash">Oxirgi xato: {0}</sys:String>
+    <sys:String x:Key="S.Diag.CrashHint">Sozlamalar → Muammo hisoboti xato haqida batafsil ma'lumotni nusxalaydi.</sys:String>
 </ResourceDictionary>

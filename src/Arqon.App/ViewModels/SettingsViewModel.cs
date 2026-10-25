@@ -33,6 +33,8 @@ public sealed class SettingsViewModel : ViewModelBase
         SetUpCommand = new RelayCommand(SetUp);
         _services.SetupChanged += OnSteeringChanged;
         DownloadUpdateCommand = new RelayCommand(OpenUpdatePage);
+        CopyReportCommand = new RelayCommand(CopyReport);
+        OpenLogsCommand = new RelayCommand(OpenLogs);
         _services.Steering.StateChanged += OnSteeringChanged;
         _services.SafeGame.Changed += OnSteeringChanged;
         _services.UpdateChanged += OnSteeringChanged;
@@ -354,6 +356,39 @@ public sealed class SettingsViewModel : ViewModelBase
         : _services.Fix.NeedsFix ? Loc.Get("S.Set.FixNeeded") : Loc.Get("S.Set.FixOk");
 
     public bool IsAdmin => WinDivertSteerer.IsAdministrator();
+
+    // ---- problem report
+
+    private string _reportMessage = "";
+
+    public RelayCommand CopyReportCommand { get; }
+    public RelayCommand OpenLogsCommand { get; }
+    public string ReportMessage => _reportMessage;
+
+    public string CrashStatus => Diagnostics.Crashes.LastAt() is { } at
+        ? Loc.Format("S.Diag.LastCrash", at.LocalDateTime.ToString("g"))
+        : Loc.Get("S.Diag.NoCrash");
+
+    private void CopyReport()
+    {
+        try
+        {
+            Clipboard.SetText(Diagnostics.BuildReport(_services));
+            _reportMessage = Loc.Get("S.Diag.Copied");
+        }
+        catch (System.Runtime.InteropServices.COMException)
+        {
+            _reportMessage = Loc.Get("S.Diag.Busy");
+        }
+        Raise(nameof(ReportMessage));
+        Raise(nameof(CrashStatus));
+    }
+
+    private static void OpenLogs()
+    {
+        System.IO.Directory.CreateDirectory(Diagnostics.LogsDirectory);
+        Process.Start(new ProcessStartInfo(Diagnostics.LogsDirectory) { UseShellExecute = true });
+    }
 
     public bool CanRestartAsAdmin => !IsAdmin;
     public string AdminText => IsAdmin ? Loc.Get("S.Set.AdminYes") : Loc.Get("S.Set.AdminNo");

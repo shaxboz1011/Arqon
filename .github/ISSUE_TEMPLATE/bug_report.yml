@@ -27,5 +27,5 @@ body:
   - type: textarea
     id: logs
     attributes:
-      label: Logs or screenshots
-      description: Crash log (`%APPDATA%\Arqon`) or steering.log if relevant. Remove anything private.
+      label: Problem report, logs or screenshots
+      description: In Arqon, *Settings → Problem report → Copy report* and paste it here (it leaves out your user name and full addresses). The logs themselves are in `%APPDATA%\Arqon`.

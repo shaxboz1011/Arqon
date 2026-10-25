@@ -245,4 +245,14 @@
 • включит системный режим.
 
 Больше ничего на компьютере не меняется. Продолжить?</sys:String>
+
+    <sys:String x:Key="S.Diag.Title">Отчёт о проблеме</sys:String>
+    <sys:String x:Key="S.Diag.Body">Копирует то, что помогает исправить ошибку: версию, Windows, подключения, системный режим и последние сбои. Имя пользователя, полные адреса и папки не попадают. Вставьте его в issue на GitHub.</sys:String>
+    <sys:String x:Key="S.Diag.Copy">Скопировать отчёт</sys:String>
+    <sys:String x:Key="S.Diag.Folder">Открыть папку журналов</sys:String>
+    <sys:String x:Key="S.Diag.Copied">Отчёт скопирован в буфер обмена.</sys:String>
+    <sys:String x:Key="S.Diag.Busy">Буфер обмена занят. Попробуйте ещё раз.</sys:String>
+    <sys:String x:Key="S.Diag.NoCrash">Сбоев не зафиксировано.</sys:String>
+    <sys:String x:Key="S.Diag.LastCrash">Последний сбой: {0}</sys:String>
+    <sys:String x:Key="S.Diag.CrashHint">Настройки → Отчёт о проблеме копирует подробности для отчёта об ошибке.</sys:String>
 </ResourceDictionary>
