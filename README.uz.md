@@ -255,6 +255,8 @@ powershell -ExecutionPolicy Bypass -File tools\build.ps1
 | Relay server (bitta ulanishni bo'laklash, o'yin paketlarini nusxalash) | 🗓 Rejada |
 | O'rnatuvchi va kod imzosi | 🗓 Rejada |
 
+Keyingi rejalar: [ROADMAP.uz.md](ROADMAP.uz.md).
+
 **Ochiq cheklovlar:** tarqatish (seeding) ixtiyoriy (standart o'chiq) va qayta ochilgandan keyin faqat fayllar diskda turgan bo'lsa davom etadi, UPnP port ochish o'chiq, bitta faylli `Arqon.exe` dan system mode drayver bilan hali tekshirilmagan.
 
 ## 🔒 Xavfsizlik

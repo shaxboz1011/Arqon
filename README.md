@@ -255,6 +255,8 @@ powershell -ExecutionPolicy Bypass -File tools\build.ps1
 | Relay server (one connection split across links, duplicated game packets) | 🗓 Planned |
 | Installer and code signing | 🗓 Planned |
 
+What comes next: [ROADMAP.md](ROADMAP.md).
+
 **Honest limits:** seeding is optional (off by default) and restarts after a restart only while the files are still on disk, UPnP port mapping is off, and system mode has not yet been checked with the driver when running from the single-file `Arqon.exe`.
 
 ## 🔒 Security
