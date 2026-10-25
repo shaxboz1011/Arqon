@@ -101,6 +101,17 @@ flowchart LR
 4. **Panel** (Dashboard) sahifasini oching. Ikkala ulanish ham ko'rinishi kerak. Sariq ogohlantirish chiqsa, **Fix** tugmasini bosing (aks holda Windows ikkinchi tarmoqni o'chirib qo'yishi mumkin).
 
 <details>
+<summary><b>📦 winget orqali</b></summary>
+
+```powershell
+winget install shaxboz1011.Arqon
+```
+
+Paket har relizda yuboriladi va Microsoft qabul qilgandan keyin ishlaydi. Batafsil: [docs/winget.md](docs/winget.md).
+
+</details>
+
+<details>
 <summary><b>🔐 Yuklab olingan faylni tekshirish (ixtiyoriy)</b></summary>
 
 Faylingizning SHA-256 ini relizdagi `Arqon.exe.sha256` bilan solishtiring:

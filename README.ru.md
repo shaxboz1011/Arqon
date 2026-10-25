@@ -101,6 +101,17 @@ flowchart LR
 4. **Откройте Dashboard.** Оба подключения должны быть в списке. Если появилась жёлтая подсказка, нажмите **Fix** (иначе Windows может отключить вторую сеть).
 
 <details>
+<summary><b>📦 Через winget</b></summary>
+
+```powershell
+winget install shaxboz1011.Arqon
+```
+
+Пакет отправляется с каждым релизом и станет доступен, когда Microsoft его примет. Подробно: [docs/winget.md](docs/winget.md).
+
+</details>
+
+<details>
 <summary><b>🔐 Проверить скачанный файл (по желанию)</b></summary>
 
 Сравните SHA-256 вашего файла с файлом `Arqon.exe.sha256` в релизе:

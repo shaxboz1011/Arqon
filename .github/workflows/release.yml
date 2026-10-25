@@ -1,6 +1,6 @@
 name: release
 
-# Push a tag such as v0.1.0 and this builds, tests and publishes Arqon.exe with its SHA-256 as a GitHub release.
+# Push a tag such as v0.1.0 and this builds, tests and publishes Arqon.exe with its SHA-256 and winget manifests as a GitHub release.
 on:
   push:
     tags: ["v*"]
@@ -21,11 +21,28 @@ jobs:
       - name: Build the single-file Arqon.exe
         shell: pwsh
         run: ./tools/build.ps1 -Output out
+      - name: Write the winget manifests
+        shell: pwsh
+        run: |
+          $version = if ("${{ github.ref }}".StartsWith("refs/tags/v")) { "${{ github.ref_name }}".Substring(1) } else { "" }
+          ./tools/winget-manifest.ps1 -Exe out/Arqon.exe -Version $version -Output out/winget
       - name: Publish the release
         if: startsWith(github.ref, 'refs/tags/v')
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${{ github.ref_name }}" out/Arqon.exe out/Arqon.exe.sha256 `
+          $manifests = (Get-ChildItem out/winget/*.yaml).FullName
+          gh release create "${{ github.ref_name }}" out/Arqon.exe out/Arqon.exe.sha256 @manifests `
             --title "Arqon ${{ github.ref_name }}" --generate-notes
+      # Opens a pull request in microsoft/winget-pkgs. Needs a classic GitHub token with the public_repo scope
+      # saved as the repository secret WINGET_TOKEN; without it this step only says so. See docs/winget.md.
+      - name: Send the manifests to winget
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        run: |
+          if (-not $env:WINGET_TOKEN) { Write-Host "No WINGET_TOKEN secret: the manifests are on the release page, submit them by hand."; exit 0 }
+          Invoke-WebRequest https://aka.ms/wingetcreate/latest -OutFile wingetcreate.exe
+          ./wingetcreate.exe submit --token $env:WINGET_TOKEN --prtitle "New version: shaxboz1011.Arqon ${{ github.ref_name }}" out/winget
