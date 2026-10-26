@@ -155,6 +155,25 @@ public sealed class HlsJobTests : IDisposable
     }
 
     [Fact]
+    public async Task A_dead_link_that_fails_at_once_does_not_use_up_the_retries_of_a_working_link()
+    {
+        var (cdn, expected) = Video(6);
+        cdn.DelayMs = 1200;   // slow but working; the dead link refuses everything at once, like a phone whose data was switched off
+
+        HttpClient ClientFor(LinkInfo l) => l.Id == "dead" ? new HttpClient(new Refusing()) : cdn.ClientFor(l);
+
+        await new HlsJob(ClientFor).RunAsync(Playlist, Dest, [Link("dead"), Link("good")], null, default);
+
+        Assert.Equal(expected, await File.ReadAllBytesAsync(Dest));
+    }
+
+    private sealed class Refusing : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct) =>
+            throw new HttpRequestException("No route to host");
+    }
+
+    [Fact]
     public async Task A_segment_that_no_link_can_fetch_fails_the_download()
     {
         var (cdn, _) = Video(6);

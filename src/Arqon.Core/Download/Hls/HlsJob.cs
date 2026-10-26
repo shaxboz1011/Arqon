@@ -116,6 +116,7 @@ public sealed class HlsJob(Func<LinkInfo, HttpClient>? clientFor = null)
         private readonly SortedSet<int> _line = [];
         private readonly ConcurrentDictionary<int, byte[]> _ready = new();
         private readonly ConcurrentDictionary<int, int> _attempts = new();
+        private readonly ConcurrentDictionary<string, int> _linkFailures = new();   // failures in a row, per link
         private readonly ConcurrentDictionary<string, long> _perLink = new();
         private readonly ConcurrentDictionary<Uri, Task<byte[]>> _keys = new();
         private readonly SemaphoreSlim _writeGate = new(1);
@@ -152,6 +153,12 @@ public sealed class HlsJob(Func<LinkInfo, HttpClient>? clientFor = null)
             {
                 while (!ct.IsCancellationRequested)
                 {
+                    // A link that keeps failing (no route, data switched off) rests, so it does not burn the retries
+                    // of segments that a slower but working link would fetch.
+                    var failures = _linkFailures.GetValueOrDefault(linkId);
+                    if (failures >= 2)
+                        await Task.Delay(TimeSpan.FromMilliseconds(Math.Min(10_000, 500 * (1 << Math.Min(failures - 2, 5)))), ct).ConfigureAwait(false);
+
                     if (!TryTake(out var index))
                     {
                         if (Volatile.Read(ref _nextToWrite) >= media.Segments.Count) return;
@@ -166,9 +173,10 @@ public sealed class HlsJob(Func<LinkInfo, HttpClient>? clientFor = null)
                     }
                     catch (Exception ex) when (ex is HttpRequestException or IOException && !ct.IsCancellationRequested)
                     {
-                        if (_attempts.AddOrUpdate(index, 1, (_, n) => n + 1) >= AttemptsPerSegment)
+                        _linkFailures.AddOrUpdate(linkId, 1, (_, n) => n + 1);
+                        if (_attempts.AddOrUpdate(index, 1, (_, n) => n + 1) >= AttemptsPerSegment * clients.Count)
                         {
-                            _fatal = new IOException($"Segment {index + 1} failed {AttemptsPerSegment} times: {ex.Message}", ex);
+                            _fatal = new IOException($"Segment {index + 1} failed {AttemptsPerSegment * clients.Count} times: {ex.Message}", ex);
                             stop.Cancel();
                             return;
                         }
@@ -177,6 +185,7 @@ public sealed class HlsJob(Func<LinkInfo, HttpClient>? clientFor = null)
                         continue;
                     }
 
+                    _linkFailures[linkId] = 0;
                     _ready[index] = data;
                     await WriteReadyAsync(ct).ConfigureAwait(false);
                 }
