@@ -12,6 +12,10 @@
 - **Torrents:** UPnP / NAT-PMP port mapping can be switched on (off by default).
 - **Local API** for scripts on 127.0.0.1 with a token (off by default): connections, downloads, add a download. See `docs/api.md`.
 - **Relay groundwork:** signed frames, a reorder buffer and a link scheduler for single-connection bonding, with a design in `docs/relay.md`. No relay server yet.
+- **HLS videos:** a `.m3u8` link downloads the whole video (the best quality of a master playlist) with its segments spread over every link. AES-128, fMP4 and pausing are supported; live streams and DRM are not.
+- **SHA-256 check:** a link ending in `#sha256=…` is checked when it finishes, and the ✓ button checks any finished file against a copied hash or SHA256SUMS text.
+- **Network check** on the dashboard finds sign-in pages, connections without internet, two connections on one line (same public address, so no gain), broken DNS and the Windows policy.
+- Lifting a speed cap (the game guard giving the speed back) now takes effect at once instead of after the waits already running.
 - [ROADMAP.md](ROADMAP.md) with the plan up to 1.0.
 
 ## 0.2.0

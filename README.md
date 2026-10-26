@@ -236,7 +236,7 @@ cd Arqon
 
 dotnet run --project src/Arqon.App            # run with your real adapters
 dotnet run --project src/Arqon.App -- --demo  # run with two pretend connections
-dotnet test                                    # 568 tests
+dotnet test                                    # 620 tests
 
 # one self-contained Arqon.exe (about 75 MB) in publish\win-x64
 powershell -ExecutionPolicy Bypass -File tools\build.ps1
@@ -268,6 +268,8 @@ powershell -ExecutionPolicy Bypass -File tools\build.ps1
 | Browser extension for Chrome, Edge and Firefox (*Download with Arqon*), `arqon://` links | 🧪 In [`browser-extension/`](browser-extension/README.md), not in the stores yet |
 | Download schedule, "save data" connections, daily-limit phone saver | ✅ Done |
 | Local API for scripts ([docs/api.md](docs/api.md)) | ✅ Done |
+| HLS videos (`.m3u8`) over every link, SHA-256 check of finished files | ✅ Done |
+| Network check on the dashboard (sign-in pages, dead links, two links on one line, DNS) | ✅ Done |
 | Relay server (one connection split across links, duplicated game packets) | 🧪 Groundwork: protocol pieces with tests ([docs/relay.md](docs/relay.md)) |
 | Installer and code signing | 🗓 Planned |
 

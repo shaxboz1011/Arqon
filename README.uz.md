@@ -236,7 +236,7 @@ cd Arqon
 
 dotnet run --project src/Arqon.App            # haqiqiy adapterlar bilan ishga tushirish
 dotnet run --project src/Arqon.App -- --demo  # ikkita soxta ulanish bilan
-dotnet test                                    # 568 ta test
+dotnet test                                    # 620 ta test
 
 # bitta mustaqil Arqon.exe (taxminan 75 MB) publish\win-x64 papkasida
 powershell -ExecutionPolicy Bypass -File tools\build.ps1
@@ -268,6 +268,8 @@ powershell -ExecutionPolicy Bypass -File tools\build.ps1
 | Chrome, Edge va Firefox uchun brauzer kengaytmasi (*Arqon bilan yuklash*), `arqon://` linklar | 🧪 [`browser-extension/`](browser-extension/README.md) da, do'konlarda hali yo'q |
 | Yuklash jadvali, "tejash" ulanishlari, kunlik chegarada telefonni tejash | ✅ Tayyor |
 | Skriptlar uchun mahalliy API ([docs/api.md](docs/api.md)) | ✅ Tayyor |
+| HLS video (`.m3u8`) barcha ulanishlar orqali, tugagan faylni SHA-256 bilan tekshirish | ✅ Tayyor |
+| Dashboard'da tarmoq tekshiruvi (kirish sahifalari, o'lik ulanishlar, bitta liniyadagi ikki ulanish, DNS) | ✅ Tayyor |
 | Relay server (bitta ulanishni bo'laklash, o'yin paketlarini nusxalash) | 🧪 Poydevor: testlari bilan protokol qismlari ([docs/relay.md](docs/relay.md)) |
 | O'rnatuvchi va kod imzosi | 🗓 Rejada |
 

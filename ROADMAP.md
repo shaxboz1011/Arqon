@@ -39,9 +39,10 @@ New features do not help if people cannot install Arqon without warnings.
 | **Save data on chosen connections**: downloads and torrents use them only as the last link; optionally all phone links once the daily limit is reached | ✅ |
 | Torrents: UPnP / NAT-PMP port mapping as an option (off by default) | ✅ |
 | Publish the extension in the Chrome Web Store and on addons.mozilla.org | 🔑 |
-| Video downloads (yt-dlp, HLS / DASH segments spread over the links) | 🗓 |
+| **HLS video** (`.m3u8`): segments spread over every link, best quality of a master playlist, AES-128, fMP4, resumable | ✅ |
+| Videos from sites like YouTube (yt-dlp: finding the stream, DASH video + audio joined with ffmpeg) | 🗓 |
 | Same file from several mirrors at once (Metalink, a list of mirror links) | 🗓 |
-| Check a finished download against a SHA-256 the user pastes or the page gives | 🗓 |
+| **SHA-256 check** of a finished download: from the link (`#sha256=…`) or a copied hash / SHA256SUMS | ✅ |
 | Torrents: RSS feeds, sequential download for watching while it downloads | 🗓 |
 
 ## 🟣 0.5–0.6: Arqon Relay (the big step)
@@ -76,7 +77,7 @@ One TCP connection cannot use two links without something on the other side. The
 | **DNS over every link at once**: the first answer wins | Pages start loading faster, and a dead link does not stall name lookups |
 | **Happy eyeballs across links**: a new connection tries the best two links and keeps the one that answers first | Fewer slow starts |
 | **Learn each link's quality by time of day** (the phone is fast at night, slow in the evening) and weigh the links by it | Better use without settings |
-| **Network doctor**: captive portal, broken DNS, wrong MTU, the Windows "second network switched off" policy, all in one check with a fix button | Fewer support questions |
+| ✅ **Network check** on the dashboard: sign-in pages, links without internet, two links on one line (same public address), DNS, the Windows policy. Still to come: MTU | Fewer support questions |
 | Notices with numbers: "the phone carried 2.1 GB today, 38% of all traffic" | People see what they gain |
 
 ## ⭐ 1.0: Polished and stable

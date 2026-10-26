@@ -39,9 +39,10 @@ Odamlar Arqonni ogohlantirishlarsiz o'rnata olmasa, yangi funksiyalar foyda berm
 | **Tanlangan ulanishlarda trafikni tejash**: yuklash va torrentlar ularni faqat oxirgi ulanish sifatida ishlatadi; xohlasangiz kunlik chegaraga yetganda barcha telefon ulanishlari ham | ✅ |
 | Torrent: UPnP / NAT-PMP port ochish ixtiyoriy (standart o'chiq) | ✅ |
 | Kengaytmani Chrome Web Store va addons.mozilla.org ga joylash | 🔑 |
-| Video yuklash (yt-dlp, HLS / DASH segmentlari ulanishlarga bo'linadi) | 🗓 |
+| **HLS video** (`.m3u8`): segmentlar barcha ulanishlarga bo'linadi, master playlistdan eng yaxshi sifat, AES-128, fMP4, davom ettirish mumkin | ✅ |
+| YouTube kabi saytlardan video (yt-dlp: oqimni topish, DASH video + audioni ffmpeg bilan birlashtirish) | 🗓 |
 | Bitta faylni bir nechta oynadan (mirror) birdaniga yuklash (Metalink, mirror linklar ro'yxati) | 🗓 |
-| Tugagan yuklashni foydalanuvchi qo'ygan yoki sahifa bergan SHA-256 bilan tekshirish | 🗓 |
+| Tugagan yuklashni **SHA-256 bilan tekshirish**: linkdan (`#sha256=…`) yoki nusxalangan hash / SHA256SUMS dan | ✅ |
 | Torrent: RSS, ketma-ket yuklash (yuklanayotganda tomosha qilish) | 🗓 |
 
 ## 🟣 0.5–0.6: Arqon Relay (katta qadam)
@@ -76,7 +77,7 @@ Bitta TCP ulanish narigi tomonda biror narsa bo'lmasa ikki ulanishni ishlata olm
 | **DNS so'rovlarini hamma ulanishdan birdaniga yuborish**: birinchi javob yutadi | Sahifalar tezroq ochila boshlaydi, o'lik ulanish nom qidirishni to'xtatmaydi |
 | **Ulanishlararo "happy eyeballs"**: yangi ulanish eng yaxshi ikki linkni sinaydi, birinchi javob berganini qoldiradi | Sekin boshlanishlar kamroq |
 | **Har bir ulanish sifatini kun vaqtiga qarab o'rganish** (telefon tunda tez, kechqurun sekin) va shunga qarab taqsimlash | Sozlamasiz yaxshiroq ishlatish |
-| **Tarmoq doktori**: captive portal, buzilgan DNS, noto'g'ri MTU, Windows'ning "ikkinchi tarmoqni o'chirish" siyosati, hammasi bitta tekshiruvda tuzatish tugmasi bilan | Yordam so'rovlari kamroq |
+| ✅ Dashboard'da **tarmoq tekshiruvi**: kirish sahifalari, internetsiz ulanishlar, bitta liniyadagi ikki ulanish (bir xil tashqi manzil), DNS, Windows siyosati. Keyinroq: MTU | Yordam so'rovlari kamroq |
 | Raqamli xabarlar: "bugun telefon 2,1 GB tashidi, butun trafikning 38%" | Odamlar foydani ko'radi |
 
 ## ⭐ 1.0: Silliq va barqaror
