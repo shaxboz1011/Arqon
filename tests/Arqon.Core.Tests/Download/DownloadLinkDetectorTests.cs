@@ -6,6 +6,7 @@ public class DownloadLinkDetectorTests
 {
     [Theory]
     [InlineData("https://example.com/files/setup.exe")]
+    [InlineData("https://cdn.example.com/videos/talk/index.m3u8")]
     [InlineData("http://example.com/a/b/movie.MKV")]
     [InlineData("https://example.com/archive.tar.gz")]
     [InlineData("https://cdn.example.com/Game%20Installer.msi?token=abc&x=1")]
