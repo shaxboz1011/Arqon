@@ -274,4 +274,10 @@ Nothing else on the computer is changed. Continue?</sys:String>
     <sys:String x:Key="S.Api.Address">Listening at {0}. Send the header Authorization: Bearer &lt;token&gt;. Details: docs/api.md.</sys:String>
     <sys:String x:Key="S.Api.Problem">Could not start: {0}</sys:String>
     <sys:String x:Key="S.Api.CopyToken">Copy token</sys:String>
+
+    <sys:String x:Key="S.Dl.Sum.Check">Check SHA-256 (copy the hash or the SHA256SUMS text first)</sys:String>
+    <sys:String x:Key="S.Dl.Sum.NoHash">Copy the SHA-256 from the download page (or its SHA256SUMS file), then press the check button again.</sys:String>
+    <sys:String x:Key="S.Dl.Sum.Checking">Checking SHA-256…</sys:String>
+    <sys:String x:Key="S.Dl.Sum.Ok">✓ SHA-256 matches: the file is exactly the published one.</sys:String>
+    <sys:String x:Key="S.Dl.Sum.Bad">✗ SHA-256 does not match (the file has {0}). It may be damaged or replaced; download it again.</sys:String>
 </ResourceDictionary>

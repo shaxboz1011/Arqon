@@ -274,4 +274,10 @@
     <sys:String x:Key="S.Api.Address">Слушает по адресу {0}. Отправляйте заголовок Authorization: Bearer &lt;token&gt;. Подробно: docs/api.md.</sys:String>
     <sys:String x:Key="S.Api.Problem">Не удалось запустить: {0}</sys:String>
     <sys:String x:Key="S.Api.CopyToken">Скопировать токен</sys:String>
+
+    <sys:String x:Key="S.Dl.Sum.Check">Проверить SHA-256 (сначала скопируйте хеш или текст SHA256SUMS)</sys:String>
+    <sys:String x:Key="S.Dl.Sum.NoHash">Скопируйте SHA-256 со страницы загрузки (или файл SHA256SUMS) и снова нажмите кнопку проверки.</sys:String>
+    <sys:String x:Key="S.Dl.Sum.Checking">Проверка SHA-256…</sys:String>
+    <sys:String x:Key="S.Dl.Sum.Ok">✓ SHA-256 совпадает: файл точно тот, что опубликован.</sys:String>
+    <sys:String x:Key="S.Dl.Sum.Bad">✗ SHA-256 не совпадает (у файла {0}). Он может быть повреждён или подменён; скачайте его заново.</sys:String>
 </ResourceDictionary>

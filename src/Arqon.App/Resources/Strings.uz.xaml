@@ -274,4 +274,10 @@ Kompyuterdagi boshqa hech narsa o'zgarmaydi. Davom etamizmi?</sys:String>
     <sys:String x:Key="S.Api.Address">{0} manzilida tinglayapti. Authorization: Bearer &lt;token&gt; sarlavhasini yuboring. Batafsil: docs/api.md.</sys:String>
     <sys:String x:Key="S.Api.Problem">Ishga tushmadi: {0}</sys:String>
     <sys:String x:Key="S.Api.CopyToken">Tokenni nusxalash</sys:String>
+
+    <sys:String x:Key="S.Dl.Sum.Check">SHA-256 ni tekshirish (avval hash yoki SHA256SUMS matnini nusxalang)</sys:String>
+    <sys:String x:Key="S.Dl.Sum.NoHash">Yuklash sahifasidagi SHA-256 ni (yoki SHA256SUMS faylini) nusxalang, keyin tekshirish tugmasini yana bosing.</sys:String>
+    <sys:String x:Key="S.Dl.Sum.Checking">SHA-256 tekshirilmoqda…</sys:String>
+    <sys:String x:Key="S.Dl.Sum.Ok">✓ SHA-256 mos keldi: fayl aynan e'lon qilingani.</sys:String>
+    <sys:String x:Key="S.Dl.Sum.Bad">✗ SHA-256 mos kelmadi (faylniki {0}). Fayl buzilgan yoki almashtirilgan bo'lishi mumkin; qayta yuklang.</sys:String>
 </ResourceDictionary>

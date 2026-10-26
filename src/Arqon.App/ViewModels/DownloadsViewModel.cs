@@ -28,6 +28,8 @@ public sealed class DownloadItemViewModel : ViewModelBase
     private string _error = "";
     private IReadOnlyList<BarPart> _parts = [];
     private string _split = "";
+    private string _verify = "";
+    private bool _verifyFailed;
     private TorrentHandle? _torrent;
     private TorrentPhase _phase = TorrentPhase.Stopped;
     private bool _spaceChecked;
@@ -60,6 +62,7 @@ public sealed class DownloadItemViewModel : ViewModelBase
         OpenFolderCommand = new RelayCommand(OpenFolder);
         ChooseFilesCommand = new RelayCommand(() => _ = ChooseFilesAsync());
         StopSeedCommand = new RelayCommand(StopSeeding);
+        VerifyCommand = new RelayCommand(VerifyWithClipboard);
     }
 
     /// <summary>Fixed-value item for the demo data set.</summary>
@@ -96,6 +99,50 @@ public sealed class DownloadItemViewModel : ViewModelBase
     public RelayCommand OpenFolderCommand { get; }
     public RelayCommand ChooseFilesCommand { get; }
     public RelayCommand StopSeedCommand { get; }
+    public RelayCommand VerifyCommand { get; }
+
+    // ---- SHA-256 check of a finished file
+
+    public bool CanVerify => IsDone && !IsTorrent && !_demoTorrent;
+    public string VerifyText => _verify;
+    public bool HasVerifyText => _verify.Length > 0;
+    public bool VerifyFailed => _verifyFailed;
+
+    /// <summary>Checks the file against a hash on the clipboard (a bare hash or a SHA256SUMS file), or the one the link carried.</summary>
+    private void VerifyWithClipboard()
+    {
+        string? text = null;
+        try { if (Clipboard.ContainsText()) text = Clipboard.GetText(); }
+        catch (System.Runtime.InteropServices.COMException) { /* busy: fall back to the link's hash */ }
+        var expected = Checksum.FromText(text, Name) ?? Record.Sha256;
+        if (expected is null)
+        {
+            _verify = Loc.Get("S.Dl.Sum.NoHash");
+            _verifyFailed = false;
+            Raise(string.Empty);
+            return;
+        }
+        _ = VerifyAsync(expected);
+    }
+
+    private async Task VerifyAsync(string expected)
+    {
+        _verify = Loc.Get("S.Dl.Sum.Checking");
+        _verifyFailed = false;
+        Raise(string.Empty);
+        try
+        {
+            var actual = await Task.Run(() => Checksum.ComputeAsync(Record.Path)).ConfigureAwait(true);
+            _verifyFailed = !Checksum.Same(actual, expected);
+            _verify = _verifyFailed ? Loc.Format("S.Dl.Sum.Bad", actual) : Loc.Get("S.Dl.Sum.Ok");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _verifyFailed = true;
+            _verify = ex.Message;
+        }
+        Raise(string.Empty);
+    }
 
     public string Name => Record.Name;
     public DownloadState State => _state;
@@ -435,6 +482,7 @@ public sealed class DownloadItemViewModel : ViewModelBase
             _speed = 0;
             SetState(DownloadState.Done);
             _owner.OnCompleted(this);
+            if (Record.Sha256 is { } expected) _ = VerifyAsync(expected);   // the link said what the file must be
         }
         catch (OperationCanceledException)
         {
@@ -893,7 +941,7 @@ public sealed class DownloadsViewModel : ViewModelBase
         if (string.IsNullOrWhiteSpace(name)) name = "download";
         var path = UniquePath(Folder, name, Items.Select(i => i.Record.Path));
 
-        var item = new DownloadItemViewModel(this, new DownloadRecord(uri.ToString(), path, Path.GetFileName(path), false));
+        var item = new DownloadItemViewModel(this, new DownloadRecord(uri.ToString(), path, Path.GetFileName(path), false, Sha256: Checksum.FromUrl(text)));
         Items.Insert(0, item);
         UrlText = "";
         Message = "";
