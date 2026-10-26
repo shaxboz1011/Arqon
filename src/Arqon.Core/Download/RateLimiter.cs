@@ -15,6 +15,7 @@ public sealed class RateLimiter
     private double _capacity;
     private double _tokens;
     private double _lastSeconds;
+    private CancellationTokenSource _changed = new();
 
     public RateLimiter(long? bytesPerSecond = null) => Limit = bytesPerSecond;
 
@@ -31,6 +32,10 @@ public sealed class RateLimiter
                 _limit = value;
                 _capacity = value is { } bps ? Math.Max(64 * 1024, bps / 10.0) : 0;
                 _tokens = wasUnlimited ? _capacity : Math.Min(_tokens, _capacity);
+                // Waits that were worked out for the old limit end now: lifting a cap gives the speed back at once.
+                var old = _changed;
+                _changed = new CancellationTokenSource();
+                old.Cancel();
             }
         }
     }
@@ -38,14 +43,29 @@ public sealed class RateLimiter
     public ValueTask AcquireAsync(int bytes, CancellationToken ct)
     {
         double waitSeconds;
+        CancellationToken changed;
         lock (_gate)
         {
             if (_limit is not { } rate) return ValueTask.CompletedTask;
             Refill();
             _tokens -= bytes;
             waitSeconds = _tokens < 0 ? -_tokens / rate : 0;
+            changed = _changed.Token;
         }
-        return waitSeconds > 0 ? new ValueTask(Task.Delay(TimeSpan.FromSeconds(waitSeconds), ct)) : ValueTask.CompletedTask;
+        return waitSeconds > 0 ? WaitAsync(TimeSpan.FromSeconds(waitSeconds), changed, ct) : ValueTask.CompletedTask;
+    }
+
+    private static async ValueTask WaitAsync(TimeSpan wait, CancellationToken changed, CancellationToken ct)
+    {
+        using var either = CancellationTokenSource.CreateLinkedTokenSource(changed, ct);
+        try
+        {
+            await Task.Delay(wait, either.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            // the limit changed: go on (under a new limit the debt is still in the bucket and the next call waits for it)
+        }
     }
 
     private void Refill()
