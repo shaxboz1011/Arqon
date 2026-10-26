@@ -236,7 +236,7 @@ cd Arqon
 
 dotnet run --project src/Arqon.App            # запуск с настоящими адаптерами
 dotnet run --project src/Arqon.App -- --demo  # запуск с двумя «ненастоящими» подключениями
-dotnet test                                    # 568 тестов
+dotnet test                                    # 620 тестов
 
 # один автономный Arqon.exe (около 75 МБ) в папке publish\win-x64
 powershell -ExecutionPolicy Bypass -File tools\build.ps1
@@ -268,6 +268,8 @@ powershell -ExecutionPolicy Bypass -File tools\build.ps1
 | Расширение для Chrome, Edge и Firefox (*Скачать через Arqon*), ссылки `arqon://` | 🧪 В [`browser-extension/`](browser-extension/README.md), в магазинах пока нет |
 | Расписание загрузок, «экономные» подключения, экономия телефона при дневном лимите | ✅ Готово |
 | Локальный API для скриптов ([docs/api.md](docs/api.md)) | ✅ Готово |
+| HLS-видео (`.m3u8`) по всем подключениям, проверка SHA-256 готовых файлов | ✅ Готово |
+| Проверка сети на панели (страницы входа, мёртвые подключения, два подключения через одну линию, DNS) | ✅ Готово |
 | Relay-сервер (разделение одного соединения по подключениям, дублирование игровых пакетов) | 🧪 Основа: части протокола с тестами ([docs/relay.md](docs/relay.md)) |
 | Установщик и подпись кода | 🗓 В планах |
 

@@ -8,7 +8,7 @@ public enum DownloadKind { Http, Torrent }
 /// <param name="Path">A plain download: the file. A torrent: the folder it is saved into.</param>
 /// <param name="Files">A torrent: the indexes of the files to download; null means all of them.</param>
 public sealed record DownloadRecord(string Url, string Path, string Name, bool Completed, DownloadKind Kind = DownloadKind.Http,
-    IReadOnlyList<int>? Files = null)
+    IReadOnlyList<int>? Files = null, string? Sha256 = null)
 {
     /// <summary>Identifies the download in the queue. Torrents share a folder, so for them the source is the identity.</summary>
     public string Key => Kind == DownloadKind.Torrent ? Url : Path;

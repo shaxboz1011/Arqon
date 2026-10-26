@@ -28,6 +28,8 @@ public sealed class DownloadItemViewModel : ViewModelBase
     private string _error = "";
     private IReadOnlyList<BarPart> _parts = [];
     private string _split = "";
+    private string _verify = "";
+    private bool _verifyFailed;
     private TorrentHandle? _torrent;
     private TorrentPhase _phase = TorrentPhase.Stopped;
     private bool _spaceChecked;
@@ -60,6 +62,7 @@ public sealed class DownloadItemViewModel : ViewModelBase
         OpenFolderCommand = new RelayCommand(OpenFolder);
         ChooseFilesCommand = new RelayCommand(() => _ = ChooseFilesAsync());
         StopSeedCommand = new RelayCommand(StopSeeding);
+        VerifyCommand = new RelayCommand(VerifyWithClipboard);
     }
 
     /// <summary>Fixed-value item for the demo data set.</summary>
@@ -96,6 +99,50 @@ public sealed class DownloadItemViewModel : ViewModelBase
     public RelayCommand OpenFolderCommand { get; }
     public RelayCommand ChooseFilesCommand { get; }
     public RelayCommand StopSeedCommand { get; }
+    public RelayCommand VerifyCommand { get; }
+
+    // ---- SHA-256 check of a finished file
+
+    public bool CanVerify => IsDone && !IsTorrent && !_demoTorrent;
+    public string VerifyText => _verify;
+    public bool HasVerifyText => _verify.Length > 0;
+    public bool VerifyFailed => _verifyFailed;
+
+    /// <summary>Checks the file against a hash on the clipboard (a bare hash or a SHA256SUMS file), or the one the link carried.</summary>
+    private void VerifyWithClipboard()
+    {
+        string? text = null;
+        try { if (Clipboard.ContainsText()) text = Clipboard.GetText(); }
+        catch (System.Runtime.InteropServices.COMException) { /* busy: fall back to the link's hash */ }
+        var expected = Checksum.FromText(text, Name) ?? Record.Sha256;
+        if (expected is null)
+        {
+            _verify = Loc.Get("S.Dl.Sum.NoHash");
+            _verifyFailed = false;
+            Raise(string.Empty);
+            return;
+        }
+        _ = VerifyAsync(expected);
+    }
+
+    private async Task VerifyAsync(string expected)
+    {
+        _verify = Loc.Get("S.Dl.Sum.Checking");
+        _verifyFailed = false;
+        Raise(string.Empty);
+        try
+        {
+            var actual = await Task.Run(() => Checksum.ComputeAsync(Record.Path)).ConfigureAwait(true);
+            _verifyFailed = !Checksum.Same(actual, expected);
+            _verify = _verifyFailed ? Loc.Format("S.Dl.Sum.Bad", actual) : Loc.Get("S.Dl.Sum.Ok");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _verifyFailed = true;
+            _verify = ex.Message;
+        }
+        Raise(string.Empty);
+    }
 
     public string Name => Record.Name;
     public DownloadState State => _state;
@@ -416,14 +463,26 @@ public sealed class DownloadItemViewModel : ViewModelBase
         _cts = new CancellationTokenSource();
         _job = new DownloadJob();
         var progress = new Progress<DownloadProgress>(OnProgress);
+        string? betterName = null;
         try
         {
-            await _job.RunAsync(new DownloadRequest(new Uri(Record.Url), Record.Path, Throttle: _owner.Throttle), _owner.CurrentLinks(), progress, _cts.Token)
-                .ConfigureAwait(true);
+            if (Core.Download.Hls.HlsPlaylist.IsPlaylistUrl(Record.Url))
+            {
+                // a video stream: its segments are spread over the links and joined into one file
+                var hls = await new Core.Download.Hls.HlsJob().RunAsync(new Uri(Record.Url), Record.Path, _owner.CurrentLinks(), progress, _cts.Token,
+                    _owner.Throttle).ConfigureAwait(true);
+                if (!Record.Path.EndsWith(hls.Extension, StringComparison.OrdinalIgnoreCase)) betterName = Path.ChangeExtension(Record.Path, hls.Extension);
+            }
+            else
+            {
+                await _job.RunAsync(new DownloadRequest(new Uri(Record.Url), Record.Path, Throttle: _owner.Throttle), _owner.CurrentLinks(), progress, _cts.Token)
+                    .ConfigureAwait(true);
+            }
             _done = _total = new FileInfo(Record.Path).Length;
             _speed = 0;
             SetState(DownloadState.Done);
             _owner.OnCompleted(this);
+            if (Record.Sha256 is { } expected) _ = VerifyAsync(expected);   // the link said what the file must be
         }
         catch (OperationCanceledException)
         {
@@ -446,6 +505,24 @@ public sealed class DownloadItemViewModel : ViewModelBase
         }
         _owner.Persist();
         _owner.OnEnded(this);   // its place goes to the next download in the queue
+        if (betterName is not null && State == DownloadState.Done) RenameTo(betterName);
+    }
+
+    /// <summary>An fMP4 video stream turned out to be MP4, not MPEG-TS: give the file the extension players expect.</summary>
+    private void RenameTo(string path)
+    {
+        if (File.Exists(path)) return;   // never overwrite another file; the content plays under the old name too
+        try
+        {
+            File.Move(Record.Path, path);
+            Record = Record with { Path = path, Name = Path.GetFileName(path) };
+            _owner.Persist();
+            Raise(string.Empty);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // it keeps its first name
+        }
     }
 
     private void OnProgress(DownloadProgress p)
@@ -498,7 +575,7 @@ public sealed class DownloadItemViewModel : ViewModelBase
     public void DeletePartialFiles()
     {
         if (IsTorrent) return;   // a torrent's files are removed through the engine, which knows exactly which ones are its own
-        foreach (var f in new[] { Record.Path + ".arqpart", Record.Path + ".arqstate" })
+        foreach (var f in new[] { Record.Path + ".arqpart", Record.Path + ".arqstate", Record.Path + ".arqhls" })
         {
             try { File.Delete(f); } catch (IOException) { } catch (UnauthorizedAccessException) { }
         }
@@ -859,11 +936,12 @@ public sealed class DownloadsViewModel : ViewModelBase
         var uri = new Uri(text);
 
         Directory.CreateDirectory(Folder);
-        var name = Path.GetFileName(Uri.UnescapeDataString(uri.LocalPath));
+        var name = Core.Download.Hls.HlsPlaylist.IsPlaylistUrl(text) ? Core.Download.Hls.HlsPlaylist.FileNameFor(uri)
+            : Path.GetFileName(Uri.UnescapeDataString(uri.LocalPath));
         if (string.IsNullOrWhiteSpace(name)) name = "download";
         var path = UniquePath(Folder, name, Items.Select(i => i.Record.Path));
 
-        var item = new DownloadItemViewModel(this, new DownloadRecord(uri.ToString(), path, Path.GetFileName(path), false));
+        var item = new DownloadItemViewModel(this, new DownloadRecord(uri.ToString(), path, Path.GetFileName(path), false, Sha256: Checksum.FromUrl(text)));
         Items.Insert(0, item);
         UrlText = "";
         Message = "";

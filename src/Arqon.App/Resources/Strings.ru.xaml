@@ -274,4 +274,24 @@
     <sys:String x:Key="S.Api.Address">Слушает по адресу {0}. Отправляйте заголовок Authorization: Bearer &lt;token&gt;. Подробно: docs/api.md.</sys:String>
     <sys:String x:Key="S.Api.Problem">Не удалось запустить: {0}</sys:String>
     <sys:String x:Key="S.Api.CopyToken">Скопировать токен</sys:String>
+
+    <sys:String x:Key="S.Dl.Sum.Check">Проверить SHA-256 (сначала скопируйте хеш или текст SHA256SUMS)</sys:String>
+    <sys:String x:Key="S.Dl.Sum.NoHash">Скопируйте SHA-256 со страницы загрузки (или файл SHA256SUMS) и снова нажмите кнопку проверки.</sys:String>
+    <sys:String x:Key="S.Dl.Sum.Checking">Проверка SHA-256…</sys:String>
+    <sys:String x:Key="S.Dl.Sum.Ok">✓ SHA-256 совпадает: файл точно тот, что опубликован.</sys:String>
+    <sys:String x:Key="S.Dl.Sum.Bad">✗ SHA-256 не совпадает (у файла {0}). Он может быть повреждён или подменён; скачайте его заново.</sys:String>
+
+    <sys:String x:Key="S.Doc.Title">Проверка сети</sys:String>
+    <sys:String x:Key="S.Doc.Body">Находит, почему объединение не помогает: страница входа публичной сети, подключение без интернета, два подключения через одну линию, неработающий DNS или Windows, отключающая вторую сеть. Один раз на подключение обращается к Cloudflare (как и монитор пинга).</sys:String>
+    <sys:String x:Key="S.Doc.Run">Проверить</sys:String>
+    <sys:String x:Key="S.Doc.Running">Проверка…</sys:String>
+    <sys:String x:Key="S.Doc.F.NoLinks">Подключений не найдено. Подключите Wi-Fi, кабель или телефон в режиме USB-модема.</sys:String>
+    <sys:String x:Key="S.Doc.F.OneLink">Только одно подключение ({0}). Добавьте второе со своим интернетом, например телефон в режиме USB-модема.</sys:String>
+    <sys:String x:Key="S.Doc.F.Portal">{0}: сеть показывает страницу входа. Откройте браузер, войдите и проверьте ещё раз.</sys:String>
+    <sys:String x:Key="S.Doc.F.NoInternet">{0}: через это подключение нет интернета ({1}).</sys:String>
+    <sys:String x:Key="S.Doc.F.LinkOk">{0}: интернет работает.</sys:String>
+    <sys:String x:Key="S.Doc.F.SameExit">{0} выходят через одну линию (внешний адрес {1}). Их объединение не добавит скорости; используйте подключения со своим интернетом.</sys:String>
+    <sys:String x:Key="S.Doc.F.DnsOk">Поиск имён (DNS) работает.</sys:String>
+    <sys:String x:Key="S.Doc.F.Dns">Не удаётся найти имена ({0}). Страницы не откроются, хотя подключение работает; попробуйте другой DNS-сервер в настройках адаптера.</sys:String>
+    <sys:String x:Key="S.Doc.F.WindowsPolicy">Windows может отключать вторую сеть. Нажмите Fix в жёлтой подсказке выше.</sys:String>
 </ResourceDictionary>

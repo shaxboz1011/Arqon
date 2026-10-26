@@ -77,4 +77,28 @@ public class RateLimiterTests
         Assert.Same(throttle.For("wifi"), throttle.For("wifi"));
         Assert.NotSame(throttle.For("wifi"), throttle.For("phone"));
     }
+
+    [Fact]
+    public async Task Lifting_the_limit_ends_a_wait_that_is_already_running()
+    {
+        var limiter = new RateLimiter(1000);
+        await limiter.AcquireAsync(64 * 1024, default);                // the burst allowance is used up
+        var waiting = limiter.AcquireAsync(20_000, default).AsTask();   // about 20 s at 1000 B/s
+
+        await Task.Delay(100);
+        Assert.False(waiting.IsCompleted);
+        limiter.Limit = null;
+
+        Assert.Same(waiting, await Task.WhenAny(waiting, Task.Delay(TimeSpan.FromSeconds(5))));
+    }
+
+    [Fact]
+    public async Task Cancelling_still_ends_a_wait_with_an_error()
+    {
+        var limiter = new RateLimiter(1000);
+        await limiter.AcquireAsync(64 * 1024, default);
+        using var cts = new CancellationTokenSource(100);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => limiter.AcquireAsync(20_000, cts.Token).AsTask());
+    }
 }

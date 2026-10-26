@@ -31,6 +31,17 @@
                         </Grid>
                         <TextBlock Foreground="#F87171" FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding Error}"
                                    Visibility="{Binding HasError, Converter={StaticResource B2V}}" />
+                        <TextBlock FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding VerifyText, Mode=OneWay}"
+                                   Visibility="{Binding HasVerifyText, Converter={StaticResource B2V}}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="#34D399" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding VerifyFailed}" Value="True"><Setter Property="Foreground" Value="#F87171" /></DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="14,0,0,0" VerticalAlignment="Center">
                         <Button Style="{StaticResource IconButton}" Content="&#xE769;" Command="{Binding PauseCommand}" ToolTip="{DynamicResource S.Dl.Pause}"
@@ -43,6 +54,8 @@
                                 Visibility="{Binding IsSeeding, Converter={StaticResource B2V}}" />
                         <Button Style="{StaticResource IconButton}" Content="&#xE8FD;" Command="{Binding ChooseFilesCommand}" ToolTip="{DynamicResource S.Dl.Files}"
                                 Visibility="{Binding CanChooseFiles, Converter={StaticResource B2V}}" />
+                        <Button Style="{StaticResource IconButton}" Content="&#xE73E;" Command="{Binding VerifyCommand}" ToolTip="{DynamicResource S.Dl.Sum.Check}"
+                                Visibility="{Binding CanVerify, Converter={StaticResource B2V}}" />
                         <Button Style="{StaticResource IconButton}" Content="&#xE8B7;" Command="{Binding OpenFolderCommand}" ToolTip="{DynamicResource S.Dl.OpenFolder}" />
                         <Button Style="{StaticResource IconButton}" Content="&#xE711;" Command="{Binding CancelCommand}" ToolTip="{DynamicResource S.Dl.Remove}" />
                     </StackPanel>

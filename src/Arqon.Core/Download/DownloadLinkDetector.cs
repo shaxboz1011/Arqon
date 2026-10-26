@@ -10,7 +10,7 @@ public static class DownloadLinkDetector
         ".zip", ".rar", ".7z", ".gz", ".tgz", ".bz2", ".xz", ".tar", ".cab",
         ".iso", ".img", ".dmg", ".bin",
         ".exe", ".msi", ".msix", ".apk", ".deb", ".rpm", ".pkg", ".appimage", ".jar",
-        ".mp4", ".mkv", ".avi", ".mov", ".webm", ".mp3", ".flac", ".wav", ".m4a",
+        ".mp4", ".mkv", ".avi", ".mov", ".webm", ".mp3", ".flac", ".wav", ".m4a", ".m3u8",
         ".pdf", ".epub", ".djvu", ".docx", ".xlsx", ".pptx",
     };
 

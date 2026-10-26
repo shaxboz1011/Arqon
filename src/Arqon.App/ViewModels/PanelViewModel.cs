@@ -83,6 +83,7 @@ public sealed class PanelViewModel : ViewModelBase
         TestTogetherCommand = new RelayCommand(() => _ = RunTest(alone: false, together: true));
         TestCompareCommand = new RelayCommand(() => _ = RunTest(alone: true, together: true));
         TestStopCommand = new RelayCommand(() => _testCancel?.Cancel());
+        DoctorCommand = new RelayCommand(() => _ = RunDoctorAsync());
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _timer.Tick += (_, _) => Refresh();
         _timer.Start();
@@ -163,6 +164,41 @@ public sealed class PanelViewModel : ViewModelBase
             _testCancel = null;
             TestStatus = "";
             TestRunning = false;
+            Raise(string.Empty);
+        }
+    }
+
+    // ---- network doctor: why combining does not help, in one click
+
+    private bool _doctorRunning;
+    private IReadOnlyList<string> _doctorLines = [];
+
+    public RelayCommand DoctorCommand { get; }
+    public bool DoctorIdle => !_doctorRunning && !_services.Demo;
+    public bool DoctorRunning => _doctorRunning;
+    public IReadOnlyList<string> DoctorLines => _doctorLines;
+    public bool HasDoctorLines => _doctorLines.Count > 0;
+
+    private async Task RunDoctorAsync()
+    {
+        if (_doctorRunning || _services.Demo) return;
+        _doctorRunning = true;
+        _doctorLines = [];
+        Raise(string.Empty);
+        try
+        {
+            var doctor = new Core.Doctor.NetworkDoctor(BoundHttp.Create, windowsPolicyNeedsFix: () => _services.Fix.NeedsFix);
+            var report = await doctor.RunAsync(_services.Links.GetLinks());
+            _doctorLines = report.Findings.Select(f => (f.Level switch
+            {
+                Core.Doctor.FindingLevel.Ok => "✓  ",
+                Core.Doctor.FindingLevel.Warning => "⚠  ",
+                _ => "✗  ",
+            }) + Loc.Format("S.Doc.F." + f.Key, [.. f.Args])).ToList();
+        }
+        finally
+        {
+            _doctorRunning = false;
             Raise(string.Empty);
         }
     }
