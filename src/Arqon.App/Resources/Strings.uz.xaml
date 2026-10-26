@@ -280,4 +280,18 @@ Kompyuterdagi boshqa hech narsa o'zgarmaydi. Davom etamizmi?</sys:String>
     <sys:String x:Key="S.Dl.Sum.Checking">SHA-256 tekshirilmoqda…</sys:String>
     <sys:String x:Key="S.Dl.Sum.Ok">✓ SHA-256 mos keldi: fayl aynan e'lon qilingani.</sys:String>
     <sys:String x:Key="S.Dl.Sum.Bad">✗ SHA-256 mos kelmadi (faylniki {0}). Fayl buzilgan yoki almashtirilgan bo'lishi mumkin; qayta yuklang.</sys:String>
+
+    <sys:String x:Key="S.Doc.Title">Tarmoq tekshiruvi</sys:String>
+    <sys:String x:Key="S.Doc.Body">Birlashtirish nega foyda bermayotganini topadi: jamoat tarmog'ining kirish sahifasi, interneti yo'q ulanish, bitta liniyadan chiqayotgan ikki ulanish, ishlamayotgan DNS yoki ikkinchi tarmoqni o'chirayotgan Windows. Har bir ulanish uchun bir marta Cloudflare'ga so'rov yuboradi (ping monitori kabi).</sys:String>
+    <sys:String x:Key="S.Doc.Run">Tekshirish</sys:String>
+    <sys:String x:Key="S.Doc.Running">Tekshirilmoqda…</sys:String>
+    <sys:String x:Key="S.Doc.F.NoLinks">Ulanish topilmadi. Wi-Fi, kabel yoki USB modem rejimidagi telefonni ulang.</sys:String>
+    <sys:String x:Key="S.Doc.F.OneLink">Faqat bitta ulanish ({0}). O'z interneti bor ikkinchisini qo'shing, masalan USB modem rejimidagi telefon.</sys:String>
+    <sys:String x:Key="S.Doc.F.Portal">{0}: tarmoq kirish sahifasini ko'rsatyapti. Brauzerni ochib tizimga kiring, keyin qayta tekshiring.</sys:String>
+    <sys:String x:Key="S.Doc.F.NoInternet">{0}: bu ulanish orqali internet yo'q ({1}).</sys:String>
+    <sys:String x:Key="S.Doc.F.LinkOk">{0}: internet ishlayapti.</sys:String>
+    <sys:String x:Key="S.Doc.F.SameExit">{0} bitta liniyadan chiqyapti (tashqi manzil {1}). Ularni birlashtirish tezlik qo'shmaydi; o'z interneti bor ulanishlardan foydalaning.</sys:String>
+    <sys:String x:Key="S.Doc.F.DnsOk">Nomlarni aniqlash (DNS) ishlayapti.</sys:String>
+    <sys:String x:Key="S.Doc.F.Dns">Nomlarni aniqlab bo'lmayapti ({0}). Ulanish ishlasa ham sahifalar ochilmaydi; adapter sozlamalarida boshqa DNS serverni sinab ko'ring.</sys:String>
+    <sys:String x:Key="S.Doc.F.WindowsPolicy">Windows ikkinchi tarmoqni o'chirib qo'yishi mumkin. Yuqoridagi sariq ogohlantirishda Fix ni bosing.</sys:String>
 </ResourceDictionary>

@@ -280,4 +280,18 @@ Nothing else on the computer is changed. Continue?</sys:String>
     <sys:String x:Key="S.Dl.Sum.Checking">Checking SHA-256…</sys:String>
     <sys:String x:Key="S.Dl.Sum.Ok">✓ SHA-256 matches: the file is exactly the published one.</sys:String>
     <sys:String x:Key="S.Dl.Sum.Bad">✗ SHA-256 does not match (the file has {0}). It may be damaged or replaced; download it again.</sys:String>
+
+    <sys:String x:Key="S.Doc.Title">Network check</sys:String>
+    <sys:String x:Key="S.Doc.Body">Finds why combining does not help: a sign-in page of a public network, a connection without internet, two connections that go out through the same line, broken name lookups, or Windows switching the second network off. It asks Cloudflare (as the ping monitor does) once per connection.</sys:String>
+    <sys:String x:Key="S.Doc.Run">Check now</sys:String>
+    <sys:String x:Key="S.Doc.Running">Checking…</sys:String>
+    <sys:String x:Key="S.Doc.F.NoLinks">No connections found. Connect Wi-Fi, a cable or a phone with USB tethering.</sys:String>
+    <sys:String x:Key="S.Doc.F.OneLink">Only one connection ({0}). Add a second one with its own internet, for example a phone over USB tethering.</sys:String>
+    <sys:String x:Key="S.Doc.F.Portal">{0}: the network shows a sign-in page. Open a browser on it and log in, then check again.</sys:String>
+    <sys:String x:Key="S.Doc.F.NoInternet">{0}: no internet through this connection ({1}).</sys:String>
+    <sys:String x:Key="S.Doc.F.LinkOk">{0}: internet works.</sys:String>
+    <sys:String x:Key="S.Doc.F.SameExit">{0} go out through the same line (public address {1}). Combining them adds no speed; use connections with their own internet.</sys:String>
+    <sys:String x:Key="S.Doc.F.DnsOk">Name lookups (DNS) work.</sys:String>
+    <sys:String x:Key="S.Doc.F.Dns">Names cannot be looked up ({0}). Pages will not open even though the connection works; try another DNS server in the adapter's settings.</sys:String>
+    <sys:String x:Key="S.Doc.F.WindowsPolicy">Windows may switch the second network off. Press Fix in the yellow notice above.</sys:String>
 </ResourceDictionary>

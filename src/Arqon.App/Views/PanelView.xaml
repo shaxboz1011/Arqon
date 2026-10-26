@@ -180,6 +180,25 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Network doctor -->
+                <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource CardLabel}" Text="{DynamicResource S.Doc.Title}" />
+                        <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,4,0,10" Text="{DynamicResource S.Doc.Body}" />
+                        <StackPanel Orientation="Horizontal">
+                            <Button Style="{StaticResource GhostButton}" Padding="12,6" Content="{DynamicResource S.Doc.Run}"
+                                    Command="{Binding DoctorCommand}" IsEnabled="{Binding DoctorIdle}" />
+                            <TextBlock Foreground="#6C8CFF" Margin="12,0,0,0" VerticalAlignment="Center" Text="{DynamicResource S.Doc.Running}"
+                                       Visibility="{Binding DoctorRunning, Converter={StaticResource B2V}}" />
+                        </StackPanel>
+                        <ItemsControl ItemsSource="{Binding DoctorLines}" Margin="0,8,0,0" Visibility="{Binding HasDoctorLines, Converter={StaticResource B2V}}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" Margin="0,2" /></DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
                 <!-- Game protection -->
                 <Border Style="{StaticResource Card}">
                     <Grid>
