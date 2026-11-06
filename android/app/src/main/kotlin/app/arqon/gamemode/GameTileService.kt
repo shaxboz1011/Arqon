@@ -40,7 +40,9 @@ class GameTileService : TileService() {
 
     private fun refresh() {
         val tile = qsTile ?: return
-        val running = (application as ArqonApp).gameMode.state.value.running
+        val app = application as ArqonApp
+        // the setting changes at once when the mode is switched; the state follows only when the tunnel is really up
+        val running = app.settings.gameMode.value || app.gameMode.state.value.running
         tile.state = if (running) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
         tile.updateTile()
     }

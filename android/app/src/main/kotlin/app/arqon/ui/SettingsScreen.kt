@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,6 +42,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import app.arqon.ArqonApp
+import app.arqon.DownloadService
 import app.arqon.BuildConfig
 import app.arqon.R
 
@@ -57,9 +59,15 @@ fun SettingsScreen(app: ArqonApp) {
 
     // The choice is made in Android's own screen, so look again each time the user comes back.
     var unrestricted by remember { mutableStateOf(isUnrestricted(context)) }
+    var resumed by remember { mutableIntStateOf(0) }
+    val canOverlay = remember(resumed) { Settings.canDrawOverlays(context) }
+    val allFiles = remember(resumed) { allFilesGranted() }
+    val folder = remember(resumed, parallel) { app.downloads.downloadDirectory().path }
     DisposableEffect(context) {
         val owner = context as? LifecycleOwner
-        val observer = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_RESUME) unrestricted = isUnrestricted(context) }
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) { unrestricted = isUnrestricted(context); resumed++ }
+        }
         owner?.lifecycle?.addObserver(observer)
         onDispose { owner?.lifecycle?.removeObserver(observer) }
     }
@@ -71,13 +79,13 @@ fun SettingsScreen(app: ArqonApp) {
         InfoCard {
             ToggleRow(stringResource(R.string.settings_cellular_wifi), stringResource(R.string.settings_cellular_wifi_body), cellularOnly) { app.settings.setCellularOnlyWithoutWifi(it) }
         }
-        InfoCard { ToggleRow(stringResource(R.string.settings_status), stringResource(R.string.settings_status_body), keepStatus) { app.settings.setKeepStatus(it) } }
+        InfoCard { ToggleRow(stringResource(R.string.settings_status), stringResource(R.string.settings_status_body), keepStatus) { app.settings.setKeepStatus(it); if (it) DownloadService.ensureRunning(context) } }
         InfoCard {
-            ToggleRow(stringResource(R.string.settings_overlay), stringResource(R.string.settings_overlay_body), overlay) { app.settings.setOverlay(it) }
-            if (overlay && !android.provider.Settings.canDrawOverlays(context)) {
+            ToggleRow(stringResource(R.string.settings_overlay), stringResource(R.string.settings_overlay_body), overlay) { app.settings.setOverlay(it); if (it) DownloadService.ensureRunning(context) }
+            if (overlay && !canOverlay) {
                 Spacer(Modifier.size(8.dp))
                 Button(onClick = {
-                    context.startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}")))
+                    openSettings(context, Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}")))
                 }) { Text(stringResource(R.string.settings_overlay_grant)) }
             }
         }
@@ -87,14 +95,14 @@ fun SettingsScreen(app: ArqonApp) {
         InfoCard {
             Text(stringResource(R.string.settings_parallel), fontWeight = FontWeight.Medium)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
-                for (n in listOf(1, 2, 3, 4, 6)) FilterChip(selected = parallel == n, onClick = { app.settings.setMaxConcurrent(n) }, label = { Text("$n") })
+                for (n in listOf(1, 2, 3, 4, 6)) FilterChip(selected = parallel == n, onClick = { app.settings.setMaxConcurrent(n); app.downloads.reschedule() }, label = { Text("$n") })
             }
         }
 
         InfoCard {
             Text(stringResource(R.string.settings_folder), fontWeight = FontWeight.Medium)
-            Text(stringResource(R.string.settings_folder_body, app.downloads.downloadDirectory().path), color = Muted, fontSize = 13.sp)
-            if (!allFilesGranted()) {
+            Text(stringResource(R.string.settings_folder_body, folder), color = Muted, fontSize = 13.sp)
+            if (!allFiles) {
                 Spacer(Modifier.size(8.dp))
                 Text(stringResource(R.string.settings_all_files_body), color = Muted, fontSize = 13.sp)
                 Spacer(Modifier.size(8.dp))
@@ -104,7 +112,7 @@ fun SettingsScreen(app: ArqonApp) {
                     } else {
                         Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}"))
                     }
-                    context.startActivity(intent)
+                    openSettings(context, intent, Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}")))
                 }) { Text(stringResource(R.string.settings_all_files)) }
             }
         }
@@ -142,11 +150,19 @@ private fun isUnrestricted(context: Context): Boolean =
 
 private fun askBatteryExemption(context: Context) {
     val direct = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:${context.packageName}"))
-    try {
-        context.startActivity(direct)
-    } catch (_: Exception) {
-        context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+    openSettings(context, direct, Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+}
+
+/** Opens one of Android's settings screens; some phones lack a screen, then the next one is tried, and nothing crashes. */
+private fun openSettings(context: Context, vararg intents: Intent) {
+    for (intent in intents) {
+        try {
+            context.startActivity(intent)
+            return
+        } catch (_: Exception) {
+        }
     }
+    try { context.startActivity(Intent(Settings.ACTION_SETTINGS)) } catch (_: Exception) { }
 }
 
 private fun allFilesGranted(): Boolean =

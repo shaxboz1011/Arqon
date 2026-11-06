@@ -77,6 +77,11 @@ class SpeedTester(private val links: AndroidLinkManager, private val scope: Coro
                         errors = _state.value.errors + result.errors,
                     )
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // an uncaught error in this scope would close the app
+                _state.value = _state.value.copy(errors = _state.value.errors + ("test" to (e.message ?: e.javaClass.simpleName)))
             } finally {
                 _state.value = _state.value.copy(running = false, step = null)
             }

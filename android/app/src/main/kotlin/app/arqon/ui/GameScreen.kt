@@ -84,9 +84,13 @@ fun GameScreen(app: ArqonApp) {
         if (intent == null) app.gameMode.start() else consent.launch(intent)   // Android's own "connection request" dialog
     }
 
-    val shown = installed
-        .filter { query.isBlank() || it.label.contains(query, ignoreCase = true) }
-        .sortedWith(compareByDescending<InstalledApp> { it.name in chosen }.thenByDescending { it.isGame }.thenBy { it.label.lowercase() })
+    // Sorted again only when the list or the search changes: not every second (the screen updates while the mode runs), and
+    // not when a box is ticked (the row would jump away from the finger).
+    val shown = remember(installed, query) {
+        installed
+            .filter { query.isBlank() || it.label.contains(query, ignoreCase = true) }
+            .sortedWith(compareByDescending<InstalledApp> { it.name in chosen }.thenByDescending { it.isGame }.thenBy { it.label.lowercase() })
+    }
 
     LazyColumn(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item {

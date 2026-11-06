@@ -9,6 +9,8 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -46,6 +48,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import app.arqon.ArqonApp
+import app.arqon.DownloadService
 import app.arqon.stats.Features
 import app.arqon.Format
 import app.arqon.R
@@ -151,7 +154,8 @@ fun UsageScreen(app: ArqonApp) {
                 Text(stringResource(R.string.usage_limit), fontWeight = FontWeight.Medium)
                 Text(stringResource(R.string.usage_limit_body), color = Muted, fontSize = 13.sp)
                 Spacer(Modifier.size(8.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // five chips are wider than a narrow screen: the row scrolls sideways instead of being cut off
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     for (mb in listOf(0L, 500L, 1024L, 2048L, 5120L)) {
                         FilterChip(
                             selected = limitMb == mb, onClick = { app.settings.setDailyMobileLimitMb(mb) },
@@ -169,7 +173,7 @@ fun UsageScreen(app: ArqonApp) {
             InfoCard {
                 Text(stringResource(R.string.usage_meter), fontWeight = FontWeight.Medium)
                 Spacer(Modifier.size(6.dp))
-                SwitchRow(stringResource(R.string.usage_meter_notification), stringResource(R.string.usage_meter_notification_body), notification) { app.settings.setMeterNotification(it) }
+                SwitchRow(stringResource(R.string.usage_meter_notification), stringResource(R.string.usage_meter_notification_body), notification) { app.settings.setMeterNotification(it); if (it) DownloadService.ensureRunning(context) }
                 Spacer(Modifier.size(6.dp))
                 SwitchRow(stringResource(R.string.usage_bytes), stringResource(R.string.usage_bytes_body), inBytes) { app.settings.setSpeedInBytes(it) }
             }
@@ -276,8 +280,8 @@ private fun NetworkModeCard(generation: Generation, context: Context, phoneAllow
         }
         Spacer(Modifier.size(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = { openNetworkSettings(context) }) { Text(stringResource(R.string.usage_network_settings), fontSize = 12.sp) }
-            OutlinedButton(onClick = { openRadioInfo(context) }) { Text(stringResource(R.string.usage_network_radio), fontSize = 12.sp) }
+            Button(onClick = { openNetworkSettings(context) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.usage_network_settings), fontSize = 12.sp) }
+            OutlinedButton(onClick = { openRadioInfo(context) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.usage_network_radio), fontSize = 12.sp) }
         }
     }
 }
@@ -286,7 +290,7 @@ private fun openUsageAccess(context: Context) {
     try {
         context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS, Uri.parse("package:${context.packageName}")))
     } catch (_: Exception) {
-        context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+        try { context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) } catch (_: Exception) { }
     }
 }
 

@@ -241,6 +241,7 @@ class AndroidLinkManager(
         }
     }
 
+    @Synchronized
     private fun release(slot: Slot) {
         slot.callback?.let { try { cm.unregisterNetworkCallback(it) } catch (_: Exception) { } }
         slots.remove(slot.id)
@@ -309,6 +310,9 @@ class AndroidLinkManager(
             if (state == LinkState.UNAVAILABLE && slot.kind == LinkKind.ETHERNET) continue   // most phones have no cable: do not show an empty row
             result += LinkInfo(slot.id, slot.label, slot.kind, state, slot.metered, pings[slot.id], enabledByUser, link)
         }
+        // a network that is gone must not keep its socket factory for the rest of the process
+        val current = slots.values.mapNotNull { s -> s.network?.let { s.id + it.networkHandle } }.toSet()
+        links.keys.retainAll(current)
         _all.value = result
     }
 

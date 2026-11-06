@@ -73,8 +73,18 @@ class GameVpnService : VpnService() {
         tunnel = started
         app.gameMode.tunnelStarted(started)
         Thread({
-            started.run()
-            if (tunnel === started) shutDown(null)   // the tunnel ended by itself (for example Android took the VPN away)
+            // an exception here must not reach Android's handler: it would close the whole app in the middle of a game
+            var reason: String? = null
+            try {
+                started.run()
+            } catch (e: Throwable) {
+                reason = e.message ?: e.javaClass.simpleName
+                app.links.note("game: tunnel stopped (${e.javaClass.simpleName}: ${e.message})")
+            }
+            if (tunnel === started) {   // the tunnel ended by itself (for example Android took the VPN away)
+                shutDown(reason)
+                stopSelf()
+            }
         }, "arqon-game-tunnel").apply { isDaemon = true }.start()
     }
 

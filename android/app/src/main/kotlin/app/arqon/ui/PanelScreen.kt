@@ -77,7 +77,7 @@ fun PanelScreen(app: ArqonApp) {
             LinkCard(
                 info, speeds[info.id] ?: 0, tests[info.id],
                 onToggle = { app.settings.setLinkEnabled(info.id, it) },
-                onTest = { scope.launch { tests[info.id] = "…"; tests[info.id] = app.links.test(info) } },
+                onTest = { if (tests[info.id] != "…") scope.launch { tests[info.id] = "…"; tests[info.id] = app.links.test(info) } },
             )
         }
         if (!app.links.hasPhonePermission()) {
@@ -184,10 +184,12 @@ private fun SpeedTestCard(app: ArqonApp, activeCount: Int) {
         Text(stringResource(R.string.test_title), fontSize = 18.sp, fontWeight = FontWeight.Medium)
         Text(stringResource(R.string.test_note), color = Muted, fontSize = 12.sp)
         Spacer(Modifier.size(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = { app.speedTester.runSeparately() }, enabled = !state.running && activeCount >= 1) { Text(stringResource(R.string.test_separate), fontSize = 12.sp) }
-            Button(onClick = { app.speedTester.runCombined() }, enabled = !state.running && activeCount >= 2) { Text(stringResource(R.string.test_combined), fontSize = 12.sp) }
-            Button(onClick = { app.speedTester.runBoth() }, enabled = !state.running && activeCount >= 2) { Text(stringResource(R.string.test_both), fontSize = 12.sp) }
+        // three equal buttons that share the width: a narrow phone (or a longer language) must not push one off the screen
+        val tight = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp, vertical = 8.dp)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Button(onClick = { app.speedTester.runSeparately() }, enabled = !state.running && activeCount >= 1, modifier = Modifier.weight(1f), contentPadding = tight) { Text(stringResource(R.string.test_separate), fontSize = 12.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center) }
+            Button(onClick = { app.speedTester.runCombined() }, enabled = !state.running && activeCount >= 2, modifier = Modifier.weight(1f), contentPadding = tight) { Text(stringResource(R.string.test_combined), fontSize = 12.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center) }
+            Button(onClick = { app.speedTester.runBoth() }, enabled = !state.running && activeCount >= 2, modifier = Modifier.weight(1f), contentPadding = tight) { Text(stringResource(R.string.test_both), fontSize = 12.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center) }
         }
         if (state.running) {
             Spacer(Modifier.size(8.dp))

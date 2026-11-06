@@ -161,6 +161,9 @@ class DownloadCenter(
         schedule()
     }
 
+    /** Called when the number of parallel downloads was raised: waiting downloads start at once. */
+    fun reschedule() = schedule()
+
     // ---- control ---------------------------------------------------------------------------------------------------
 
     fun pause(id: String) {
