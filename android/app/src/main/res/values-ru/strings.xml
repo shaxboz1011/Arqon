@@ -136,6 +136,11 @@
     <string name="usage_mobile">Мобильный интернет</string>
     <string name="usage_today">Сегодня</string>
     <string name="usage_month">В этом месяце</string>
+    <string name="usage_mobile_short">Моб.</string>
+    <string name="usage_history">Расход по дням</string>
+    <string name="usage_col_date">Дата</string>
+    <string name="usage_col_total">Всего</string>
+    <string name="usage_month30">Последние 30 дней</string>
     <string name="usage_week">Последние 7 дней</string>
     <string name="usage_exact">Точные цифры из счётчиков Android.</string>
     <string name="usage_estimated">Считает сам Arqon, пока работает. Для точных цифр разрешите доступ к статистике ниже.</string>

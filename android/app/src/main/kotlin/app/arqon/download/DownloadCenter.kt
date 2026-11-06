@@ -19,6 +19,7 @@ import app.arqon.core.torrent.TorrentSource
 import app.arqon.net.AndroidLinkManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -90,9 +91,10 @@ class DownloadCenter(
     /** Bytes per second received over each link right now (all downloads together). */
     val linkSpeeds: StateFlow<Map<String, Long>> = _linkSpeeds
 
-    private val jobs = HashMap<String, Job>()
-    private val announced = HashSet<String>()
-    private val sessions = HashMap<String, TorrentSession>()
+    // touched from the main thread (buttons) and from the worker threads (a download ending), so they must be thread-safe
+    private val jobs = java.util.concurrent.ConcurrentHashMap<String, Job>()
+    private val announced: MutableSet<String> = java.util.concurrent.ConcurrentHashMap.newKeySet()
+    private val sessions = java.util.concurrent.ConcurrentHashMap<String, TorrentSession>()
     private var lastPerLink = HashMap<String, Long>()
     private var lastDone = HashMap<String, Long>()
 
@@ -208,6 +210,8 @@ class DownloadCenter(
 
     // ---- running ---------------------------------------------------------------------------------------------------
 
+    /** Synchronized: two callers at once would both see the same item as waiting and start it twice. */
+    @Synchronized
     private fun schedule() {
         val running = _items.value.count { it.state == ItemState.RUNNING }
         var room = settings.maxConcurrent.value - running
@@ -225,7 +229,8 @@ class DownloadCenter(
 
     private fun launch(item: DownloadItem) {
         update(item.id) { it.copy(state = ItemState.RUNNING, error = null) }
-        jobs[item.id] = scope.launch(Dispatchers.Default) {
+        // started only after it is in [jobs]: a download that fails at once must not remove its entry before it was added
+        val job = scope.launch(Dispatchers.Default, start = CoroutineStart.LAZY) {
             try {
                 when (item.kind) {
                     ItemKind.HTTP -> runHttp(item)
@@ -241,6 +246,8 @@ class DownloadCenter(
                 schedule()
             }
         }
+        jobs[item.id] = job
+        job.start()
     }
 
     private suspend fun runHttp(item: DownloadItem) {
@@ -330,6 +337,7 @@ class DownloadCenter(
         else context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: File(context.filesDir, "downloads")
     }
 
+    @Synchronized
     private fun save() {
         try {
             val array = JSONArray()
@@ -341,7 +349,9 @@ class DownloadCenter(
                     i.selectedFiles?.let { put("selected", JSONArray(it.toList())) }
                 })
             }
-            file.writeText(array.toString())
+            val temp = File(file.path + ".tmp")
+            temp.writeText(array.toString())
+            if (!temp.renameTo(file)) { file.writeText(array.toString()); temp.delete() }
         } catch (_: Exception) {
             // the list is a convenience
         }

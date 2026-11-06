@@ -20,7 +20,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -67,14 +69,22 @@ fun BrowserScreen(app: ArqonApp, controller: BrowserController, active: Boolean)
             }
         }
         if (progress in 1..99) LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth())
-        AndroidView(
-            modifier = Modifier.fillMaxSize(),
-            factory = {
-                // the same page view is used every time the tab is shown, so it must leave its old parent first
-                (controller.webView.parent as? ViewGroup)?.removeView(controller.webView)
-                controller.webView
-            },
-            update = { },
-        )
+        val web = controller.webView
+        // a new page view (after the web engine died) is a new key: the old one is dropped, the new one shown
+        key(web) {
+            DisposableEffect(web) {
+                web.onResume()
+                onDispose { web.onPause() }   // leaving the tab stops the page's sound and scripts
+            }
+            AndroidView(
+                modifier = Modifier.fillMaxSize(),
+                factory = {
+                    // the same page view is used every time the tab is shown, so it must leave its old parent first
+                    (web.parent as? ViewGroup)?.removeView(web)
+                    web
+                },
+                update = { },
+            )
+        }
     }
 }

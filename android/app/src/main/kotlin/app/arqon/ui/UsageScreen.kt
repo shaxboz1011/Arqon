@@ -117,6 +117,7 @@ fun UsageScreen(app: ArqonApp) {
                 WeekChart(meter.week)
             }
         }
+        item { HistoryCard(meter.history, meter.monthWifi, meter.monthMobile) }
         if (!access) item {
             InfoCard {
                 Text(stringResource(R.string.usage_grant), fontWeight = FontWeight.Medium)
@@ -204,6 +205,40 @@ private fun TotalRow(name: String, traffic: Traffic, color: androidx.compose.ui.
         Text(name, color = color, modifier = Modifier.weight(1f))
         Text("↓ ${Format.size(traffic.rx)}   ↑ ${Format.size(traffic.tx)}", color = Muted, fontSize = 13.sp)
         Text(Format.size(traffic.total), fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 12.dp))
+    }
+}
+
+private fun sum(days: List<app.arqon.core.usage.DayUsage>): Pair<Traffic, Traffic> =
+    days.fold(Traffic()) { a, d -> a + d.mobile } to days.fold(Traffic()) { a, d -> a + d.wifi }
+
+/** The table of the days: mobile data, Wi-Fi and both together for each day, and for the last 7 days, 30 days and this month. */
+@Composable
+private fun HistoryCard(history: List<app.arqon.core.usage.DayUsage>, monthWifi: Traffic, monthMobile: Traffic) {
+    InfoCard {
+        Text(stringResource(R.string.usage_history), fontWeight = FontWeight.Medium)
+        Spacer(Modifier.size(6.dp))
+        HistoryRow(stringResource(R.string.usage_col_date), stringResource(R.string.usage_mobile_short), stringResource(R.string.usage_wifi), stringResource(R.string.usage_col_total), Muted, bold = true)
+        val (m7, w7) = sum(history.takeLast(7))
+        val (m30, w30) = sum(history)
+        HistoryRow(stringResource(R.string.usage_week), Format.size(m7.total), Format.size(w7.total), Format.size(m7.total + w7.total), Accent, bold = true)
+        HistoryRow(stringResource(R.string.usage_month30), Format.size(m30.total), Format.size(w30.total), Format.size(m30.total + w30.total), Accent, bold = true)
+        HistoryRow(stringResource(R.string.usage_month), Format.size(monthMobile.total), Format.size(monthWifi.total), Format.size(monthMobile.total + monthWifi.total), Accent, bold = true)
+        Spacer(Modifier.size(4.dp))
+        val pattern = java.time.format.DateTimeFormatter.ofPattern("d MMM", java.util.Locale.getDefault())
+        for (day in history.asReversed()) {
+            HistoryRow(day.date.format(pattern), Format.size(day.mobile.total), Format.size(day.wifi.total), Format.size(day.total), androidx.compose.ui.graphics.Color.Unspecified, bold = false)
+        }
+    }
+}
+
+@Composable
+private fun HistoryRow(date: String, mobile: String, wifi: String, total: String, color: androidx.compose.ui.graphics.Color, bold: Boolean) {
+    val weight = if (bold) FontWeight.SemiBold else FontWeight.Normal
+    Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(date, color = color, fontWeight = weight, fontSize = 13.sp, maxLines = 1, modifier = Modifier.weight(1.3f))
+        Text(mobile, color = SimColor1, fontWeight = weight, fontSize = 13.sp, maxLines = 1, modifier = Modifier.weight(1f))
+        Text(wifi, color = WifiColor, fontWeight = weight, fontSize = 13.sp, maxLines = 1, modifier = Modifier.weight(1f))
+        Text(total, fontWeight = weight, fontSize = 13.sp, maxLines = 1, modifier = Modifier.weight(1f))
     }
 }
 

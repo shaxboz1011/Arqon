@@ -136,6 +136,11 @@
     <string name="usage_mobile">Mobil internet</string>
     <string name="usage_today">Bugun</string>
     <string name="usage_month">Shu oy</string>
+    <string name="usage_mobile_short">Mobil</string>
+    <string name="usage_history">Kunlik sarf</string>
+    <string name="usage_col_date">Sana</string>
+    <string name="usage_col_total">Jami</string>
+    <string name="usage_month30">Oxirgi 30 kun</string>
     <string name="usage_week">Oxirgi 7 kun</string>
     <string name="usage_exact">Aniq raqamlar, Android hisoblagichlaridan.</string>
     <string name="usage_estimated">Arqon ishlab turganda o\'zi sanagan. Aniq raqamlar uchun pastda foydalanish ruxsatini bering.</string>
