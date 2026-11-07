@@ -220,7 +220,7 @@ class DownloadCenter(
         var room = settings.maxConcurrent.value - running
         for (item in _items.value) {
             if (room <= 0) break
-            if (item.state == ItemState.QUEUED && item.id !in jobs) {
+            if (item.state == ItemState.QUEUED && !jobs.containsKey(item.id)) {
                 room--
                 launch(item)
             }
