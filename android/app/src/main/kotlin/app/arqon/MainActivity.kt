@@ -75,7 +75,14 @@ class MainActivity : ComponentActivity() {
                 Root()
             }
         }
-        handle(intent)
+        // after the system recreated the activity the same intent is delivered again: it was handled already
+        if (savedInstanceState == null) handle(intent)
+    }
+
+    override fun onDestroy() {
+        browser?.destroy()
+        browser = null
+        super.onDestroy()
     }
 
     override fun onStart() {

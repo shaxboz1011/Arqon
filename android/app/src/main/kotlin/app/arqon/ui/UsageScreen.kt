@@ -9,6 +9,8 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -46,6 +48,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import app.arqon.ArqonApp
+import app.arqon.DownloadService
 import app.arqon.stats.Features
 import app.arqon.Format
 import app.arqon.R
@@ -117,6 +120,7 @@ fun UsageScreen(app: ArqonApp) {
                 WeekChart(meter.week)
             }
         }
+        item { HistoryCard(meter.history, meter.monthWifi, meter.monthMobile) }
         if (!access) item {
             InfoCard {
                 Text(stringResource(R.string.usage_grant), fontWeight = FontWeight.Medium)
@@ -150,7 +154,8 @@ fun UsageScreen(app: ArqonApp) {
                 Text(stringResource(R.string.usage_limit), fontWeight = FontWeight.Medium)
                 Text(stringResource(R.string.usage_limit_body), color = Muted, fontSize = 13.sp)
                 Spacer(Modifier.size(8.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // five chips are wider than a narrow screen: the row scrolls sideways instead of being cut off
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     for (mb in listOf(0L, 500L, 1024L, 2048L, 5120L)) {
                         FilterChip(
                             selected = limitMb == mb, onClick = { app.settings.setDailyMobileLimitMb(mb) },
@@ -168,7 +173,7 @@ fun UsageScreen(app: ArqonApp) {
             InfoCard {
                 Text(stringResource(R.string.usage_meter), fontWeight = FontWeight.Medium)
                 Spacer(Modifier.size(6.dp))
-                SwitchRow(stringResource(R.string.usage_meter_notification), stringResource(R.string.usage_meter_notification_body), notification) { app.settings.setMeterNotification(it) }
+                SwitchRow(stringResource(R.string.usage_meter_notification), stringResource(R.string.usage_meter_notification_body), notification) { app.settings.setMeterNotification(it); if (it) DownloadService.ensureRunning(context) }
                 Spacer(Modifier.size(6.dp))
                 SwitchRow(stringResource(R.string.usage_bytes), stringResource(R.string.usage_bytes_body), inBytes) { app.settings.setSpeedInBytes(it) }
             }
@@ -207,6 +212,40 @@ private fun TotalRow(name: String, traffic: Traffic, color: androidx.compose.ui.
     }
 }
 
+private fun sum(days: List<app.arqon.core.usage.DayUsage>): Pair<Traffic, Traffic> =
+    days.fold(Traffic()) { a, d -> a + d.mobile } to days.fold(Traffic()) { a, d -> a + d.wifi }
+
+/** The table of the days: mobile data, Wi-Fi and both together for each day, and for the last 7 days, 30 days and this month. */
+@Composable
+private fun HistoryCard(history: List<app.arqon.core.usage.DayUsage>, monthWifi: Traffic, monthMobile: Traffic) {
+    InfoCard {
+        Text(stringResource(R.string.usage_history), fontWeight = FontWeight.Medium)
+        Spacer(Modifier.size(6.dp))
+        HistoryRow(stringResource(R.string.usage_col_date), stringResource(R.string.usage_mobile_short), stringResource(R.string.usage_wifi), stringResource(R.string.usage_col_total), Muted, bold = true)
+        val (m7, w7) = sum(history.takeLast(7))
+        val (m30, w30) = sum(history)
+        HistoryRow(stringResource(R.string.usage_week), Format.size(m7.total), Format.size(w7.total), Format.size(m7.total + w7.total), Accent, bold = true)
+        HistoryRow(stringResource(R.string.usage_month30), Format.size(m30.total), Format.size(w30.total), Format.size(m30.total + w30.total), Accent, bold = true)
+        HistoryRow(stringResource(R.string.usage_month), Format.size(monthMobile.total), Format.size(monthWifi.total), Format.size(monthMobile.total + monthWifi.total), Accent, bold = true)
+        Spacer(Modifier.size(4.dp))
+        val pattern = java.time.format.DateTimeFormatter.ofPattern("d MMM", java.util.Locale.getDefault())
+        for (day in history.asReversed()) {
+            HistoryRow(day.date.format(pattern), Format.size(day.mobile.total), Format.size(day.wifi.total), Format.size(day.total), androidx.compose.ui.graphics.Color.Unspecified, bold = false)
+        }
+    }
+}
+
+@Composable
+private fun HistoryRow(date: String, mobile: String, wifi: String, total: String, color: androidx.compose.ui.graphics.Color, bold: Boolean) {
+    val weight = if (bold) FontWeight.SemiBold else FontWeight.Normal
+    Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(date, color = color, fontWeight = weight, fontSize = 13.sp, maxLines = 1, modifier = Modifier.weight(1.3f))
+        Text(mobile, color = SimColor1, fontWeight = weight, fontSize = 13.sp, maxLines = 1, modifier = Modifier.weight(1f))
+        Text(wifi, color = WifiColor, fontWeight = weight, fontSize = 13.sp, maxLines = 1, modifier = Modifier.weight(1f))
+        Text(total, fontWeight = weight, fontSize = 13.sp, maxLines = 1, modifier = Modifier.weight(1f))
+    }
+}
+
 /** Seven bars, Wi-Fi under mobile data, each as tall as that day's use compared with the busiest day. */
 @Composable
 private fun WeekChart(days: List<app.arqon.core.usage.DayUsage>) {
@@ -241,8 +280,8 @@ private fun NetworkModeCard(generation: Generation, context: Context, phoneAllow
         }
         Spacer(Modifier.size(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = { openNetworkSettings(context) }) { Text(stringResource(R.string.usage_network_settings), fontSize = 12.sp) }
-            OutlinedButton(onClick = { openRadioInfo(context) }) { Text(stringResource(R.string.usage_network_radio), fontSize = 12.sp) }
+            Button(onClick = { openNetworkSettings(context) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.usage_network_settings), fontSize = 12.sp) }
+            OutlinedButton(onClick = { openRadioInfo(context) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.usage_network_radio), fontSize = 12.sp) }
         }
     }
 }
@@ -251,7 +290,7 @@ private fun openUsageAccess(context: Context) {
     try {
         context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS, Uri.parse("package:${context.packageName}")))
     } catch (_: Exception) {
-        context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+        try { context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) } catch (_: Exception) { }
     }
 }
 

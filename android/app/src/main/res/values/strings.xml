@@ -137,6 +137,11 @@
     <string name="usage_mobile">Mobile data</string>
     <string name="usage_today">Today</string>
     <string name="usage_month">This month</string>
+    <string name="usage_mobile_short">Mobile</string>
+    <string name="usage_history">Daily use</string>
+    <string name="usage_col_date">Date</string>
+    <string name="usage_col_total">Total</string>
+    <string name="usage_month30">Last 30 days</string>
     <string name="usage_week">Last 7 days</string>
     <string name="usage_exact">Exact numbers from Android.</string>
     <string name="usage_estimated">Counted by Arqon while it runs. Allow usage access below for exact numbers.</string>

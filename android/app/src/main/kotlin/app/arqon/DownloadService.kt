@@ -72,7 +72,7 @@ class DownloadService : Service() {
     }
 
     private fun holdAwake(needed: Boolean) {
-        if (needed && wakeLock == null) {
+        if (needed && wakeLock?.isHeld != true) {
             val power = getSystemService(PowerManager::class.java)
             wakeLock = power.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "arqon:downloads").also { it.acquire(6 * 60 * 60 * 1000L) }
         } else if (!needed) {

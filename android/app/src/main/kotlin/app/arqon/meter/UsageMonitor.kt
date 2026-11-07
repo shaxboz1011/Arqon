@@ -52,6 +52,8 @@ data class MeterState(
     val monthWifi: Traffic = Traffic(),
     val monthMobile: Traffic = Traffic(),
     val week: List<DayUsage> = emptyList(),
+    /** The last [UsageMonitor.HISTORY_DAYS] days, oldest first, today last. */
+    val history: List<DayUsage> = emptyList(),
     /** True when the numbers come from Android's own counters (usage access allowed), false when Arqon counted them itself. */
     val exact: Boolean = false,
 )
@@ -77,6 +79,9 @@ class UsageMonitor(
     val state: StateFlow<MeterState> = _state
 
     @Volatile private var started = false
+    private var pastDate: LocalDate? = null
+    private var pastAt = 0L
+    private var pastDays: List<DayUsage> = emptyList()
 
     fun start() {
         if (started) return
@@ -98,8 +103,8 @@ class UsageMonitor(
                 ledger.add(key, Medium.MOBILE, sample.mobile.rx, sample.mobile.tx)
 
                 if (tick % 5 == 0) signal = readSignal()
+                if (tick % 5 == 0) exact = readExact(today)
                 if (tick % 15 == 0) {
-                    exact = readExact(today)
                     saveLedger(today)
                     checkLimit(today, exact)
                 }
@@ -107,12 +112,17 @@ class UsageMonitor(
 
                 val ownToday = { m: Medium -> ledger.day(key, m) }
                 val ownMonth = { m: Medium -> ledger.month(key.substring(0, 7), m) }
+                // days Android no longer remembers fall back to what Arqon counted itself
+                val history = ledger.lastDays(today, HISTORY_DAYS).let { own ->
+                    val e = exact?.history ?: return@let own
+                    own.zip(e) { o, x -> if (x.total > 0) x else o }
+                }
                 _state.value = MeterState(
                     downBytesPerSecond = sample.downBytesPerSecond, upBytesPerSecond = sample.upBytesPerSecond,
                     signalPercent = signal.first, signalIsWifi = signal.second, generation = signal.third,
                     todayWifi = exact?.todayWifi ?: ownToday(Medium.WIFI), todayMobile = exact?.todayMobile ?: ownToday(Medium.MOBILE),
                     monthWifi = exact?.monthWifi ?: ownMonth(Medium.WIFI), monthMobile = exact?.monthMobile ?: ownMonth(Medium.MOBILE),
-                    week = exact?.week ?: ledger.lastDays(today, 7),
+                    week = history.takeLast(7), history = history,
                     exact = exact != null,
                 )
                 delay(1000)
@@ -131,7 +141,9 @@ class UsageMonitor(
     private fun saveLedger(today: LocalDate) {
         try {
             ledger.prune(today)
-            file.writeText(ledger.serialize())
+            val temp = File(file.path + ".tmp")
+            temp.writeText(ledger.serialize())
+            if (!temp.renameTo(file)) { file.writeText(ledger.serialize()); temp.delete() }
             prefs.edit()
                 .putLong("meterAt", System.currentTimeMillis())
                 .putLong("meterTrx", TrafficStats.getTotalRxBytes()).putLong("meterTtx", TrafficStats.getTotalTxBytes())
@@ -177,7 +189,7 @@ class UsageMonitor(
     // ---- Android's own counters ----------------------------------------------------------------------------------------
 
     private class Exact(
-        val todayWifi: Traffic, val todayMobile: Traffic, val monthWifi: Traffic, val monthMobile: Traffic, val week: List<DayUsage>,
+        val todayWifi: Traffic, val todayMobile: Traffic, val monthWifi: Traffic, val monthMobile: Traffic, val history: List<DayUsage>,
     )
 
     fun hasUsageAccess(): Boolean = try {
@@ -213,12 +225,18 @@ class UsageMonitor(
         }
         val day = both(startOf(today), end) ?: return null
         val month = both(startOf(today.withDayOfMonth(1)), end) ?: return null
-        val week = (6 downTo 0).map { back ->
-            val date = today.minusDays(back.toLong())
-            val pair = both(startOf(date), if (back == 0) end else startOf(date.plusDays(1))) ?: (Traffic() to Traffic())
-            DayUsage(date, pair.first, pair.second)
+        // finished days do not change: ask for them again only after a new day began, or now and then
+        if (pastDate != today || end - pastAt > 10 * 60_000L) {
+            pastDays = (HISTORY_DAYS - 1 downTo 1).map { back ->
+                val date = today.minusDays(back.toLong())
+                val pair = both(startOf(date), startOf(date.plusDays(1))) ?: (Traffic() to Traffic())
+                DayUsage(date, pair.first, pair.second)
+            }
+            pastDate = today
+            pastAt = end
         }
-        return Exact(day.first, day.second, month.first, month.second, week)
+        val history = pastDays + DayUsage(today, day.first, day.second)
+        return Exact(day.first, day.second, month.first, month.second, history)
     }
 
     /** The apps that used the most data today (wifi and mobile together). Needs usage access; returns nothing without it. */
@@ -284,8 +302,9 @@ class UsageMonitor(
         }
     }
 
-    private companion object {
-        const val ALERT_CHANNEL = "alerts"
-        const val ALERT_ID = 3
+    companion object {
+        const val HISTORY_DAYS = 30
+        private const val ALERT_CHANNEL = "alerts"
+        private const val ALERT_ID = 3
     }
 }
